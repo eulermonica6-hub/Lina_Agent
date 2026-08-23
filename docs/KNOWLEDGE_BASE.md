@@ -12,6 +12,7 @@
 | 004 | 2026-08-23 | Demo 五轮验收与状态优化 | 验证五类匹配结果，修复新旧数据状态错位 | [五轮验收迭代](iterations/004-five-round-demo-validation.md) |
 | 005 | 2026-08-23 | JD 解析离线评测基线 | 用 6 例标注集量化精度、召回和失败类型 | [评测基线迭代](iterations/005-jd-parser-evaluation-baseline.md) |
 | 006 | 2026-08-23 | 推送前审查与正确性加固 | 修复偏好误判、地名切割、异步竞态和空评测 | [审查加固迭代](iterations/006-pre-push-review-hardening.md) |
+| 007 | 2026-08-23 | 面向 Agent 工程评审的仓库叙事 | 从定向求职包装转为可信 Agent 工程试验场，并加入产品证据 | [README 定位迭代](iterations/007-agent-engineering-readme.md) |
 
 ## 文档入口
 
