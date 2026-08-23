@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Lina 求职岗位硬条件匹配工作台">
+    <title>Lina 求职决策台</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=5">
+    <script src="/assets/app.js?v=5" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Lina 首页">
+            <span class="brand-mark">L</span>
+            <span>Lina</span>
+        </a>
+        <div class="run-state" id="run-state" aria-live="polite">
+            <span class="state-dot"></span>
+            <span>等待输入</span>
+        </div>
+        <a class="api-link" href="/docs">API</a>
+    </header>
+
+    <main>
+        <section class="intro">
+            <p class="eyebrow">CAREER DECISION WORKBENCH · MVP 01</p>
+            <h1>Lina 求职决策台</h1>
+            <p class="intro-copy">录入候选人和目标岗位，快速识别毕业年份、学历、经验与地点硬门槛。</p>
+            <div class="intro-actions">
+                <button class="secondary-action" id="load-example" type="button">载入匿名示例</button>
+                <button class="reset-action" id="reset-workbench" type="button">开始新一轮</button>
+            </div>
+        </section>
+
+        <ol class="step-track" aria-label="分析步骤">
+            <li class="active" data-step="profile"><span>01</span>候选人</li>
+            <li data-step="job"><span>02</span>目标岗位</li>
+            <li data-step="match"><span>03</span>匹配结论</li>
+        </ol>
+
+        <section class="workspace">
+            <form id="profile-form" class="work-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="section-index">01 / PROFILE</p>
+                        <h2>候选人画像</h2>
+                    </div>
+                    <span class="status-label" id="profile-status">未保存</span>
+                </div>
+
+                <div class="field-grid">
+                    <label>
+                        <span>毕业年份</span>
+                        <input id="graduation-year" name="graduationYear" type="number" min="1900" max="2200" required placeholder="2028">
+                    </label>
+                    <label>
+                        <span>最高学历</span>
+                        <select id="education" name="education" required>
+                            <option value="bachelor">本科</option>
+                            <option value="master" selected>硕士</option>
+                            <option value="doctorate">博士</option>
+                            <option value="associate">大专</option>
+                            <option value="high_school">高中</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>工作经验（年）</span>
+                        <input id="experience" name="experience" type="number" min="0" step="0.1" required placeholder="0.5">
+                    </label>
+                    <label>
+                        <span>意向地点</span>
+                        <input id="locations" name="locations" required placeholder="上海, 杭州">
+                    </label>
+                    <label class="wide-field">
+                        <span>技能关键词</span>
+                        <input id="skills" name="skills" required placeholder="Python, RAG, Agent">
+                    </label>
+                </div>
+                <button class="primary-action" type="submit">保存候选人画像</button>
+            </form>
+
+            <form id="job-form" class="work-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="section-index">02 / JOB</p>
+                        <h2>目标岗位</h2>
+                    </div>
+                    <span class="status-label" id="job-status">未保存</span>
+                </div>
+
+                <div class="field-grid">
+                    <label>
+                        <span>岗位名称</span>
+                        <input id="job-title" name="jobTitle" required placeholder="Agent 研发工程师">
+                    </label>
+                    <label>
+                        <span>公司</span>
+                        <input id="company" name="company" required placeholder="目标公司">
+                    </label>
+                    <label>
+                        <span>最低学历</span>
+                        <select id="minimum-education" name="minimumEducation">
+                            <option value="">不限</option>
+                            <option value="bachelor">本科</option>
+                            <option value="master">硕士</option>
+                            <option value="doctorate">博士</option>
+                            <option value="associate">大专</option>
+                            <option value="high_school">高中</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>要求毕业年份</span>
+                        <input id="required-years" name="requiredYears" placeholder="2027, 2028">
+                    </label>
+                    <label>
+                        <span>最低经验（年）</span>
+                        <input id="minimum-experience" name="minimumExperience" type="number" min="0" step="0.1" placeholder="不限">
+                    </label>
+                    <label>
+                        <span>工作地点</span>
+                        <input id="job-locations" name="jobLocations" placeholder="上海, 北京">
+                    </label>
+                    <label class="wide-field">
+                        <span>岗位描述</span>
+                        <textarea id="description" name="description" rows="5" required placeholder="粘贴岗位职责与要求"></textarea>
+                    </label>
+                </div>
+                <div class="extraction-row">
+                    <button class="extract-action" id="extract-constraints" type="button">从描述提取硬条件</button>
+                    <span>提取结果不会自动保存，请确认后再提交岗位。</span>
+                </div>
+                <section class="evidence-panel" id="evidence-panel" hidden>
+                    <p class="section-index">SOURCE EVIDENCE</p>
+                    <h3>抽取证据</h3>
+                    <ul id="evidence-list"></ul>
+                    <p class="extraction-warning" id="extraction-warning"></p>
+                </section>
+                <button class="primary-action" type="submit">保存目标岗位</button>
+            </form>
+
+            <section class="result-panel" id="result-panel" aria-live="polite">
+                <div class="result-number">03</div>
+                <div class="result-content">
+                    <p class="section-index">MATCH RESULT</p>
+                    <h2 id="result-title">等待分析</h2>
+                    <p id="result-summary">候选人画像与目标岗位保存后，即可运行硬条件匹配。</p>
+                    <ul class="reason-list" id="reason-list"></ul>
+                </div>
+                <button class="match-action" id="run-match" type="button" disabled>运行匹配</button>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <span>Deterministic matching · No LLM involved</span>
+        <span>数据暂存于当前服务进程</span>
+    </footer>
+</body>
+</html>

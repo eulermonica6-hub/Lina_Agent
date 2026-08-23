@@ -1,0 +1,12 @@
+{
+  "id": "1d46a09b-3be0-41ce-95bf-9d1768db0000",
+  "title": "Agent 研发工程师（2027 届）",
+  "company": "字节跳动",
+  "description": "参与面向业务场景的 Agent 系统设计与研发，覆盖需求理解、测试生成、代码评审、缺陷发现；参与任务规划、上下文构建、多工具调用编排、结果汇总验证；参与可复用 Agent 框架设计与沉淀，持续提升效率、稳定性与可靠性。要求 2027 届本科及以上学历，熟练掌握 Python、Java、Go 至少一门语言，熟悉主流 Agent 编排框架并有实际项目经验。",
+  "constraints": {
+    "minimum_education": "bachelor",
+    "graduation_years": [2027],
+    "minimum_years_of_experience": null,
+    "locations": []
+  }
+}

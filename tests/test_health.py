@@ -22,3 +22,21 @@ def test_health_check_reports_service_metadata() -> None:
         "service": "Lina Test",
         "version": "0.1.0",
     }
+
+
+def test_root_serves_mvp_workbench() -> None:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+
+    async def request_root() -> Response:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            return await client.get("/")
+
+    response = asyncio.run(request_root())
+
+    assert response.status_code == 200
+    assert "Lina 求职决策台" in response.text
+    assert "从描述提取硬条件" in response.text
+    assert "开始新一轮" in response.text
+    assert 'href="/assets/styles.css?v=5"' in response.text
+    assert 'src="/assets/app.js?v=5"' in response.text

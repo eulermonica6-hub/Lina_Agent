@@ -39,6 +39,19 @@ class JobConstraints(DomainModel):
     locations: set[str] = Field(default_factory=set[str])
 
 
+class JobConstraintEvidence(DomainModel):
+    graduation_years: tuple[SourceEvidence, ...] = ()
+    minimum_education: SourceEvidence | None = None
+    minimum_years_of_experience: SourceEvidence | None = None
+    locations: tuple[SourceEvidence, ...] = ()
+
+
+class JobConstraintExtraction(DomainModel):
+    constraints: JobConstraints
+    evidence: JobConstraintEvidence
+    warnings: tuple[str, ...] = ()
+
+
 class JobPosting(DomainModel):
     id: UUID = Field(default_factory=uuid4)
     title: str = Field(min_length=1)

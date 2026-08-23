@@ -1,0 +1,17 @@
+{
+  "id": "f7ea0c79-f85e-43f7-afd4-7cb1df360000",
+  "graduation_year": 2028,
+  "highest_education": "master",
+  "years_of_experience": 0.33,
+  "skills": [
+    "Python",
+    "SQL",
+    "RAG",
+    "Multi-Agent",
+    "Dify",
+    "XGBoost",
+    "SHAP",
+    "Sentence-Transformers"
+  ],
+  "preferred_locations": ["上海"]
+}

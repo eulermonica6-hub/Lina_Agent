@@ -6,17 +6,32 @@
 
 ```bash
 cp .env.example .env
-uv sync --extra dev
-uv run pytest
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+.venv/bin/python -m pytest
 ```
 
-启动 API：
+如果已经安装 `uv`，也可以使用 `uv sync --extra dev`。当前工作区不依赖全局 `uv`，以下命令直接使用项目虚拟环境。
+
+启动应用：
 
 ```bash
-uv run uvicorn lina_agent.main:app --reload
+.venv/bin/python -m uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 ```
 
-访问 <http://127.0.0.1:8000/docs>，调用 `GET /health`。如果返回服务名和版本号，说明应用、路由、配置注入已经连通。
+访问 <http://127.0.0.1:8000/> 使用 Lina 工作台；访问 <http://127.0.0.1:8000/docs> 调用 `GET /health`。如果返回服务名和版本号，说明应用、路由、配置注入已经连通。
+
+工作台的最短验证路径：
+
+1. 点击“载入匿名示例”。
+2. 点击“从描述提取硬条件”，确认显示 `2027 届`、`本科及以上学历` 和 `工作地点：上海` 三段证据。
+3. 依次保存候选人画像和目标岗位。
+4. 点击“运行匹配”。
+5. 页面应显示“暂不满足硬条件”和“毕业年份不符合”。
+
+完整实现过程、技术取舍、失败记录和面试表达见 [MVP 实现日志](MVP_IMPLEMENTATION.md)。
+每次迭代的知识点和开发心得统一收录在 [开发知识库](KNOWLEDGE_BASE.md)。
+面向使用者的字段解释、API 示例、数据生命周期和故障处理见 [当前版本使用手册](USER_GUIDE.md)。
 
 ## 先理解当前骨架
 
@@ -35,6 +50,10 @@ uv run uvicorn lina_agent.main:app --reload
 - 如果模型返回负数工作年限，应该在哪一层最早失败？
 
 ## 第一个任务：硬条件匹配器
+
+> 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
+
+Repository 接口、内存适配器和首个匿名简历/JD 用例也已完成。下一步将匿名基线扩展到至少 5 个 JD，并为每个样例人工标注硬条件和预期结论。
 
 ### 目标
 
@@ -87,10 +106,10 @@ def evaluate_hard_constraints(
 ### 完成标准
 
 ```bash
-uv run ruff format .
-uv run ruff check .
-uv run pyright
-uv run pytest --cov
+.venv/bin/ruff format .
+.venv/bin/ruff check .
+.venv/bin/pyright
+.venv/bin/python -m pytest --cov --cov-branch
 ```
 
 四条命令必须全部通过。然后用 5 分钟口头回答：

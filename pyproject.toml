@@ -20,6 +20,7 @@ dev = [
     "pre-commit>=4.3,<5.0",
     "pyright>=1.1.404,<2.0",
     "pytest>=8.4,<9.0",
+    "pytest-asyncio>=1.1,<2.0",
     "pytest-cov>=6.2,<7.0",
     "ruff>=0.12,<1.0",
 ]
@@ -27,8 +28,12 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+lina_agent = ["web/*"]
+
 [tool.pytest.ini_options]
 addopts = "-q --strict-config --strict-markers"
+asyncio_mode = "strict"
 pythonpath = ["src"]
 testpaths = ["tests"]
 
@@ -47,6 +52,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+allowed-confusables = ["，", "：", "；"]
 
 [tool.pyright]
 include = ["src", "tests"]

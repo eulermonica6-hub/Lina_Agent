@@ -1,0 +1,68 @@
+[
+  {
+    "case_id": "standard-campus-role",
+    "description": "工作地点：上海。面向 2027 届毕业生，要求本科及以上学历，具备 2 年以上工作经验。",
+    "expected": {
+      "graduation_years": [2027],
+      "minimum_education": "bachelor",
+      "minimum_years_of_experience": 2,
+      "locations": ["上海"]
+    },
+    "expected_evidence": ["2027 届", "本科及以上学历", "2 年以上工作经验", "工作地点：上海"]
+  },
+  {
+    "case_id": "multiple-years-and-locations",
+    "description": "工作地点：北京、深圳。招聘 2027、2028 届，硕士以上学历，接受 0 年工作经验。",
+    "expected": {
+      "graduation_years": [2027, 2028],
+      "minimum_education": "master",
+      "minimum_years_of_experience": 0,
+      "locations": ["北京", "深圳"]
+    },
+    "expected_evidence": ["2027、2028 届", "硕士以上学历", "0 年工作经验", "工作地点：北京、深圳"]
+  },
+  {
+    "case_id": "no-explicit-constraints",
+    "description": "寻找热爱 Agent 工程、善于协作并愿意持续学习的同学。",
+    "expected": {
+      "graduation_years": [],
+      "minimum_education": null,
+      "minimum_years_of_experience": null,
+      "locations": []
+    },
+    "expected_evidence": []
+  },
+  {
+    "case_id": "base-and-graduation-variant",
+    "description": "Base 地在杭州，面向 2026 年毕业生，本科起。",
+    "expected": {
+      "graduation_years": [2026],
+      "minimum_education": "bachelor",
+      "minimum_years_of_experience": null,
+      "locations": ["杭州"]
+    },
+    "expected_evidence": ["2026 年毕业生", "本科起", "Base 地在杭州"]
+  },
+  {
+    "case_id": "labelled-requirements-variant",
+    "description": "学历要求：硕士，至少 1 年相关经验，办公地点：广州。",
+    "expected": {
+      "graduation_years": [],
+      "minimum_education": "master",
+      "minimum_years_of_experience": 1,
+      "locations": ["广州"]
+    },
+    "expected_evidence": ["硕士", "1 年相关经验", "办公地点：广州"]
+  },
+  {
+    "case_id": "education-choice-variant",
+    "description": "本科或硕士学历均可，工作地点：杭州。",
+    "expected": {
+      "graduation_years": [],
+      "minimum_education": "bachelor",
+      "minimum_years_of_experience": null,
+      "locations": ["杭州"]
+    },
+    "expected_evidence": ["本科或硕士学历", "工作地点：杭州"]
+  }
+]
