@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
@@ -13,10 +13,11 @@ from lina_agent.infrastructure.repositories.memory import (
 )
 
 WEB_DIRECTORY = Path(__file__).parent / "web"
+WORKBENCH_TEMPLATE = (WEB_DIRECTORY / "index.html").read_text(encoding="utf-8")
 
 
-async def serve_workbench() -> FileResponse:
-    return FileResponse(WEB_DIRECTORY / "index.html")
+async def serve_workbench() -> HTMLResponse:
+    return HTMLResponse(WORKBENCH_TEMPLATE.replace("{{APP_VERSION}}", __version__))
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

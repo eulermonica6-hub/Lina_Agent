@@ -36,7 +36,9 @@ def test_root_serves_mvp_workbench() -> None:
 
     assert response.status_code == 200
     assert "Lina 求职决策台" in response.text
+    assert 'class="brand-version">v0.1.0</span>' in response.text
+    assert "{{APP_VERSION}}" not in response.text
     assert "从描述提取硬条件" in response.text
     assert "开始新一轮" in response.text
-    assert 'href="/assets/styles.css?v=5"' in response.text
+    assert 'href="/assets/styles.css?v=6"' in response.text
     assert 'src="/assets/app.js?v=5"' in response.text

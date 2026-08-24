@@ -62,6 +62,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
     font-size: 18px;
 }
 
+.brand-version {
+    align-self: flex-end;
+    margin-bottom: 3px;
+    padding: 2px 5px;
+    color: var(--green);
+    border: 1px solid rgb(23 79 56 / 28%);
+    font-family: "Avenir Next", "PingFang SC", sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
 .run-state { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
 .state-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
 .run-state.ready .state-dot { background: var(--green-bright); box-shadow: 0 0 0 4px rgb(199 243 107 / 20%); }
