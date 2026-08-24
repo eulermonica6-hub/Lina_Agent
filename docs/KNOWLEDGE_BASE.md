@@ -14,6 +14,7 @@
 | 006 | 2026-08-23 | 推送前审查与正确性加固 | 修复偏好误判、地名切割、异步竞态和空评测 | [审查加固迭代](iterations/006-pre-push-review-hardening.md) |
 | 007 | 2026-08-23 | 面向 Agent 工程评审的仓库叙事 | 从定向求职包装转为可信 Agent 工程试验场，并加入产品证据 | [README 定位迭代](iterations/007-agent-engineering-readme.md) |
 | 008 | 2026-08-24 | 版本展示与发布记录 | 建立统一版本源、页面版本徽标和重大更新发布流程 | [版本治理迭代](iterations/008-versioning-and-release-notes.md) |
+| 009 | 2026-08-24 | 代码现状与路线审计 | 统一真实能力、文档口径和后续阶段依赖 | [路线审计迭代](iterations/009-codebase-roadmap-audit.md) |
 
 ## 文档入口
 

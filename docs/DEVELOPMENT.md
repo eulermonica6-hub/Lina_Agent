@@ -65,7 +65,7 @@ python3.12 -m venv .venv
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository 接口、内存适配器和首个匿名简历/JD 用例也已完成。下一步将匿名基线扩展到至少 5 个 JD，并为每个样例人工标注硬条件和预期结论。
+Repository 接口、内存适配器、匿名简历 Fixture 和 6 例合成 JD 评测基线已经完成。下一步先补充匿名化真实 JD，再实现统一简历文档解析与候选人证据抽取。
 
 ### 目标
 

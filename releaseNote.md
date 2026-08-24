@@ -34,8 +34,8 @@
 
 ### 可靠性
 
-- 35 个自动化测试通过，语句和分支覆盖率均为 100%。
-- Ruff、Pyright strict、pre-commit 质量门禁。
+- 36 个自动化测试通过，语句和分支覆盖率均为 100%。
+- pre-commit 执行 Ruff；CI 执行 Ruff、Pyright strict 和带 100% 覆盖率门槛的 pytest。
 - 解析器基线：`10 TP / 0 FP / 6 FN`，Precision 1.0、Recall 0.625、Exact Match 0.5。
 - 修复偏好条件误判、地点切割、空评测集满分和浏览器异步旧响应覆盖新状态等问题。
 
