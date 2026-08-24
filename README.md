@@ -83,7 +83,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 36 个测试通过 |
+| 自动化测试 | 38 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -180,16 +180,22 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 
 当前确定性版本是未来 Agent 工作流的控制面，而不是一个已经实现自主运行的 Agent。下一步先用匿名真实 JD 补齐数据基线，再实现 Markdown/PDF/DOCX 统一文件摄取与证据持久化；之后引入 Provider 抽象、结构化模型节点、Schema 校验、引用验证和回归评测。状态图稳定后才增加自然语言对话入口；岗位监控的跨周能力必须建立在持久化之上。
 
-## 设计与开发记录
+## 参考文档
 
-仓库将实现决策和失败实验与代码一起保存：
+所有重要文档都从这里直接进入；每次版本更新按文档治理清单统一 Review。
 
-- [知识库与迭代索引](docs/KNOWLEDGE_BASE.md)
-- [MVP 实现记录](docs/MVP_IMPLEMENTATION.md)
-- [解析器评测基线](docs/evaluations/JD_PARSER_BASELINE.md)
-- [开发指南](docs/DEVELOPMENT.md)
-- [架构与交付路线](docs/CODING_PLAN.md)
-- [岗位监控设计](docs/JOB_MONITORING.md)
+| 文档 | 用途 |
+| --- | --- |
+| [当前版本使用手册](docs/USER_GUIDE.md) | 安装、启动、页面流程、API、隐私和故障处理 |
+| [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
+| [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
+| [开发指南](docs/DEVELOPMENT.md) | 开发流程、质量门禁和发布步骤 |
+| [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |
+| [数据匿名化与标注指南](docs/DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核方法 |
+| [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |
+| [MVP 实现记录](docs/MVP_IMPLEMENTATION.md) | 首个工作台的实现过程与历史复盘 |
+| [解析器评测基线](docs/evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果和失败分类 |
+| [岗位监控设计](docs/JOB_MONITORING.md) | 尚未实现的来源适配、快照、去重和周报设计 |
 
 ## 欢迎讨论
 

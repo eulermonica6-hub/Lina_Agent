@@ -10,8 +10,9 @@
 2. 在 `pyproject.toml` 同步项目版本。
 3. 在本文件顶部新增对应版本记录，写明新增能力、重要修复、验证结果和已知限制。
 4. 确认页面左上角显示的新版本；页面版本由运行时 `__version__` 自动渲染，无需修改 HTML。
-5. 运行 Ruff、Pyright、pytest 和必要的真实浏览器验收。
-6. 完成提交并推送，确保发布记录与代码位于同一个 commit。
+5. 按 [文档治理清单](docs/DOCUMENTATION_GOVERNANCE.md) 统一 Review 并更新所有重要文档。
+6. 运行 Ruff、Pyright、pytest 和必要的真实浏览器验收。
+7. 完成提交并推送，确保发布记录、重要文档与代码位于同一个 commit。
 
 版本一致性由 `tests/test_versioning.py` 自动检查；任一版本来源未同步时，测试必须失败。
 
@@ -34,7 +35,7 @@
 
 ### 可靠性
 
-- 36 个自动化测试通过，语句和分支覆盖率均为 100%。
+- 38 个自动化测试通过，语句和分支覆盖率均为 100%。
 - pre-commit 执行 Ruff；CI 执行 Ruff、Pyright strict 和带 100% 覆盖率门槛的 pytest。
 - 解析器基线：`10 TP / 0 FP / 6 FN`，Precision 1.0、Recall 0.625、Exact Match 0.5。
 - 修复偏好条件误判、地点切割、空评测集满分和浏览器异步旧响应覆盖新状态等问题。

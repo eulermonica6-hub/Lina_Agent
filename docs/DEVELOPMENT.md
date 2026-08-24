@@ -43,7 +43,8 @@ python3.12 -m venv .venv
 2. 在 [Release Notes](../releaseNote.md) 顶部新增版本记录，说明新增能力、重要修复、验证结果和已知限制。
 3. 运行 `tests/test_versioning.py`，确认项目元数据、运行时版本和发布记录一致。
 4. 启动工作台，确认左上角版本徽标正确；该徽标由运行时版本自动渲染。
-5. 完成全量质量门禁、提交和推送，保证代码与 release note 位于同一个 commit。
+5. 按 [文档治理清单](DOCUMENTATION_GOVERNANCE.md) 统一 Review README、使用手册、Coding Plan、开发指南、专题设计、评测报告和知识库。
+6. 完成全量质量门禁、提交和推送，保证代码、重要文档与 release note 位于同一个 commit。
 
 ## 先理解当前骨架
 

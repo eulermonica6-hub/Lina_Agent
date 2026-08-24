@@ -15,6 +15,7 @@
 | 007 | 2026-08-23 | 面向 Agent 工程评审的仓库叙事 | 从定向求职包装转为可信 Agent 工程试验场，并加入产品证据 | [README 定位迭代](iterations/007-agent-engineering-readme.md) |
 | 008 | 2026-08-24 | 版本展示与发布记录 | 建立统一版本源、页面版本徽标和重大更新发布流程 | [版本治理迭代](iterations/008-versioning-and-release-notes.md) |
 | 009 | 2026-08-24 | 代码现状与路线审计 | 统一真实能力、文档口径和后续阶段依赖 | [路线审计迭代](iterations/009-codebase-roadmap-audit.md) |
+| 010 | 2026-08-24 | 文档治理与数据标注规范 | 建立重要文档契约、版本 Review 清单和 JD/简历标注流程 | [文档与标注迭代](iterations/010-documentation-and-annotation-governance.md) |
 
 ## 文档入口
 
@@ -27,6 +28,8 @@
 | 复盘实现过程 | 本知识库的迭代索引 | 决策、失败、心得、验证和面试素材 |
 | 查看岗位监控设计 | [岗位监控设计](JOB_MONITORING.md) | 尚未实现的来源、调度和可靠性方案 |
 | 查看能力指标 | [JD 解析基线评测](evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果与失败分类 |
+| 管理重要文档 | [文档治理](DOCUMENTATION_GOVERNANCE.md) | 文档职责、事实来源和版本 Review 清单 |
+| 准备评测数据 | [数据匿名化与标注指南](DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核流程 |
 
 ## 每次迭代的完成标准
 
