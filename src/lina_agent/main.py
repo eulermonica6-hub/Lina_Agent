@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
-from lina_agent.api.routes import health, jobs, matches, profiles
+from lina_agent.api.routes import agent, health, jobs, matches, profiles
 from lina_agent.config import Settings, get_settings
 from lina_agent.infrastructure.repositories.memory import (
     InMemoryCandidateProfileRepository,
@@ -40,6 +40,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(profiles.router)
     app.include_router(jobs.router)
     app.include_router(matches.router)
+    app.include_router(agent.router)
     app.mount("/assets", StaticFiles(directory=WEB_DIRECTORY), name="assets")
     app.add_api_route("/", serve_workbench, methods=["GET"], include_in_schema=False)
     return app

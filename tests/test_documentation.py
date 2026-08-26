@@ -31,3 +31,14 @@ def test_anonymized_resume_has_no_obvious_contact_details() -> None:
     assert re.search(r"(?<!\d)1[3-9]\d{9}(?!\d)", resume) is None
     assert "http://" not in resume
     assert "https://" not in resume
+
+
+def test_public_agent_fixture_is_anonymous_and_key_file_is_ignored() -> None:
+    catalog = (PROJECT_ROOT / "tests/fixtures/job_catalog_anonymized.md").read_text(
+        encoding="utf-8"
+    )
+    gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert re.search(r"(?<!\d)1[3-9]\d{9}(?!\d)", catalog) is None
+    assert "@" not in catalog
+    assert "LLM api key.txt" in gitignore

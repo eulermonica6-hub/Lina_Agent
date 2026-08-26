@@ -19,3 +19,4 @@ build/
 
 # Private job-search data must never be committed.
 data/private/
+LLM api key.txt

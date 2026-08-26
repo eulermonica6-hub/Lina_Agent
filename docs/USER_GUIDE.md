@@ -1,7 +1,7 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.1.0
-> 使用方式：本地单用户 Web 工作台或 HTTP API
+> 适用版本：0.1.1
+> 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
 ## 1. 当前能力边界
@@ -15,10 +15,12 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | 岗位保存 | 可用 | 保存到当前服务进程的内存 |
 | 硬条件匹配 | 可用 | 判断毕业年份、学历、经验和地点 |
 | 匿名示例 | 可用 | 用于快速体验和验证 |
-| 自然语言对话 | 不可用 | 尚无模型 Provider、会话状态或工具编排 |
+| 本地简历/JD Agent | 可用 | 读取 TXT、Markdown、DOCX，输出证据 Top-K 和 Trace |
+| 智能行动计划 | 可选 | `--use-llm` 显式启用经济型 Provider |
+| 自然语言对话 | 不可用 | 尚无会话状态和开放式工具选择 |
 | 联网岗位和公司查询 | 不可用 | 尚无 Search Provider 或来源适配器 |
-| PDF/DOCX 简历解析 | 不可用 | 当前需要手工录入画像 |
-| 简历优化与学习建议 | 不可用 | 尚无语义匹配和受约束生成 |
+| DOCX 简历解析 | 可用 | 支持正文、表格和文本框中的文字 |
+| PDF/OCR | 不可用 | 尚不处理 PDF、扫描件和图片内文字 |
 | 数据持久化 | 不可用 | 重启后画像和岗位会丢失 |
 
 ## 2. 启动 Lina
@@ -59,7 +61,7 @@ uv sync --extra dev
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
 ```
 
@@ -131,6 +133,45 @@ Lina 一次返回所有不满足的硬条件：
 
 “硬条件通过”只表示满足当前已录入的四类门槛，不代表技能匹配、面试成功率或最终录用概率。
 
+### 4.5 运行本地文件 Agent
+
+推荐把真实资料放在 Git 已忽略的 `data/private/`。默认运行完全本地，不调用模型：
+
+```bash
+uv run --locked lina-match \
+  --resume "data/private/your-resume.docx" \
+  --jobs "data/private/AI_Agent_JD.md" \
+  --top 5
+```
+
+也可以运行 `uv run --locked python -m lina_agent.cli ...`。支持的简历格式是 UTF-8 `.txt`、`.md` 和 `.docx`；JD 目录标题格式为 `### 序号. 岗位 | 公司`，半角或全角竖线均可。
+
+报告中的“证据覆盖分”由明确要求、优先项和职责上下文覆盖率加权生成。它不是录取概率；学历、毕业时间和经验年限仍需人工确认。
+
+### 4.6 配置经济型模型 Provider
+
+只有加入 `--use-llm` 才会生成智能行动计划。默认路由是 Groq 到 NVIDIA；两者都失败时不会自动调用付费 DeepSeek。
+
+密钥可以放在被 Git 忽略的 `data/private/LLM api key.txt`：
+
+```text
+deepseek=sk-placeholder
+nvidia=nvapi-placeholder
+groq=gsk_placeholder
+```
+
+也可以使用 `LINA_LLM_GROQ_API_KEY`、`LINA_LLM_NVIDIA_API_KEY`、`LINA_LLM_DEEPSEEK_API_KEY` 环境变量。常用选择：
+
+```bash
+# 显式只用 NVIDIA
+LINA_LLM_PROVIDER=nvidia uv run --locked lina-match ... --use-llm
+
+# 允许免费服务失败后付费回退；请自行承担费用
+LINA_LLM_ALLOW_PAID_FALLBACK=true uv run --locked lina-match ... --use-llm
+```
+
+模型节点只接收候选人技能标签、Top 岗位标题/公司、覆盖项和缺口，不接收简历文件名、联系方式或原文证据。技能组合仍可能构成个人派生数据；运行 `--use-llm` 前应确认接受将这些字段发送给所选 Provider。
+
 ## 5. API 使用
 
 API 的交互式 Schema 和试用入口位于 <http://127.0.0.1:8000/docs>。
@@ -184,13 +225,18 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 如果服务重启过，需要重新创建候选人和岗位，否则旧 ID 会返回 `404`。
 
+### 5.5 文件 Agent API
+
+`POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。当前 API 不调用 LLM，智能计划只在本地 CLI 显式启用。
+
 ## 6. 数据与隐私
 
 - 数据只保存在 Uvicorn 进程内存中；停止或重启服务后清空。
 - 当前没有登录和访问控制，只应在本机使用，不要直接暴露到公网。
 - 原始真实简历应放在 `data/private/`，该目录被 Git 忽略。
 - 提交代码前运行 `git status`，确认没有个人姓名、手机号、邮箱或完整简历进入版本控制。
-- 工作台没有调用 LLM，也不会把输入发送给模型提供商。
+- 工作台和默认文件 Agent 不调用 LLM。只有 CLI 的 `--use-llm` 会发送第 4.6 节列出的匿名化结构字段。
+- key 文件必须保留在 `data/private/` 或使用环境变量；任何日志、异常和 Git 提交都不应包含 key。
 
 ## 7. 常见问题
 
@@ -223,6 +269,14 @@ curl -X POST http://127.0.0.1:8000/matches \
 ### 返回 `422`
 
 请求未通过 Pydantic 校验。检查必填字段、年份范围、负数经验、UUID 格式和学历枚举；也可以在 `/docs` 查看准确 Schema。
+
+### DOCX 读取为空或顺序异常
+
+Lina 会读取正文、表格单元格和文本框文字，真正无文本时显式失败。页眉页脚、批注、扫描图片和复杂双栏版面不在当前支持范围；这类文件先另存为 UTF-8 文本，或等待 PDF/OCR 与版面解析阶段。
+
+### 免费模型限流
+
+Groq 429、网络错误、无效响应和部分 5xx 会降级到 NVIDIA。项目不会轮换多个 Groq key 来叠加免费额度，因为官方限额按 organization 计算。DeepSeek 只有显式选择或允许付费回退时启用。
 
 ## 8. 质量检查
 

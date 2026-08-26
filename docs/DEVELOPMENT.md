@@ -20,6 +20,17 @@ uv run --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 
 访问 <http://127.0.0.1:8000/> 使用 Lina 工作台；访问 <http://127.0.0.1:8000/docs> 调用 `GET /health`。如果返回服务名和版本号，说明应用、路由、配置注入已经连通。
 
+本地文件 Agent 的最短验证路径：
+
+```bash
+uv run --locked lina-match \
+  --resume tests/fixtures/resume_anonymized.md \
+  --jobs tests/fixtures/job_catalog_anonymized.md \
+  --top 3
+```
+
+默认不联网。Provider 测试必须使用 `httpx.MockTransport`，不能在单元测试中消耗真实额度。真实连通性探针只能使用无隐私提示；真实简历的派生数据也不得在缺少明确授权时发送给外部模型。
+
 工作台的最短验证路径：
 
 1. 点击“载入匿名示例”。
@@ -47,7 +58,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.1.0`。本阶段每次重大功能更新递增补丁版本，下一版为 `0.1.1`。
+当前版本为 `0.1.1`。本阶段每次重大功能更新按可验收用户能力递增补丁版本。
 
 重大更新推送前必须：
 
@@ -78,7 +89,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository 接口、内存适配器、匿名简历 Fixture 和 6 例合成 JD 评测基线已经完成。下一步先补充匿名化真实 JD，再实现统一简历文档解析与候选人证据抽取。
+Repository、统一 TXT/Markdown/DOCX 摄取、真实 JD 目录解析、技能证据排序、经济型 Provider 与有界 Supervisor 已完成。下一步先制作匿名人工技能与 Top-K 标注，不先扩展 PDF 或爬虫。
 
 ### 目标
 
