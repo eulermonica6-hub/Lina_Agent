@@ -13,6 +13,7 @@ from lina_agent.domain.models import DomainModel
 class LLMProviderName(StrEnum):
     AUTO = "auto"
     GROQ = "groq"
+    AGNES = "agnes"
     NVIDIA = "nvidia"
     DEEPSEEK = "deepseek"
 
@@ -22,9 +23,11 @@ class LLMSettings(BaseSettings):
     allow_paid_fallback: bool = False
     key_file: Path = Path("data/private/LLM api key.txt")
     groq_api_key: SecretStr | None = None
+    agnes_api_key: SecretStr | None = None
     nvidia_api_key: SecretStr | None = None
     deepseek_api_key: SecretStr | None = None
     groq_model: str = "qwen/qwen3.6-27b"
+    agnes_model: str = "agnes-2.5-flash"
     nvidia_model: str = "qwen/qwen3-next-80b-a3b-instruct"
     deepseek_model: str = "deepseek-v4-flash"
 
@@ -93,11 +96,13 @@ class LLMProvider(Protocol):
 
 _BASE_URLS = {
     LLMProviderName.GROQ: "https://api.groq.com/openai/v1",
+    LLMProviderName.AGNES: "https://apihub.agnes-ai.com/v1",
     LLMProviderName.NVIDIA: "https://integrate.api.nvidia.com/v1",
     LLMProviderName.DEEPSEEK: "https://api.deepseek.com",
 }
 _KEY_PATTERNS = {
     LLMProviderName.GROQ: re.compile(r"gsk_[A-Za-z0-9_-]+"),
+    LLMProviderName.AGNES: re.compile(r"(?i:agnes)[^\n]*?(?P<key>sk-[A-Za-z0-9_-]+)"),
     LLMProviderName.NVIDIA: re.compile(r"nvapi-[A-Za-z0-9_-]+"),
     LLMProviderName.DEEPSEEK: re.compile(r"(?i:deepseek)[^\n]*?(?P<key>sk-[A-Za-z0-9_-]+)"),
 }
@@ -114,17 +119,22 @@ def resolve_provider_configs(
     keys = _load_key_file(resolved_settings.key_file)
     environment_keys = {
         LLMProviderName.GROQ: resolved_settings.groq_api_key,
+        LLMProviderName.AGNES: resolved_settings.agnes_api_key,
         LLMProviderName.NVIDIA: resolved_settings.nvidia_api_key,
         LLMProviderName.DEEPSEEK: resolved_settings.deepseek_api_key,
     }
     keys.update(
-        {provider: secret for provider, secret in environment_keys.items() if secret is not None}
+        {provider: (secret,) for provider, secret in environment_keys.items() if secret is not None}
     )
 
     if resolved_settings.provider is LLMProviderName.AUTO:
         selected = [
             provider
-            for provider in (LLMProviderName.GROQ, LLMProviderName.NVIDIA)
+            for provider in (
+                LLMProviderName.GROQ,
+                LLMProviderName.AGNES,
+                LLMProviderName.NVIDIA,
+            )
             if provider in keys
         ]
         if resolved_settings.allow_paid_fallback and LLMProviderName.DEEPSEEK in keys:
@@ -137,12 +147,13 @@ def resolve_provider_configs(
             raise ProviderConfigurationError(
                 "只检测到付费 DeepSeek key；请显式选择 deepseek 或允许付费回退。"
             )
-        raise ProviderConfigurationError("没有检测到可用的 Groq 或 NVIDIA API key。")
+        raise ProviderConfigurationError("没有检测到可用的 Groq、Agnes 或 NVIDIA API key。")
     if selected[0] not in keys:
         raise ProviderConfigurationError(f"没有检测到 {selected[0].value} API key。")
 
     models = {
         LLMProviderName.GROQ: resolved_settings.groq_model,
+        LLMProviderName.AGNES: resolved_settings.agnes_model,
         LLMProviderName.NVIDIA: resolved_settings.nvidia_model,
         LLMProviderName.DEEPSEEK: resolved_settings.deepseek_model,
     }
@@ -151,14 +162,15 @@ def resolve_provider_configs(
             provider=provider,
             model=models[provider],
             base_url=_BASE_URLS[provider],
-            api_key=keys[provider],
+            api_key=api_key,
             cost_tier=("paid" if provider is LLMProviderName.DEEPSEEK else "free_quota"),
         )
         for provider in selected
+        for api_key in keys[provider]
     )
 
 
-def _load_key_file(path: Path) -> dict[LLMProviderName, SecretStr]:
+def _load_key_file(path: Path) -> dict[LLMProviderName, tuple[SecretStr, ...]]:
     if not path.is_file():
         return {}
     try:
@@ -166,12 +178,15 @@ def _load_key_file(path: Path) -> dict[LLMProviderName, SecretStr]:
     except (OSError, UnicodeDecodeError) as error:
         raise ProviderConfigurationError(f"无法读取 LLM key 文件：{path}") from error
 
-    keys: dict[LLMProviderName, SecretStr] = {}
+    keys: dict[LLMProviderName, tuple[SecretStr, ...]] = {}
     for provider, pattern in _KEY_PATTERNS.items():
-        match = pattern.search(text)
-        if match is not None:
-            value = match.groupdict().get("key") or match.group()
-            keys[provider] = SecretStr(value)
+        values = tuple(
+            dict.fromkeys(
+                match.groupdict().get("key") or match.group() for match in pattern.finditer(text)
+            )
+        )
+        if values:
+            keys[provider] = tuple(SecretStr(value) for value in values)
     return keys
 
 
@@ -275,6 +290,8 @@ class EconomicLLMRouter:
                 continue
             except ProviderResponseError as error:
                 if error.status_code is not None and error.status_code not in {
+                    401,
+                    403,
                     408,
                     429,
                     500,

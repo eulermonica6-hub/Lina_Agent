@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.1.1
+> 适用版本：0.1.2
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -61,7 +61,7 @@ uv sync --extra dev
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }
 ```
 
@@ -150,7 +150,7 @@ uv run --locked lina-match \
 
 ### 4.6 配置经济型模型 Provider
 
-只有加入 `--use-llm` 才会生成智能行动计划。默认路由是 Groq 到 NVIDIA；两者都失败时不会自动调用付费 DeepSeek。
+只有加入 `--use-llm` 才会生成智能行动计划。默认路由是多个 Groq 凭据、Agnes、NVIDIA；免费服务都失败时不会自动调用付费 DeepSeek。
 
 密钥可以放在被 Git 忽略的 `data/private/LLM api key.txt`：
 
@@ -158,9 +158,10 @@ uv run --locked lina-match \
 deepseek=sk-placeholder
 nvidia=nvapi-placeholder
 groq=gsk_placeholder
+agnes=sk-placeholder
 ```
 
-也可以使用 `LINA_LLM_GROQ_API_KEY`、`LINA_LLM_NVIDIA_API_KEY`、`LINA_LLM_DEEPSEEK_API_KEY` 环境变量。常用选择：
+也可以使用 `LINA_LLM_GROQ_API_KEY`、`LINA_LLM_AGNES_API_KEY`、`LINA_LLM_NVIDIA_API_KEY`、`LINA_LLM_DEEPSEEK_API_KEY` 环境变量。环境变量会替换同一 Provider 的文件凭据。常用选择：
 
 ```bash
 # 显式只用 NVIDIA
@@ -276,7 +277,7 @@ Lina 会读取正文、表格单元格和文本框文字，真正无文本时显
 
 ### 免费模型限流
 
-Groq 429、网络错误、无效响应和部分 5xx 会降级到 NVIDIA。项目不会轮换多个 Groq key 来叠加免费额度，因为官方限额按 organization 计算。DeepSeek 只有显式选择或允许付费回退时启用。
+Groq 单个凭据出现 401/403、429、网络错误、无效响应或部分 5xx 时，会按文件顺序尝试下一个 Groq 账号，再降级到 Agnes 和 NVIDIA。只应配置自己有权使用的账号；同一 organization 的多个 key 不会增加官方组织级额度。DeepSeek 只有显式选择或允许付费回退时启用。
 
 ## 8. 质量检查
 

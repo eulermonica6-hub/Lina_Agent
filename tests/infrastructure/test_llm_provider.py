@@ -27,7 +27,7 @@ from lina_agent.infrastructure.llm_provider import (
 
 
 def _settings(**values: object) -> LLMSettings:
-    return LLMSettings.model_validate(values)
+    return LLMSettings.model_validate({"allow_paid_fallback": False, **values})
 
 
 def _config() -> ResolvedProviderConfig:
@@ -47,7 +47,7 @@ def _request() -> LLMRequest:
 def test_auto_selection_prefers_first_groq_key_without_exposing_it(tmp_path: Path) -> None:
     key_file = tmp_path / "keys.txt"
     key_file.write_text(
-        "deepseek=sk-deepseek\nnvidia=nvapi-nvidia\ngroq=gsk_first\ngsk_second",
+        "deepseek=sk-deepseek\nnvidia=nvapi-nvidia\ngroq=gsk_first\ngsk_second\nagnes=sk-agnes",
         encoding="utf-8",
     )
 
@@ -62,8 +62,12 @@ def test_auto_selection_prefers_first_groq_key_without_exposing_it(tmp_path: Pat
     configs = resolve_provider_configs(_settings(key_file=key_file))
     assert [item.provider for item in configs] == [
         LLMProviderName.GROQ,
+        LLMProviderName.GROQ,
+        LLMProviderName.AGNES,
         LLMProviderName.NVIDIA,
     ]
+    assert configs[1].api_key.get_secret_value() == "gsk_second"
+    assert configs[2].model == "agnes-2.5-flash"
 
 
 def test_explicit_environment_key_overrides_file_and_selects_nvidia(tmp_path: Path) -> None:
@@ -103,7 +107,7 @@ def test_reports_missing_explicit_or_automatic_provider_keys(tmp_path: Path) -> 
 
     with pytest.raises(ProviderConfigurationError, match="groq API key"):
         resolve_provider_config(_settings(provider="groq", key_file=missing))
-    with pytest.raises(ProviderConfigurationError, match="Groq 或 NVIDIA"):
+    with pytest.raises(ProviderConfigurationError, match="Groq、Agnes 或 NVIDIA"):
         resolve_provider_config(_settings(key_file=missing))
 
 
@@ -121,10 +125,11 @@ def test_default_settings_and_provider_builder_do_not_require_global_state(
 ) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("LINA_LLM_GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("LINA_LLM_AGNES_API_KEY", raising=False)
     monkeypatch.delenv("LINA_LLM_NVIDIA_API_KEY", raising=False)
     monkeypatch.delenv("LINA_LLM_DEEPSEEK_API_KEY", raising=False)
 
-    with pytest.raises(ProviderConfigurationError, match="Groq 或 NVIDIA"):
+    with pytest.raises(ProviderConfigurationError, match="Groq、Agnes 或 NVIDIA"):
         resolve_provider_config()
 
     provider = build_llm_provider(
@@ -250,9 +255,13 @@ def test_economic_router_fails_over_only_for_transient_errors() -> None:
     assert limited.calls == 1
     assert healthy.calls == 1
 
+    unauthorized = _StubProvider(ProviderResponseError("revoked key", status_code=401))
+    assert EconomicLLMRouter((unauthorized, healthy)).complete(_request()) == expected
+    assert healthy.calls == 2
+
     invalid_payload = _StubProvider(ProviderResponseError("invalid payload"))
     assert EconomicLLMRouter((invalid_payload, healthy)).complete(_request()) == expected
-    assert healthy.calls == 2
+    assert healthy.calls == 3
 
     invalid = _StubProvider(ProviderResponseError("bad request", status_code=400))
     untouched = _StubProvider(expected)

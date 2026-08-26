@@ -1,10 +1,33 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前阶段采用递增补丁版本：当前为 `0.1.1`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前阶段采用递增补丁版本：当前为 `0.1.2`，之后按可验收用户能力递增。
 
 ## Unreleased
 
 - 暂无。
+
+## 0.1.2 - 2026-08-27
+
+扩展经济型模型路由和凭据级故障切换。
+
+### 新增
+
+- 接入 OpenAI-compatible Agnes Provider，默认模型为 `agnes-2.5-flash`。
+- 同一密钥文件可保存多个用户有权使用的 Groq 账号 key；只在前一个调用失败时按文件顺序尝试，不并发调用。
+- 免费优先自动路由升级为多个 Groq 配置、Agnes、NVIDIA，再按显式设置选择付费 DeepSeek。
+- 本机私有 `.env` 已按用户授权允许 DeepSeek 作为最终付费回退；仓库默认仍保持关闭。
+
+### 可靠性与验证
+
+- 单个凭据遇到 401/403、429、网络错误、无效响应或选定 5xx 时可切换下一配置；400 等请求错误立即失败。
+- 真实密钥文件安全解析为 10 个 Groq、1 个 Agnes、1 个 NVIDIA 和 1 个 DeepSeek 配置，过程不输出 key。
+- Agnes `agnes-2.5-flash` 与 DeepSeek `deepseek-v4-flash` 均使用无隐私最小提示完成真实连通性验证。
+- 修复本机 Git/libcurl 到 GitHub 443 超时：使用只允许 `github.com:443` 的临时 Python CONNECT 转发完成同步，结束后删除代理，不修改全局 Git 配置。
+
+### 使用边界
+
+- 多 key 只应用于用户有权使用的独立账号故障切换；同一 organization 的多个 key 不会增加组织级限额。
+- DeepSeek 是付费 Provider，仓库级默认配置不自动启用。
 
 ## 0.1.1 - 2026-08-26
 

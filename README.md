@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.1.1** · [查看发布记录](releaseNote.md)
+当前版本：**0.1.2** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -51,7 +51,7 @@ flowchart LR
     FILE[TXT / Markdown / DOCX] --> INGEST[证据块摄取]
     INGEST --> AGENT[CareerMatch Supervisor]
     AGENT --> MATCHER[技能证据排序]
-    AGENT -. 显式启用 .-> LLM[Groq → NVIDIA → 可选 DeepSeek]
+    AGENT -. 显式启用 .-> LLM[Groq keys → Agnes → NVIDIA → 可选 DeepSeek]
     UI[Web 工作台] --> API[FastAPI API]
     API --> APP[应用服务]
     APP --> REPO[Repository 协议]
@@ -107,7 +107,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 评测语料 | 6 个合成、人工标注、版本化案例 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
-| Provider | Groq 无隐私真实探针通过；NVIDIA 为免费降级，DeepSeek 不自动付费 |
+| Provider | Groq、Agnes、DeepSeek 无隐私真实探针通过；NVIDIA 为免费降级；DeepSeek 默认不自动付费 |
 
 当前解析器优先保证 Precision，而不是 Recall。基线结果为 `10 TP / 0 FP / 6 FN`；这是小型合成语料上的回归指标，不代表生产准确率。漏掉字段时，用户仍可手工补充；错误生成硬性要求则可能误判一个本可申请的机会，因此后者成本更高。
 
@@ -150,7 +150,7 @@ uv run --locked lina-match \
   --top 5
 ```
 
-加入 `--use-llm` 才会联网生成智能计划。默认 `auto` 只使用 Groq 和 NVIDIA 免费额度；DeepSeek 需要显式配置。密钥文件、环境变量和实际发送字段见 [使用手册](docs/USER_GUIDE.md)。
+加入 `--use-llm` 才会联网生成智能计划。默认 `auto` 依次使用多个 Groq 凭据、Agnes 和 NVIDIA；DeepSeek 需要显式选择或允许付费回退。密钥文件、环境变量和实际发送字段见 [使用手册](docs/USER_GUIDE.md)。
 
 运行质量门禁：
 
@@ -203,7 +203,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - API、领域层、应用层、基础设施层和评测测试；
 - TXT、Markdown、DOCX 统一证据摄取与文本框兜底；
 - 真实 JD 目录解析、技能证据 Top-K、Supervisor Trace 和本地 CLI；
-- 免费优先的可替换 LLM Provider 与显式 opt-in 智能行动计划；
+- 支持 Groq、Agnes、NVIDIA、DeepSeek 的免费优先 Provider 路由与显式 opt-in 智能行动计划；
 - 版本化评测数据与工程迭代记录。
 
 当前尚未实现，也不会提前宣称：

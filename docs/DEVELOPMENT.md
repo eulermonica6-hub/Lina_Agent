@@ -58,7 +58,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.1.1`。本阶段每次重大功能更新按可验收用户能力递增补丁版本。
+当前版本为 `0.1.2`。本阶段每次重大功能更新按可验收用户能力递增补丁版本。
 
 重大更新推送前必须：
 

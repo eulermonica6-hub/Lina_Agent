@@ -18,6 +18,7 @@
 | 010 | 2026-08-24 | 文档治理与数据标注规范 | 建立重要文档契约、版本 Review 清单和 JD/简历标注流程 | [文档与标注迭代](iterations/010-documentation-and-annotation-governance.md) |
 | 011 | 2026-08-26 | P0 工程基线与浏览器竞态自动化 | 保证 UTF-8、依赖和异步状态在 Linux/Windows 可重复验证 | [P0 工程基线迭代](iterations/011-p0-engineering-baseline.md) |
 | 012 | 2026-08-26 | 首个证据驱动职业匹配 Agent | 从真实 DOCX 与 JD 生成可解释 Top-K，并可选生成匿名化智能计划 | [初步 Agent 核心迭代](iterations/012-initial-career-agent.md) |
+| 013 | 2026-08-27 | 多 Provider 路由与 Git 连接诊断 | 增加 Agnes、多 Groq 凭据故障切换和可复现的网络分层定位 | [Provider 与连接迭代](iterations/013-provider-routing-and-connectivity.md) |
 
 ## 文档入口
 
