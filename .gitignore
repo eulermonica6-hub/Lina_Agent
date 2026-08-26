@@ -13,6 +13,7 @@ __pycache__/
 .ruff_cache/
 coverage.xml
 htmlcov/
+test-results/
 dist/
 build/
 

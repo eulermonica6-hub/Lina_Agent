@@ -83,14 +83,14 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 38 个测试通过 |
+| 自动化测试 | 46 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
 | API 契约 | FastAPI + Pydantic v2 |
 | 解析器评测 | Precision 1.0、Recall 0.625、Exact Match 0.5 |
 | 评测语料 | 6 个合成、人工标注、版本化案例 |
-| 浏览器验收 | 手工 Playwright 验证桌面端、移动端和延迟响应；自动化仍待完成 |
+| 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 
 当前解析器优先保证 Precision，而不是 Recall。基线结果为 `10 TP / 0 FP / 6 FN`；这是小型合成语料上的回归指标，不代表生产准确率。漏掉字段时，用户仍可手工补充；错误生成硬性要求则可能误判一个本可申请的机会，因此后者成本更高。
 
@@ -100,7 +100,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 - 保留地名 `新疆和田`，同时将 `北京和上海` 识别为无法可靠拆分的自然语言地点列表；
 - 空评测数据集必须报错，而不能返回看似完美的指标。
 
-编辑或重置表单后，过期的成功与失败响应不会污染新状态；这些路径已通过延迟响应浏览器场景验证。将其转换为仓库内正式的 Playwright 自动化测试，仍是待完成事项。
+编辑或重置表单后，过期的成功与失败响应不会污染新状态；这些路径已固化为仓库内 Playwright 自动化测试，并在 Linux 与 Windows CI 中使用 Chromium 运行。
 
 指标定义和失败分析详见 [解析器评测报告](docs/evaluations/JD_PARSER_BASELINE.md) 与 [推送前审查加固记录](docs/iterations/006-pre-push-review-hardening.md)。
 
@@ -109,11 +109,12 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 环境要求：Python 3.12+。
 
 ```bash
-cp .env.example .env
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/python -m uvicorn lina_agent.main:app --app-dir src --reload --port 8000
+uv sync --extra dev --locked
+uv run --extra dev --locked playwright install chromium
+uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 ```
+
+Linux 首次安装浏览器时使用 `playwright install --with-deps chromium`，同时安装 Chromium 所需系统库。
 
 启动后访问：
 
@@ -126,16 +127,18 @@ python3.12 -m venv .venv
 运行质量门禁：
 
 ```bash
-.venv/bin/ruff format --check src tests
-.venv/bin/ruff check src tests
-.venv/bin/pyright
-.venv/bin/python -m pytest --cov=lina_agent --cov-branch --cov-fail-under=100
+uv lock --check
+uv run --extra dev --locked ruff format --check .
+uv run --extra dev --locked ruff check .
+uv run --extra dev --locked pyright
+uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failure \
+    --cov=lina_agent --cov-branch --cov-fail-under=100
 ```
 
 独立运行解析器评测：
 
 ```bash
-PYTHONPATH=src .venv/bin/python -m lina_agent.evaluation.job_parser \
+uv run --locked python -m lina_agent.evaluation.job_parser \
     tests/fixtures/job_parser_evaluation.json
 ```
 

@@ -5,18 +5,17 @@
 ## 环境准备
 
 ```bash
-cp .env.example .env
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/python -m pytest
+uv sync --extra dev --locked
+uv run --extra dev --locked playwright install chromium
+uv run --extra dev --locked pytest --browser chromium
 ```
 
-如果已经安装 `uv`，也可以使用 `uv sync --extra dev`。当前工作区不依赖全局 `uv`，以下命令直接使用项目虚拟环境。
+`uv.lock` 是 Linux 与 Windows 共用的精确依赖图，但 `.venv` 不是跨平台产物。在 Windows 与 WSL 间切换时应分别创建环境，或用 `UV_PROJECT_ENVIRONMENT` 指向不同目录。不要手工编辑锁文件；修改 `pyproject.toml` 后运行 `uv lock`，提交前使用 `uv lock --check` 验证同步状态。Linux 首次安装浏览器时使用 `playwright install --with-deps chromium`。
 
 启动应用：
 
 ```bash
-.venv/bin/python -m uvicorn lina_agent.main:app --app-dir src --reload --port 8000
+uv run --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 ```
 
 访问 <http://127.0.0.1:8000/> 使用 Lina 工作台；访问 <http://127.0.0.1:8000/docs> 调用 `GET /health`。如果返回服务名和版本号，说明应用、路由、配置注入已经连通。
@@ -32,6 +31,19 @@ python3.12 -m venv .venv
 完整实现过程、技术取舍、失败记录和面试表达见 [MVP 实现日志](MVP_IMPLEMENTATION.md)。
 每次迭代的知识点和开发心得统一收录在 [开发知识库](KNOWLEDGE_BASE.md)。
 面向使用者的字段解释、API 示例、数据生命周期和故障处理见 [当前版本使用手册](USER_GUIDE.md)。
+
+## 质量门禁
+
+```bash
+uv lock --check
+uv run --extra dev --locked ruff format --check .
+uv run --extra dev --locked ruff check .
+uv run --extra dev --locked pyright
+uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failure \
+    --cov=lina_agent --cov-branch --cov-fail-under=100
+```
+
+浏览器测试启动真实 FastAPI 工作台，并控制 API 响应返回时机，验证保存、抽取和匹配请求的过期成功与失败响应都不能覆盖用户修改后的新状态。失败 Trace 写入 `test-results/`；该目录不进入 Git，CI 会在失败时上传它供调试。
 
 ## 版本发布流程
 

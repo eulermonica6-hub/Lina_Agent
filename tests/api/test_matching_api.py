@@ -14,7 +14,10 @@ FIXTURES = Path(__file__).parents[1] / "fixtures"
 def load_fixture(name: str) -> dict[str, Any]:
     import json
 
-    return cast(dict[str, Any], json.loads((FIXTURES / name).read_text()))
+    return cast(
+        dict[str, Any],
+        json.loads((FIXTURES / name).read_text(encoding="utf-8")),
+    )
 
 
 @pytest.fixture

@@ -18,7 +18,10 @@ FIXTURES = Path(__file__).parents[1] / "fixtures"
 
 
 def load_json(name: str) -> dict[str, Any]:
-    return cast(dict[str, Any], json.loads((FIXTURES / name).read_text()))
+    return cast(
+        dict[str, Any],
+        json.loads((FIXTURES / name).read_text(encoding="utf-8")),
+    )
 
 
 async def build_service() -> tuple[AnalyzeJobEligibility, CandidateProfile, JobPosting]:

@@ -22,6 +22,7 @@ dev = [
     "pytest>=8.4,<9.0",
     "pytest-asyncio>=1.1,<2.0",
     "pytest-cov>=6.2,<7.0",
+    "pytest-playwright>=0.7,<1.0",
     "ruff>=0.12,<1.0",
 ]
 
@@ -34,6 +35,9 @@ lina_agent = ["web/*"]
 [tool.pytest.ini_options]
 addopts = "-q --strict-config --strict-markers"
 asyncio_mode = "strict"
+markers = [
+    "browser: end-to-end tests that require a Playwright browser",
+]
 pythonpath = ["src"]
 testpaths = ["tests"]
 
