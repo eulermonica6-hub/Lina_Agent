@@ -5,7 +5,6 @@ from pathlib import Path
 
 from lina_agent.application.career_agent import CareerAgentRun, CareerMatchAgent
 from lina_agent.infrastructure.llm_career_planner import LLMCareerPlanner
-from lina_agent.infrastructure.llm_provider import build_economic_router
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -32,7 +31,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="输出格式，默认 markdown",
     )
     arguments = parser.parse_args(argv)
-    planner = LLMCareerPlanner(build_economic_router()) if arguments.use_llm else None
+    planner = LLMCareerPlanner() if arguments.use_llm else None
     run = CareerMatchAgent(planner=planner).execute_paths(
         arguments.resume,
         arguments.jobs,
@@ -73,12 +72,27 @@ def format_markdown(run: CareerAgentRun) -> str:
                 "",
             )
         )
+    lines.extend(("## 聚合能力缺口", ""))
+    if not run.gap_analysis.gaps:
+        lines.append("当前 Top 岗位中没有识别到词表内能力缺口。")
+    for gap in run.gap_analysis.gaps:
+        lines.append(
+            f"- {gap.skill}：优先级 {gap.priority.value}，影响 "
+            f"{len(gap.affected_catalog_numbers)} 个岗位，缺口分 {gap.priority_score:.1f}"
+        )
+    lines.append("")
     if run.action_plan is not None:
         lines.extend(("## 智能行动计划", "", run.action_plan.summary, ""))
-        lines.extend(
-            f"{action.priority}. {action.action}：{action.reason}"
-            for action in run.action_plan.priority_actions
-        )
+        for action in run.action_plan.priority_actions:
+            lines.extend(
+                (
+                    f"{action.priority}. {action.action}：{action.reason}",
+                    f"   - 目标技能：{'、'.join(action.target_skills)}",
+                    f"   - 产出物：{action.deliverable}",
+                    f"   - 验收：{action.acceptance_criteria}",
+                    f"   - 时间预算：{action.time_budget_hours} 小时",
+                )
+            )
         lines.append("")
     lines.extend(("## 使用边界", "", *(f"- {warning}" for warning in run.warnings)))
     return "\n".join(lines)

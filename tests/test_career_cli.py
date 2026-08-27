@@ -9,6 +9,7 @@ import lina_agent.cli.career_match as career_match_cli
 from lina_agent.application.career_agent import CareerMatchAgent
 from lina_agent.cli.career_match import format_markdown, main
 from lina_agent.infrastructure.document_loader import LocalDocumentLoader
+from lina_agent.infrastructure.llm_career_planner import LLMCareerPlanner
 from lina_agent.infrastructure.llm_provider import (
     LLMProviderName,
     LLMRequest,
@@ -32,7 +33,10 @@ class _PlanProvider:
             model="test-model",
             content=(
                 '{"summary":"优先补齐岗位缺口","priority_actions":'
-                '[{"priority":1,"action":"完成项目","reason":"形成证据"}]}'
+                '[{"priority":1,"target_skills":["Python"],'
+                '"action":"完成项目","reason":"形成证据",'
+                '"deliverable":"可运行仓库","acceptance_criteria":"测试通过",'
+                '"time_budget_hours":8}]}'
             ),
             usage=LLMUsage(total_tokens=20),
         )
@@ -44,7 +48,7 @@ def test_cli_outputs_markdown_report(
 ) -> None:
     resume = tmp_path / "resume.txt"
     jobs = tmp_path / "jobs.md"
-    resume.write_text("Python", encoding="utf-8")
+    resume.write_text("RAG", encoding="utf-8")
     jobs.write_text(JOBS, encoding="utf-8")
 
     main(("--resume", str(resume), "--jobs", str(jobs), "--top", "1"))
@@ -52,7 +56,8 @@ def test_cli_outputs_markdown_report(
     output = capsys.readouterr().out
     assert "# Lina 初步职业匹配报告" in output
     assert "Agent 工程师" in output
-    assert "未覆盖明确技能：无" in output
+    assert "未覆盖明确技能：Python" in output
+    assert "Python：优先级 high" in output
 
 
 def test_cli_outputs_json_and_forwards_inactive_option(
@@ -122,7 +127,11 @@ def test_cli_can_opt_in_to_anonymized_llm_plan(
     jobs = tmp_path / "jobs.md"
     resume.write_text("Python", encoding="utf-8")
     jobs.write_text(JOBS, encoding="utf-8")
-    monkeypatch.setattr(career_match_cli, "build_economic_router", _PlanProvider)
+    monkeypatch.setattr(
+        career_match_cli,
+        "LLMCareerPlanner",
+        lambda: LLMCareerPlanner(_PlanProvider()),
+    )
 
     main(("--resume", str(resume), "--jobs", str(jobs), "--use-llm"))
 
@@ -130,3 +139,5 @@ def test_cli_can_opt_in_to_anonymized_llm_plan(
     assert "## 智能行动计划" in output
     assert "优先补齐岗位缺口" in output
     assert "1. 完成项目：形成证据" in output
+    assert "产出物：可运行仓库" in output
+    assert "验收：测试通过" in output

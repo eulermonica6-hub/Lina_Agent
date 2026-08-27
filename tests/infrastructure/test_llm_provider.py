@@ -30,10 +30,10 @@ def _settings(**values: object) -> LLMSettings:
     return LLMSettings.model_validate({"allow_paid_fallback": False, **values})
 
 
-def _config() -> ResolvedProviderConfig:
+def _config(model: str = "test-model") -> ResolvedProviderConfig:
     return ResolvedProviderConfig(
         provider=LLMProviderName.GROQ,
-        model="test-model",
+        model=model,
         base_url="https://provider.example/v1/",
         api_key=SecretStr("gsk_test-secret"),
         cost_tier="free_quota",
@@ -168,6 +168,64 @@ def test_openai_compatible_provider_sends_safe_request_and_parses_usage() -> Non
     assert result.provider is LLMProviderName.GROQ
     assert result.content == "结构化结果"
     assert result.usage.total_tokens == 14
+
+
+def test_groq_qwen_request_enables_json_mode_and_disables_reasoning() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = cast(dict[str, object], json.loads(request.content))
+        assert payload["response_format"] == {"type": "json_object"}
+        assert payload["reasoning_effort"] == "none"
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": "{}"}}]},
+        )
+
+    provider = OpenAICompatibleLLM(
+        _config(model="qwen/qwen3.6-27b"),
+        transport=httpx.MockTransport(handler),
+    )
+    request = LLMRequest(
+        messages=(LLMMessage(role="user", content="JSON"),),
+        response_format="json_object",
+        reasoning_effort="none",
+    )
+
+    assert provider.complete(request).content == "{}"
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        _config(model="other-model"),
+        ResolvedProviderConfig(
+            provider=LLMProviderName.NVIDIA,
+            model="qwen/qwen3.6-27b",
+            base_url="https://provider.example/v1/",
+            api_key=SecretStr("nvapi-test"),
+            cost_tier="free_quota",
+        ),
+    ],
+)
+def test_non_qwen_or_non_groq_provider_omits_groq_only_options(
+    config: ResolvedProviderConfig,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = cast(dict[str, object], json.loads(request.content))
+        assert "response_format" not in payload or config.provider is LLMProviderName.GROQ
+        assert "reasoning_effort" not in payload
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": "ok"}}]},
+        )
+
+    provider = OpenAICompatibleLLM(config, transport=httpx.MockTransport(handler))
+    request = LLMRequest(
+        messages=(LLMMessage(role="user", content="JSON"),),
+        response_format="json_object",
+        reasoning_effort="none",
+    )
+
+    assert provider.complete(request).content == "ok"
 
 
 def test_openai_compatible_provider_handles_default_usage_and_http_errors() -> None:

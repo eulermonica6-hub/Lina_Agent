@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.1.2
+> 适用版本：0.2.0
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -16,7 +16,9 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | 硬条件匹配 | 可用 | 判断毕业年份、学历、经验和地点 |
 | 匿名示例 | 可用 | 用于快速体验和验证 |
 | 本地简历/JD Agent | 可用 | 读取 TXT、Markdown、DOCX，输出证据 Top-K 和 Trace |
-| 智能行动计划 | 可选 | `--use-llm` 显式启用经济型 Provider |
+| 智能行动计划 | 可选 | CLI `--use-llm` 或 API `use_llm=true` 显式启用 |
+| 多岗位能力缺口 | 可用 | 聚合 Top-K 的硬性/优先缺口、影响岗位与证据优势 |
+| 计划复核与降级 | 可用 | 无证据技能被拒绝；模型失败时保留确定性分析 |
 | 自然语言对话 | 不可用 | 尚无会话状态和开放式工具选择 |
 | 联网岗位和公司查询 | 不可用 | 尚无 Search Provider 或来源适配器 |
 | DOCX 简历解析 | 可用 | 支持正文、表格和文本框中的文字 |
@@ -61,7 +63,7 @@ uv sync --extra dev
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.1.2"
+  "version": "0.2.0"
 }
 ```
 
@@ -146,11 +148,11 @@ uv run --locked lina-match \
 
 也可以运行 `uv run --locked python -m lina_agent.cli ...`。支持的简历格式是 UTF-8 `.txt`、`.md` 和 `.docx`；JD 目录标题格式为 `### 序号. 岗位 | 公司`，半角或全角竖线均可。
 
-报告中的“证据覆盖分”由明确要求、优先项和职责上下文覆盖率加权生成。它不是录取概率；学历、毕业时间和经验年限仍需人工确认。
+报告中的“证据覆盖分”由明确要求、优先项和职责上下文覆盖率加权生成。它不是录取概率；学历、毕业时间和经验年限仍需人工确认。报告还会聚合 Top-K 的能力缺口：硬性缺口权重高于优先项，`priority_score` 只表示该技能影响当前 Top-K 的相对范围，不表示学习难度。
 
 ### 4.6 配置经济型模型 Provider
 
-只有加入 `--use-llm` 才会生成智能行动计划。默认路由是多个 Groq 凭据、Agnes、NVIDIA；免费服务都失败时不会自动调用付费 DeepSeek。
+只有 CLI 加入 `--use-llm` 或 API 明确设置 `use_llm=true` 才会生成智能行动计划。默认路由是多个 Groq 凭据、Agnes、NVIDIA；免费服务都失败时不会自动调用付费 DeepSeek。
 
 密钥可以放在被 Git 忽略的 `data/private/LLM api key.txt`：
 
@@ -171,7 +173,7 @@ LINA_LLM_PROVIDER=nvidia uv run --locked lina-match ... --use-llm
 LINA_LLM_ALLOW_PAID_FALLBACK=true uv run --locked lina-match ... --use-llm
 ```
 
-模型节点只接收候选人技能标签、Top 岗位标题/公司、覆盖项和缺口，不接收简历文件名、联系方式或原文证据。技能组合仍可能构成个人派生数据；运行 `--use-llm` 前应确认接受将这些字段发送给所选 Provider。
+模型节点只接收候选人技能标签、Top 岗位标题/公司、覆盖项以及聚合缺口，不接收简历文件名、联系方式或原文证据。模型计划必须返回目标技能、产出物、验收标准和时间预算；确定性 Reviewer 会拒绝无证据技能、重复任务或不连续优先级。技能组合仍可能构成个人派生数据；启用 LLM 前应确认接受将这些字段发送给所选 Provider。
 
 ## 5. API 使用
 
@@ -228,7 +230,9 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 ### 5.5 文件 Agent API
 
-`POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。当前 API 不调用 LLM，智能计划只在本地 CLI 显式启用。
+`POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
+
+请求默认 `use_llm=false`，完全本地运行。只有明确设置 `use_llm=true` 才会调用经济型 Provider；成功计划经过 Reviewer 后返回。Provider 或 Schema 失败时 HTTP 请求仍返回确定性结果，`state` 为 `degraded`，失败节点的 `status` 为 `failed`。这表示模型增强失败，不表示 Top-K 和缺口分析失败。
 
 ## 6. 数据与隐私
 
@@ -236,7 +240,7 @@ curl -X POST http://127.0.0.1:8000/matches \
 - 当前没有登录和访问控制，只应在本机使用，不要直接暴露到公网。
 - 原始真实简历应放在 `data/private/`，该目录被 Git 忽略。
 - 提交代码前运行 `git status`，确认没有个人姓名、手机号、邮箱或完整简历进入版本控制。
-- 工作台和默认文件 Agent 不调用 LLM。只有 CLI 的 `--use-llm` 会发送第 4.6 节列出的匿名化结构字段。
+- 工作台和默认文件 Agent 不调用 LLM。只有 CLI `--use-llm` 或 API `use_llm=true` 会发送第 4.6 节列出的最小化结构字段。
 - key 文件必须保留在 `data/private/` 或使用环境变量；任何日志、异常和 Git 提交都不应包含 key。
 
 ## 7. 常见问题

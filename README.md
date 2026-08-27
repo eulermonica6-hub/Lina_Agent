@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.1.2** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.0** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -37,8 +37,9 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 1. 将 DOCX/TXT 简历和 Markdown JD 转为带指纹、分块与字符偏移的统一文档；
 2. 解析岗位职责、要求、来源和上下线状态；
 3. 从双方证据中识别规范化技能，区分明确要求、优先项和职责上下文；
-4. 排除不可投递岗位，生成 Top-K 覆盖排序、缺口和五步 Supervisor Trace；
-5. 仅在 `--use-llm` 时，将匿名化结构数据交给免费优先 Provider 生成行动计划。
+4. 排除不可投递岗位，生成 Top-K 覆盖排序与逐岗位证据缺口；
+5. 由 Gap Analyst 聚合多个岗位的高频缺口、影响范围与已有证据优势；
+6. 仅在 `--use-llm` 时，由 Planner 生成带产出物和验收标准的计划，再由确定性 Reviewer 复核后接纳。
 
 ![来源证据与匹配摘要](docs/assets/lina-evidence-result.png)
 
@@ -50,8 +51,12 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 flowchart LR
     FILE[TXT / Markdown / DOCX] --> INGEST[证据块摄取]
     INGEST --> AGENT[CareerMatch Supervisor]
+    AGENT --> PROFILE[Candidate Analyst]
+    AGENT --> JOB[Job Analyst]
     AGENT --> MATCHER[技能证据排序]
-    AGENT -. 显式启用 .-> LLM[Groq keys → Agnes → NVIDIA → 可选 DeepSeek]
+    MATCHER --> GAP[Gap Analyst]
+    GAP -. 显式启用 .-> LLM[Planner: Groq keys → Agnes → NVIDIA → 可选 DeepSeek]
+    LLM --> REVIEW[Deterministic Plan Reviewer]
     UI[Web 工作台] --> API[FastAPI API]
     API --> APP[应用服务]
     APP --> REPO[Repository 协议]
@@ -89,7 +94,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 资格判断 | 纯领域规则 | 结果稳定，并能返回完整失败原因 |
 | 模糊表达 | 警告 + 人工复核 | 避免把偏好条件误判为硬性要求 |
 | 技能证据映射 | 当前确定性词表；待真实标注校准 | 先获得可重复基线，再引入语义抽取 |
-| 行动计划 | 显式 opt-in 的结构化模型节点 | 输入最小化，输出必须通过 Schema |
+| 行动计划 | 显式 opt-in 的 Planner + 确定性 Reviewer | 输入最小化；输出必须通过 Schema、技能白名单和优先级复核 |
 | 外部副作用 | 规划中的人工审批节点 | 让用户保持对高影响操作的控制权 |
 
 这是项目最核心的架构判断：Agent 应当编排工具和不确定性，而不是用概率性行为替代可靠代码。
@@ -98,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 88 个测试通过 |
+| 自动化测试 | 100 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -179,7 +184,7 @@ uv run --locked python -m lina_agent.evaluation.job_parser \
 | `POST` | `/jobs/parse` | 预览约束及其来源证据 |
 | `POST` | `/jobs` | 保存用户确认后的岗位 |
 | `POST` | `/matches` | 执行确定性硬条件检查 |
-| `POST` | `/agent/runs` | 以 Base64 文件运行确定性证据匹配 Agent |
+| `POST` | `/agent/runs` | 以 Base64 文件运行证据 Agent；`use_llm=true` 时显式启用计划与复核 |
 
 抽取示例：
 
@@ -203,7 +208,10 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - API、领域层、应用层、基础设施层和评测测试；
 - TXT、Markdown、DOCX 统一证据摄取与文本框兜底；
 - 真实 JD 目录解析、技能证据 Top-K、Supervisor Trace 和本地 CLI；
+- 跨 Top-K 的能力缺口聚合、证据优势汇总和确定性优先级；
 - 支持 Groq、Agnes、NVIDIA、DeepSeek 的免费优先 Provider 路由与显式 opt-in 智能行动计划；
+- 带目标技能、产出物、验收标准和时间预算的计划契约，以及拒绝无证据技能的 Reviewer；
+- 模型失败时保留确定性结果并返回 `degraded` 的可观测降级状态；
 - 版本化评测数据与工程迭代记录。
 
 当前尚未实现，也不会提前宣称：
@@ -213,7 +221,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持在线岗位采集或公司调研；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界工作流 Agent：它具备目标、类型化工具、状态、证据、停止条件、Trace 和可选模型节点，但还没有持久化恢复、开放式任务规划、自然语言会话或多智能体协作。下一步先为真实匿名简历与岗位建立人工技能/Top-K 标注，校准词表、权重和引用支持率，再持久化文档、确认状态与 Agent Run；PDF 与爬虫不会先于这条质量基线。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步先为真实匿名简历与岗位建立人工技能/Top-K 标注，校准词表、权重和引用支持率，再持久化文档、确认状态与 Agent Run；PDF、爬虫和新版 Web 展示不会先于这条质量基线。
 
 ## 参考文档
 
@@ -225,7 +233,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
 | [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
 | [开发指南](docs/DEVELOPMENT.md) | 开发流程、质量门禁和发布步骤 |
-| [0.1.2 发布测试手册](docs/RELEASE_TESTING_0.1.2.md) | 从版本同步、Web、CLI、API、Provider 到失败路径的逐步验收 |
+| [0.2.0 发布测试手册](docs/RELEASE_TESTING_0.2.0.md) | 从多节点缺口、LLM 计划、Reviewer、降级到 Web 边界的逐步验收 |
 | [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |
 | [数据匿名化与标注指南](docs/DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核方法 |
 | [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |

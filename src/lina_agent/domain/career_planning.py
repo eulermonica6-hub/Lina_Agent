@@ -5,8 +5,12 @@ from lina_agent.domain.models import DomainModel
 
 class CareerPlanAction(DomainModel):
     priority: int = Field(ge=1, le=3)
+    target_skills: tuple[str, ...] = Field(min_length=1, max_length=3)
     action: str = Field(min_length=1, max_length=200)
     reason: str = Field(min_length=1, max_length=300)
+    deliverable: str = Field(min_length=1, max_length=200)
+    acceptance_criteria: str = Field(min_length=1, max_length=300)
+    time_budget_hours: int = Field(ge=1, le=80)
 
 
 class CareerActionPlan(DomainModel):

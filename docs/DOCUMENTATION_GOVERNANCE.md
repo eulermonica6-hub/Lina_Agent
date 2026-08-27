@@ -11,7 +11,7 @@
 | `docs/USER_GUIDE.md` | 当前版本实际可执行的操作 | API、页面、字段、启动方式或限制变化 |
 | `docs/CODING_PLAN.md` | 未来阶段、依赖关系和验收标准 | 路线、优先级或阶段状态变化 |
 | `docs/DEVELOPMENT.md` | 开发环境、质量门禁和发布流程 | 工具、命令、CI 或协作流程变化 |
-| `docs/RELEASE_TESTING_0.1.2.md` | 当前发布版本的逐步验收操作与预期结果 | 版本、入口、测试命令、指标或发布边界变化 |
+| `docs/RELEASE_TESTING_0.2.0.md` | 当前发布版本的逐步验收操作与预期结果 | 版本、入口、测试命令、指标或发布边界变化 |
 | `docs/KNOWLEDGE_BASE.md` | 迭代日志和知识主题索引 | 每次可验收迭代完成 |
 | `docs/MVP_IMPLEMENTATION.md` | MVP 当时的实现与复盘 | 历史记录原则上冻结，只补当前路线导航 |
 | `docs/JOB_MONITORING.md` | 岗位监控规划与契约 | 监控设计或实现状态变化 |

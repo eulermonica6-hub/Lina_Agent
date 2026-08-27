@@ -94,6 +94,7 @@ class RankedJobMatch(DomainModel):
     matched_required: tuple[EvidenceMatch, ...] = ()
     missing_required: tuple[SkillMention, ...] = ()
     matched_preferred: tuple[EvidenceMatch, ...] = ()
+    missing_preferred: tuple[SkillMention, ...] = ()
     matched_contextual: tuple[EvidenceMatch, ...] = ()
 
 
@@ -144,7 +145,7 @@ def score_job_match(
 ) -> RankedJobMatch:
     candidate_by_skill = {mention.skill: mention for mention in candidate.skills}
     matched_required, missing_required = _partition_matches(candidate_by_skill, skills.required)
-    matched_preferred, _ = _partition_matches(candidate_by_skill, skills.preferred)
+    matched_preferred, missing_preferred = _partition_matches(candidate_by_skill, skills.preferred)
     matched_contextual, _ = _partition_matches(candidate_by_skill, skills.contextual)
 
     required_coverage = _coverage(len(matched_required), len(skills.required))
@@ -181,6 +182,7 @@ def score_job_match(
         matched_required=matched_required,
         missing_required=missing_required,
         matched_preferred=matched_preferred,
+        missing_preferred=missing_preferred,
         matched_contextual=matched_contextual,
     )
 

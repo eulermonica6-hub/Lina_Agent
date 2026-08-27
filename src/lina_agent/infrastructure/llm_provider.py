@@ -75,6 +75,8 @@ class LLMRequest(DomainModel):
     messages: tuple[LLMMessage, ...] = Field(min_length=1)
     max_tokens: int = Field(default=1024, ge=1, le=8192)
     temperature: float = Field(default=0.1, gt=0, le=2)
+    response_format: Literal["text", "json_object"] = "text"
+    reasoning_effort: Literal["none", "default"] | None = None
 
 
 class LLMUsage(DomainModel):
@@ -222,12 +224,19 @@ class OpenAICompatibleLLM:
         self._transport = transport
 
     def complete(self, request: LLMRequest) -> LLMResult:
-        payload = {
+        payload: dict[str, object] = {
             "model": self._config.model,
             "messages": [message.model_dump(mode="json") for message in request.messages],
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
         }
+        if self._config.provider is LLMProviderName.GROQ:
+            if request.response_format == "json_object":
+                payload["response_format"] = {"type": "json_object"}
+            if request.reasoning_effort is not None and self._config.model.startswith(
+                "qwen/qwen3."
+            ):
+                payload["reasoning_effort"] = request.reasoning_effort
         headers = {
             "Authorization": f"Bearer {self._config.api_key.get_secret_value()}",
             "Content-Type": "application/json",

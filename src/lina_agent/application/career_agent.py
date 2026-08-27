@@ -4,7 +4,14 @@ from uuid import UUID, uuid4
 
 from pydantic import Field
 
-from lina_agent.application.career_planner import CareerPlanner
+from lina_agent.application.career_planner import CareerPlanner, CareerPlannerError
+from lina_agent.domain.career_gap import (
+    CareerGapAnalysis,
+    CareerPlanReview,
+    PlanReviewStatus,
+    analyze_career_gaps,
+    review_action_plan,
+)
 from lina_agent.domain.career_matching import (
     CandidateDocumentProfile,
     RankedJobMatch,
@@ -21,10 +28,29 @@ from lina_agent.infrastructure.document_loader import LocalDocumentLoader
 
 class AgentRunState(StrEnum):
     COMPLETE = "complete"
+    DEGRADED = "degraded"
+
+
+class AgentStepStatus(StrEnum):
+    COMPLETE = "complete"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class AgentRole(StrEnum):
+    DOCUMENT_INGESTOR = "document_ingestor"
+    CANDIDATE_ANALYST = "candidate_analyst"
+    JOB_ANALYST = "job_analyst"
+    MATCHER = "matcher"
+    GAP_ANALYST = "gap_analyst"
+    CAREER_PLANNER = "career_planner"
+    PLAN_REVIEWER = "plan_reviewer"
 
 
 class AgentStep(DomainModel):
     name: str = Field(min_length=1)
+    role: AgentRole
+    status: AgentStepStatus = AgentStepStatus.COMPLETE
     summary: str = Field(min_length=1)
 
 
@@ -37,13 +63,15 @@ class CareerAgentRun(DomainModel):
     considered_jobs: int = Field(ge=0)
     excluded_inactive_jobs: int = Field(ge=0)
     matches: tuple[RankedJobMatch, ...] = ()
+    gap_analysis: CareerGapAnalysis
     action_plan: CareerActionPlan | None = None
+    action_plan_review: CareerPlanReview | None = None
     steps: tuple[AgentStep, ...] = Field(min_length=1)
     warnings: tuple[str, ...] = ()
 
 
 class CareerMatchAgent:
-    """A bounded supervisor with deterministic tools and an optional planning node."""
+    """A bounded supervisor for deterministic specialists and an optional LLM planner."""
 
     def __init__(
         self,
@@ -78,13 +106,14 @@ class CareerMatchAgent:
         *,
         top_k: int = 5,
         include_inactive: bool = False,
+        planner: CareerPlanner | None = None,
     ) -> CareerAgentRun:
         return CareerMatchAgent._execute_documents(
             resume,
             job_catalog,
             top_k=top_k,
             include_inactive=include_inactive,
-            planner=None,
+            planner=planner,
         )
 
     @staticmethod
@@ -123,54 +152,122 @@ class CareerMatchAgent:
         if not considered:
             warnings.append("没有可参与排序的岗位。")
 
-        action_plan = (
-            planner.create_plan(candidate, ranked) if planner is not None and ranked else None
-        )
-        if planner is not None and not ranked:
-            warnings.append("没有匹配结果，因此跳过智能行动计划。")
-
+        gap_analysis = analyze_career_gaps(ranked)
         steps = [
             AgentStep(
                 name="ingest_resume",
+                role=AgentRole.DOCUMENT_INGESTOR,
                 summary=f"从 {resume.source_name} 建立 {len(resume.blocks)} 个证据块。",
             ),
             AgentStep(
                 name="ingest_job_catalog",
+                role=AgentRole.DOCUMENT_INGESTOR,
                 summary=f"从 {job_catalog.source_name} 建立 {len(job_catalog.blocks)} 个证据块。",
             ),
             AgentStep(
                 name="extract_candidate_facts",
+                role=AgentRole.CANDIDATE_ANALYST,
                 summary=f"识别 {len(candidate.skills)} 项候选人技能。",
             ),
             AgentStep(
                 name="parse_job_catalog",
+                role=AgentRole.JOB_ANALYST,
                 summary=f"解析 {len(jobs)} 个岗位，{len(considered)} 个进入排序。",
             ),
             AgentStep(
                 name="rank_jobs",
+                role=AgentRole.MATCHER,
                 summary=f"返回前 {len(ranked)} 个证据匹配结果。",
             ),
+            AgentStep(
+                name="analyze_skill_gaps",
+                role=AgentRole.GAP_ANALYST,
+                summary=(
+                    f"聚合 {gap_analysis.analyzed_jobs} 个岗位，识别 "
+                    f"{len(gap_analysis.gaps)} 项能力缺口与 "
+                    f"{len(gap_analysis.strengths)} 项证据优势。"
+                ),
+            ),
         ]
-        if action_plan is not None:
+
+        state = AgentRunState.COMPLETE
+        action_plan: CareerActionPlan | None = None
+        action_plan_review: CareerPlanReview | None = None
+        if planner is not None and ranked:
+            try:
+                generated_plan = planner.create_plan(candidate, ranked, gap_analysis)
+            except CareerPlannerError as error:
+                state = AgentRunState.DEGRADED
+                warnings.append(f"智能行动计划已降级：{error}")
+                steps.append(
+                    AgentStep(
+                        name="generate_action_plan",
+                        role=AgentRole.CAREER_PLANNER,
+                        status=AgentStepStatus.FAILED,
+                        summary="模型计划节点失败，确定性匹配与缺口分析仍然可用。",
+                    )
+                )
+            else:
+                steps.append(
+                    AgentStep(
+                        name="generate_action_plan",
+                        role=AgentRole.CAREER_PLANNER,
+                        summary=(
+                            f"使用 {generated_plan.provider}/{generated_plan.model} 生成 "
+                            f"{len(generated_plan.priority_actions)} 项行动。"
+                        ),
+                    )
+                )
+                action_plan_review = review_action_plan(
+                    generated_plan,
+                    candidate,
+                    gap_analysis,
+                )
+                if action_plan_review.status is PlanReviewStatus.VERIFIED:
+                    action_plan = generated_plan
+                    steps.append(
+                        AgentStep(
+                            name="verify_action_plan",
+                            role=AgentRole.PLAN_REVIEWER,
+                            summary=(
+                                f"验证 {action_plan_review.checked_actions} 项行动和 "
+                                f"{len(action_plan_review.verified_target_skills)} 项目标技能。"
+                            ),
+                        )
+                    )
+                else:
+                    state = AgentRunState.DEGRADED
+                    warnings.extend(action_plan_review.issues)
+                    steps.append(
+                        AgentStep(
+                            name="verify_action_plan",
+                            role=AgentRole.PLAN_REVIEWER,
+                            status=AgentStepStatus.FAILED,
+                            summary="模型计划未通过确定性证据复核，已拒绝进入正式结果。",
+                        )
+                    )
+        elif planner is not None:
+            warnings.append("没有匹配结果，因此跳过智能行动计划。")
             steps.append(
                 AgentStep(
                     name="generate_action_plan",
-                    summary=(
-                        f"使用 {action_plan.provider}/{action_plan.model} 生成 "
-                        f"{len(action_plan.priority_actions)} 项行动。"
-                    ),
+                    role=AgentRole.CAREER_PLANNER,
+                    status=AgentStepStatus.SKIPPED,
+                    summary="没有匹配结果，未调用模型计划节点。",
                 )
             )
 
         return CareerAgentRun(
-            state=AgentRunState.COMPLETE,
+            state=state,
             candidate=candidate,
             job_catalog_document_id=job_catalog.id,
             total_jobs=len(jobs),
             considered_jobs=len(considered),
             excluded_inactive_jobs=excluded_count,
             matches=ranked,
+            gap_analysis=gap_analysis,
             action_plan=action_plan,
+            action_plan_review=action_plan_review,
             steps=tuple(steps),
             warnings=tuple(warnings),
         )

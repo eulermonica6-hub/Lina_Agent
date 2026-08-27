@@ -19,6 +19,7 @@
 | 011 | 2026-08-26 | P0 工程基线与浏览器竞态自动化 | 保证 UTF-8、依赖和异步状态在 Linux/Windows 可重复验证 | [P0 工程基线迭代](iterations/011-p0-engineering-baseline.md) |
 | 012 | 2026-08-26 | 首个证据驱动职业匹配 Agent | 从真实 DOCX 与 JD 生成可解释 Top-K，并可选生成匿名化智能计划 | [初步 Agent 核心迭代](iterations/012-initial-career-agent.md) |
 | 013 | 2026-08-27 | 多 Provider 路由与 Git 连接诊断 | 增加 Agnes、多 Groq 凭据故障切换和可复现的网络分层定位 | [Provider 与连接迭代](iterations/013-provider-routing-and-connectivity.md) |
+| 014 | 2026-08-27 | 可验证、可降级的多节点 Agent 内核 | 聚合多岗位能力缺口，约束并复核 LLM 计划，模型失败时保留确定性结果 | [多节点核心迭代](iterations/014-verifiable-multi-node-agent-core.md) |
 
 ## 文档入口
 

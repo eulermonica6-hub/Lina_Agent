@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from lina_agent.application.career_agent import AgentRunState, CareerMatchAgent
+from lina_agent.application.career_agent import (
+    AgentRunState,
+    AgentStepStatus,
+    CareerMatchAgent,
+)
+from lina_agent.application.career_planner import CareerPlannerError
+from lina_agent.domain.career_gap import CareerGapAnalysis, PlanReviewStatus
 from lina_agent.domain.career_matching import CandidateDocumentProfile, RankedJobMatch
 from lina_agent.domain.career_planning import CareerActionPlan, CareerPlanAction
 from lina_agent.infrastructure.document_loader import LocalDocumentLoader
@@ -31,14 +37,24 @@ class _FakePlanner:
         self,
         candidate: CandidateDocumentProfile,
         matches: tuple[RankedJobMatch, ...],
+        gap_analysis: CareerGapAnalysis,
     ) -> CareerActionPlan:
         self.calls += 1
         assert candidate.skills
         assert matches
+        assert gap_analysis.analyzed_jobs == 1
         return CareerActionPlan(
             summary="测试计划",
             priority_actions=(
-                CareerPlanAction(priority=1, action="补齐缺口", reason="岗位证据要求"),
+                CareerPlanAction(
+                    priority=1,
+                    target_skills=("Python",),
+                    action="强化项目证据",
+                    reason="岗位证据要求",
+                    deliverable="项目说明",
+                    acceptance_criteria="包含可复现步骤",
+                    time_budget_hours=4,
+                ),
             ),
             provider="groq",
             model="test-model",
@@ -67,7 +83,10 @@ def test_executes_end_to_end_path_workflow_and_excludes_inactive_jobs(tmp_path: 
         "extract_candidate_facts",
         "parse_job_catalog",
         "rank_jobs",
+        "analyze_skill_gaps",
     ]
+    assert run.gap_analysis.analyzed_jobs == 1
+    assert [strength.skill for strength in run.gap_analysis.strengths] == ["Python", "RAG"]
     assert any("排除了 1 个" in warning for warning in run.warnings)
 
 
@@ -100,6 +119,8 @@ def test_reports_empty_candidate_and_no_considered_jobs() -> None:
     run = CareerMatchAgent.execute_documents(resume, jobs)
 
     assert run.matches == ()
+    assert run.gap_analysis.analyzed_jobs == 0
+    assert run.gap_analysis.gaps == ()
     assert any("未识别到技能词" in warning for warning in run.warnings)
     assert any("没有可参与排序" in warning for warning in run.warnings)
 
@@ -125,7 +146,9 @@ def test_optional_planner_adds_action_plan_and_trace(tmp_path: Path) -> None:
     assert planner.calls == 1
     assert run.action_plan is not None
     assert run.action_plan.summary == "测试计划"
-    assert run.steps[-1].name == "generate_action_plan"
+    assert run.action_plan_review is not None
+    assert run.action_plan_review.status is PlanReviewStatus.VERIFIED
+    assert run.steps[-1].name == "verify_action_plan"
 
 
 def test_optional_planner_is_skipped_without_ranked_jobs(tmp_path: Path) -> None:
@@ -142,4 +165,67 @@ def test_optional_planner_is_skipped_without_ranked_jobs(tmp_path: Path) -> None
 
     assert planner.calls == 0
     assert run.action_plan is None
+    assert run.steps[-1].status is AgentStepStatus.SKIPPED
     assert any("跳过智能行动计划" in warning for warning in run.warnings)
+
+
+class _FailingPlanner:
+    def create_plan(
+        self,
+        candidate: CandidateDocumentProfile,
+        matches: tuple[RankedJobMatch, ...],
+        gap_analysis: CareerGapAnalysis,
+    ) -> CareerActionPlan:
+        raise CareerPlannerError("测试模型不可用")
+
+
+class _UnsupportedSkillPlanner:
+    def create_plan(
+        self,
+        candidate: CandidateDocumentProfile,
+        matches: tuple[RankedJobMatch, ...],
+        gap_analysis: CareerGapAnalysis,
+    ) -> CareerActionPlan:
+        return CareerActionPlan(
+            summary="包含无证据技能",
+            priority_actions=(
+                CareerPlanAction(
+                    priority=1,
+                    target_skills=("Kubernetes",),
+                    action="部署集群",
+                    reason="模型自行扩展",
+                    deliverable="集群",
+                    acceptance_criteria="可以访问",
+                    time_budget_hours=8,
+                ),
+            ),
+            provider="groq",
+            model="test-model",
+            total_tokens=10,
+        )
+
+
+@pytest.mark.parametrize(
+    ("planner", "warning"),
+    [
+        (_FailingPlanner(), "测试模型不可用"),
+        (_UnsupportedSkillPlanner(), "无证据技能"),
+    ],
+)
+def test_planner_failure_or_rejection_degrades_without_losing_matches(
+    tmp_path: Path,
+    planner: _FailingPlanner | _UnsupportedSkillPlanner,
+    warning: str,
+) -> None:
+    resume_path = tmp_path / "resume.txt"
+    jobs_path = tmp_path / "jobs.md"
+    resume_path.write_text("Python", encoding="utf-8")
+    jobs_path.write_text(ACTIVE_AND_INACTIVE_JOBS, encoding="utf-8")
+
+    run = CareerMatchAgent(planner=planner).execute_paths(resume_path, jobs_path)
+
+    assert run.state is AgentRunState.DEGRADED
+    assert run.matches
+    assert run.action_plan is None
+    assert run.steps[-1].status is AgentStepStatus.FAILED
+    assert any(warning in item for item in run.warnings)

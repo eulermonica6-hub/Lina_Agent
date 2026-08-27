@@ -4,6 +4,7 @@ from pydantic import Base64Bytes, BaseModel, Field
 from lina_agent.application.career_agent import CareerAgentRun, CareerMatchAgent
 from lina_agent.domain.job_catalog import JobCatalogParseError
 from lina_agent.infrastructure.document_loader import DocumentLoadError, LocalDocumentLoader
+from lina_agent.infrastructure.llm_career_planner import LLMCareerPlanner
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -18,6 +19,7 @@ class CareerAgentRequest(BaseModel):
     job_catalog: EncodedDocument
     top_k: int = Field(default=5, ge=1, le=50)
     include_inactive: bool = False
+    use_llm: bool = False
 
 
 @router.post("/runs", response_model=CareerAgentRun)
@@ -31,6 +33,7 @@ def create_agent_run(request: CareerAgentRequest) -> CareerAgentRun:
             catalog,
             top_k=request.top_k,
             include_inactive=request.include_inactive,
+            planner=LLMCareerPlanner() if request.use_llm else None,
         )
     except (DocumentLoadError, JobCatalogParseError) as error:
         raise HTTPException(
