@@ -4,6 +4,14 @@
 
 ## 环境准备
 
+推荐从已提交的 VS Code 工作区开始：
+
+```powershell
+code Lina_Agent.code-workspace
+```
+
+工作区提供 FastAPI、匿名文件 Agent 和当前 pytest 文件三组调试入口，以及依赖同步、快速测试、Playwright 和完整质量门禁任务。VS Code 测试侧栏默认跳过浏览器测试以缩短红绿循环；提交前仍必须执行完整门禁。Windows 与 WSL 应分别选择各自的 Python 虚拟环境。代码地图、断点顺序与扩展规范见 [工程代码技术书](ENGINEERING_HANDBOOK.md)。
+
 ```bash
 uv sync --extra dev --locked
 uv run --extra dev --locked playwright install chromium

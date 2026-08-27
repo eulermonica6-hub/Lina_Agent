@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- 新增可提交的 VS Code 工作区，固化推荐扩展、FastAPI/匿名 Agent/pytest 调试入口，以及依赖、测试和完整质量门禁任务。
+- 新增完整工程代码技术书，统一代码框架、领域契约、双链数据流、扩展方法和从 Gold Set 到语义匹配的未来行动顺序。
+- 移除 Pyright 对 `.venv` 的单一路径硬编码，使 Windows `.venv-windows` 与 WSL `.venv-wsl` 可由各自的 `uv run`/编辑器解释器解析。
 - 新增当前 Agent 工程架构与数据流基线，明确 Web 硬条件链和文件证据链尚未统一。
 - 将本地岗位采集 CJS 标记为未发布实验，并忽略浏览器 Profile 与认证页面 JSON，降低误提交风险。
 

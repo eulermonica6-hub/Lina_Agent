@@ -1,0 +1,192 @@
+{
+  "version": "2.0.0",
+  "linux": {
+    "options": {
+      "env": {
+        "UV_CACHE_DIR": "${workspaceFolder}/.uv-cache-wsl",
+        "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv-wsl"
+      }
+    }
+  },
+  "windows": {
+    "options": {
+      "env": {
+        "UV_CACHE_DIR": "${workspaceFolder}\\.uv-cache-windows",
+        "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}\\.venv-windows"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "label": "Setup: sync locked dependencies",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "sync",
+        "--extra",
+        "dev",
+        "--locked"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup: install Playwright Chromium",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "playwright",
+        "install",
+        "chromium"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: FastAPI with reload (8000)",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--locked",
+        "uvicorn",
+        "lina_agent.main:app",
+        "--app-dir",
+        "src",
+        "--reload",
+        "--port",
+        "8000"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Agent: anonymous offline smoke test",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--locked",
+        "lina-match",
+        "--resume",
+        "tests/fixtures/resume_anonymized.md",
+        "--jobs",
+        "tests/fixtures/job_catalog_anonymized.md",
+        "--top",
+        "3"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: lock check",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "lock",
+        "--check"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Ruff format check",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Ruff lint",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "ruff",
+        "check",
+        "."
+      ],
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Quality: Pyright strict",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "pyright"
+      ],
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Test: fast suite (without browser)",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "pytest",
+        "--ignore=tests/web"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Test: full quality gate",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "dev",
+        "--locked",
+        "pytest",
+        "--browser",
+        "chromium",
+        "--tracing=retain-on-failure",
+        "--cov=lina_agent",
+        "--cov-branch",
+        "--cov-report=term-missing",
+        "--cov-report=xml",
+        "--cov-fail-under=100"
+      ],
+      "problemMatcher": "$python"
+    },
+    {
+      "label": "Quality: all checks",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Quality: lock check",
+        "Quality: Ruff format check",
+        "Quality: Ruff lint",
+        "Quality: Pyright strict",
+        "Test: full quality gate"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

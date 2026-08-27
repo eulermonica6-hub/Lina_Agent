@@ -9,7 +9,11 @@ ScreenShot_*.png
 .uv-cache/
 .uv-cache-windows/
 .uv-cache-wsl/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
 __pycache__/
 *.egg-info/
 *.py[cod]

@@ -21,6 +21,7 @@
 | 013 | 2026-08-27 | 多 Provider 路由与 Git 连接诊断 | 增加 Agnes、多 Groq 凭据故障切换和可复现的网络分层定位 | [Provider 与连接迭代](iterations/013-provider-routing-and-connectivity.md) |
 | 014 | 2026-08-27 | 可验证、可降级的多节点 Agent 内核 | 聚合多岗位能力缺口，约束并复核 LLM 计划，模型失败时保留确定性结果 | [多节点核心迭代](iterations/014-verifiable-multi-node-agent-core.md) |
 | 015 | 2026-08-27 | Agent 架构与数据流基线 | 明确双内核、完整输入输出、数据传输、实验脚本边界与后续收敛顺序 | [架构与数据流迭代](iterations/015-agent-architecture-dataflow-baseline.md) |
+| 016 | 2026-08-27 | VS Code 工程框架与完整技术书 | 用统一工作区、调试任务、代码地图和演进规则降低后续接手与迭代成本 | [工程框架迭代](iterations/016-vscode-engineering-handbook.md) |
 
 ## 文档入口
 
@@ -29,6 +30,7 @@
 | 第一次使用 Lina | [当前版本使用手册](USER_GUIDE.md) | 安装、启动、操作、API、隐私和故障处理 |
 | 浏览项目概况 | [项目 README](../README.md) | 当前能力、目标、技术路线和文档导航 |
 | 参与开发 | [开发指南](DEVELOPMENT.md) | 环境、测试驱动流程和质量门禁 |
+| 系统学习完整代码 | [工程代码技术书](ENGINEERING_HANDBOOK.md) | 分层、领域契约、数据流、VS Code 调试、扩展方法和未来行动 |
 | 查看后续规划 | [Coding Plan](CODING_PLAN.md) | 阶段目标、验收标准和知识路线 |
 | 理解当前数据流 | [Agent 架构与数据流](AGENT_ARCHITECTURE.md) | 入口、领域契约、节点方向、脚本和架构债务 |
 | 复盘实现过程 | 本知识库的迭代索引 | 决策、失败、心得、验证和面试素材 |

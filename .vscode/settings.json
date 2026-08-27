@@ -1,0 +1,48 @@
+{
+  "editor.formatOnSave": true,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/__pycache__": true,
+    "**/*.egg-info": true
+  },
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/src"
+  ],
+  "python.analysis.typeCheckingMode": "strict",
+  "python.testing.pytestArgs": [
+    "tests",
+    "--ignore=tests/web"
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "search.exclude": {
+    "**/.browser-profile-jobs": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/.venv": true,
+    "**/.venv-windows": true,
+    "**/.venv-wsl": true,
+    "**/__pycache__": true,
+    "data/private": true,
+    "test-results": true
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.env.linux": {
+    "UV_CACHE_DIR": "${workspaceFolder}/.uv-cache-wsl",
+    "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}/.venv-wsl"
+  },
+  "terminal.integrated.env.windows": {
+    "UV_CACHE_DIR": "${workspaceFolder}\\.uv-cache-windows",
+    "UV_PROJECT_ENVIRONMENT": "${workspaceFolder}\\.venv-windows"
+  },
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
+}

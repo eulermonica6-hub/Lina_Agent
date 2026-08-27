@@ -7,6 +7,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/USER_GUIDE.md",
     "docs/CODING_PLAN.md",
     "docs/AGENT_ARCHITECTURE.md",
+    "docs/ENGINEERING_HANDBOOK.md",
     "docs/DEVELOPMENT.md",
     "docs/RELEASE_TESTING_0.2.0.md",
     "docs/KNOWLEDGE_BASE.md",
