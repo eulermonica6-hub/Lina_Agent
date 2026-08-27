@@ -10,6 +10,8 @@
 
 扩展经济型模型路由和凭据级故障切换。
 
+完整验收命令和预期结果见 [0.1.2 发布测试手册](docs/RELEASE_TESTING_0.1.2.md)。
+
 ### 新增
 
 - 接入 OpenAI-compatible Agnes Provider，默认模型为 `agnes-2.5-flash`。

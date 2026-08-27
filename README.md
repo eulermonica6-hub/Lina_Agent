@@ -225,6 +225,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
 | [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
 | [开发指南](docs/DEVELOPMENT.md) | 开发流程、质量门禁和发布步骤 |
+| [0.1.2 发布测试手册](docs/RELEASE_TESTING_0.1.2.md) | 从版本同步、Web、CLI、API、Provider 到失败路径的逐步验收 |
 | [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |
 | [数据匿名化与标注指南](docs/DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核方法 |
 | [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |

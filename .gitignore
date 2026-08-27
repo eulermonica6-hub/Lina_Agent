@@ -3,6 +3,11 @@
 ScreenShot_*.png
 .idea/
 .venv/
+.venv-windows/
+.venv-wsl/
+.uv-cache/
+.uv-cache-windows/
+.uv-cache-wsl/
 .vscode/
 __pycache__/
 *.egg-info/

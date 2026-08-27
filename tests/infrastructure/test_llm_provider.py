@@ -47,7 +47,7 @@ def _request() -> LLMRequest:
 def test_auto_selection_prefers_first_groq_key_without_exposing_it(tmp_path: Path) -> None:
     key_file = tmp_path / "keys.txt"
     key_file.write_text(
-        "deepseek=sk-deepseek\nnvidia=nvapi-nvidia\ngroq=gsk_first\ngsk_second\nagnes=sk-agnes",
+        "deepseek=sk-deepseek\nnvidia=nvapi-nvidia\ngroq=gsk_first\ngsk_second\ngsk_first\nagnes=sk-agnes",
         encoding="utf-8",
     )
 
