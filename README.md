@@ -232,6 +232,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [当前版本使用手册](docs/USER_GUIDE.md) | 安装、启动、页面流程、API、隐私和故障处理 |
 | [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
 | [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
+| [Agent 架构与数据流](docs/AGENT_ARCHITECTURE.md) | 当前入口、模块、输入输出、传输方向、脚本边界与收敛方案 |
 | [开发指南](docs/DEVELOPMENT.md) | 开发流程、质量门禁和发布步骤 |
 | [0.2.0 发布测试手册](docs/RELEASE_TESTING_0.2.0.md) | 从多节点缺口、LLM 计划、Reviewer、降级到 Web 边界的逐步验收 |
 | [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |

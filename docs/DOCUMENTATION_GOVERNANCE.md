@@ -10,6 +10,7 @@
 | `releaseNote.md` | 已发布版本的新增、修复、验证和限制 | 每次版本发布 |
 | `docs/USER_GUIDE.md` | 当前版本实际可执行的操作 | API、页面、字段、启动方式或限制变化 |
 | `docs/CODING_PLAN.md` | 未来阶段、依赖关系和验收标准 | 路线、优先级或阶段状态变化 |
+| `docs/AGENT_ARCHITECTURE.md` | 当前模块边界、入口、数据契约、传输方向和架构债务 | 新入口、新领域模型、节点、适配器、持久化或数据边界变化 |
 | `docs/DEVELOPMENT.md` | 开发环境、质量门禁和发布流程 | 工具、命令、CI 或协作流程变化 |
 | `docs/RELEASE_TESTING_0.2.0.md` | 当前发布版本的逐步验收操作与预期结果 | 版本、入口、测试命令、指标或发布边界变化 |
 | `docs/KNOWLEDGE_BASE.md` | 迭代日志和知识主题索引 | 每次可验收迭代完成 |

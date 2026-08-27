@@ -1,4 +1,5 @@
 .DS_Store
+.browser-profile-jobs/
 .env
 ScreenShot_*.png
 .idea/
@@ -24,4 +25,6 @@ build/
 
 # Private job-search data must never be committed.
 data/private/
+data/authenticated_job_pages_*.json
+data/boss_authenticated_job_pages_*.json
 LLM api key.txt
