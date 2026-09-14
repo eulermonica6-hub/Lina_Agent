@@ -16,6 +16,7 @@ from lina_agent.domain.career_matching import (
     MatchWeights,
     SkillMention,
     extract_candidate_profile,
+    extract_decision_signals,
     extract_job_skill_profile,
     score_job_match,
 )
@@ -99,6 +100,20 @@ class CareerMatchingAblationReport(DomainModel):
     skill_only: CareerMatchingEvaluationReport
     hard_skill: CareerMatchingEvaluationReport
     hard_direction_skill: CareerMatchingEvaluationReport
+
+
+class AutomaticDecisionSignalReport(DomainModel):
+    dataset_version: str
+    job_count: int = Field(ge=1)
+    hard_signal_coverage: float = Field(ge=0, le=1)
+    hard_signal_mae: float | None = Field(default=None, ge=0, le=1)
+    direction_signal_coverage: float = Field(ge=0, le=1)
+    direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
+    unknown_hard_constraint_count: int = Field(ge=0)
+    predicted_ranking: tuple[int, ...]
+    gold_ranking: tuple[int, ...]
+    top_1_accuracy: float = Field(ge=0, le=1)
+    pairwise_accuracy: float = Field(ge=0, le=1)
 
 
 def load_gold_dataset(path: Path) -> CareerMatchingGoldDataset:
@@ -210,6 +225,60 @@ def evaluate_ablations(dataset_path: Path) -> CareerMatchingAblationReport:
             dataset_path,
             ablation=MatchingAblation.HARD_DIRECTION_SKILL,
         ),
+    )
+
+
+def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecisionSignalReport:
+    dataset = load_gold_dataset(dataset_path)
+    loader = LocalDocumentLoader()
+    resume = loader.load((dataset_path.parent / dataset.resume).resolve())
+    catalog = loader.load((dataset_path.parent / dataset.job_catalog).resolve())
+    candidate = extract_candidate_profile(resume)
+    jobs = parse_job_catalog(catalog)
+    labels = {job.catalog_number: job for job in dataset.jobs}
+    extractions = {job.catalog_number: extract_decision_signals(resume, job) for job in jobs}
+    matches = tuple(
+        sorted(
+            (
+                score_job_match(
+                    candidate,
+                    job,
+                    extract_job_skill_profile(job),
+                    decision_signals=extractions[job.catalog_number].signals,
+                    decision_weights=DecisionWeights(),
+                )
+                for job in jobs
+            ),
+            key=lambda match: (-match.score, match.catalog_number),
+        )
+    )
+    hard_pairs = tuple(
+        (extraction.signals.hard_compatibility, labels[number].hard_compatibility)
+        for number, extraction in extractions.items()
+        if extraction.signals.hard_compatibility is not None
+    )
+    direction_pairs = tuple(
+        (extraction.signals.direction_alignment, labels[number].direction_alignment)
+        for number, extraction in extractions.items()
+        if extraction.signals.direction_alignment is not None
+    )
+    predicted_ranking = tuple(match.catalog_number for match in matches)
+    return AutomaticDecisionSignalReport(
+        dataset_version=dataset.dataset_version,
+        job_count=len(jobs),
+        hard_signal_coverage=_ratio(len(hard_pairs), len(jobs)),
+        hard_signal_mae=_mean_absolute_error(hard_pairs),
+        direction_signal_coverage=_ratio(len(direction_pairs), len(jobs)),
+        direction_signal_mae=_mean_absolute_error(direction_pairs),
+        unknown_hard_constraint_count=sum(
+            item.status == "unknown"
+            for extraction in extractions.values()
+            for item in extraction.hard_constraints
+        ),
+        predicted_ranking=predicted_ranking,
+        gold_ranking=dataset.gold_ranking,
+        top_1_accuracy=float(predicted_ranking[0] == dataset.gold_ranking[0]),
+        pairwise_accuracy=_pairwise_accuracy(predicted_ranking, dataset.gold_ranking),
     )
 
 
@@ -348,6 +417,11 @@ def _ratio(numerator: int, denominator: int) -> float:
     return numerator / denominator if denominator else 1.0
 
 
+def _mean_absolute_error(pairs: Iterable[tuple[float, float]]) -> float | None:
+    values = tuple(abs(predicted - expected) for predicted, expected in pairs)
+    return sum(values) / len(values) if values else None
+
+
 def _weight_grid() -> Iterable[MatchWeights]:
     for required_units in range(5, 10):
         for preferred_units in range(0, 11 - required_units):
@@ -372,13 +446,19 @@ def main(arguments: Sequence[str] | None = None) -> None:
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--calibrate", action="store_true")
     parser.add_argument("--ablate", action="store_true")
+    parser.add_argument("--auto-signals", action="store_true")
     parsed_arguments = parser.parse_args(arguments)
-    if parsed_arguments.calibrate and parsed_arguments.ablate:
-        parser.error("--calibrate and --ablate are mutually exclusive")
+    selected_modes = sum(
+        (parsed_arguments.calibrate, parsed_arguments.ablate, parsed_arguments.auto_signals)
+    )
+    if selected_modes > 1:
+        parser.error("--calibrate, --ablate and --auto-signals are mutually exclusive")
     if parsed_arguments.calibrate:
         report = calibrate_match_weights(parsed_arguments.dataset)
     elif parsed_arguments.ablate:
         report = evaluate_ablations(parsed_arguments.dataset)
+    elif parsed_arguments.auto_signals:
+        report = evaluate_automatic_decision_signals(parsed_arguments.dataset)
     else:
         report = evaluate_career_matching(parsed_arguments.dataset)
     print(report.model_dump_json(indent=2))

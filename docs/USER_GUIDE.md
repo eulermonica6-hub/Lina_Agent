@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.3
+> 适用版本：0.2.4
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -60,7 +60,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.3"
+  "version": "0.2.4"
 }
 ```
 
@@ -145,7 +145,18 @@ uv run --locked lina-match \
 
 也可以运行 `uv run --locked python -m lina_agent.cli ...`。支持的简历格式是 UTF-8 `.txt`、`.md` 和 `.docx`；JD 目录标题格式为 `### 序号. 岗位 | 公司`，半角或全角竖线均可。
 
-报告中的“证据覆盖分”由明确要求、优先项和职责上下文覆盖率加权生成。它不是录取概率；学历、毕业时间和经验年限仍需人工确认。报告还会聚合 Top-K 的能力缺口：硬性缺口权重高于优先项，`priority_score` 只表示该技能影响当前 Top-K 的相对范围，不表示学习难度。
+默认报告中的“证据覆盖分”由明确要求、优先项和职责上下文覆盖率加权生成。它不是录取概率；学历、毕业时间和经验年限仍需人工确认。报告还会聚合 Top-K 的能力缺口：硬性缺口权重高于优先项，`priority_score` 只表示该技能影响当前 Top-K 的相对范围，不表示学习难度。
+
+实验性自动综合排序需要显式启用：
+
+```bash
+uv run --locked lina-match \
+  --resume "data/private/your-resume.docx" \
+  --jobs "data/private/AI_Agent_JD.md" \
+  --auto-decision-signals
+```
+
+该模式会抽取毕业届次、学历、地点、每周到岗天数、持续月份和岗位方向，返回逐项双侧证据。缺少候选人证据的硬条件保持 `unknown` 并进入警告，不会被默认为兼容。当前 5 JD 基线上硬条件覆盖率为 `0.6`，因此默认仍使用 skill-only。
 
 ### 4.6 配置经济型模型 Provider
 
@@ -229,7 +240,7 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 `POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
 
-请求默认 `use_llm=false`，完全本地运行。只有明确设置 `use_llm=true` 才会调用经济型 Provider；成功计划经过 Reviewer 后返回。Provider 或 Schema 失败时 HTTP 请求仍返回确定性结果，`state` 为 `degraded`，失败节点的 `status` 为 `failed`。这表示模型增强失败，不表示 Top-K 和缺口分析失败。
+请求默认 `auto_decision_signals=false`、`use_llm=false`，完全本地运行。设置 `auto_decision_signals=true` 会启用本地确定性综合排序，并在 `decision_signal_extractions` 返回逐项证据；只有明确设置 `use_llm=true` 才会调用经济型 Provider。Provider 或 Schema 失败时 HTTP 请求仍返回确定性结果，`state` 为 `degraded`，失败节点的 `status` 为 `failed`。这表示模型增强失败，不表示 Top-K 和缺口分析失败。
 
 ## 6. 数据与隐私
 

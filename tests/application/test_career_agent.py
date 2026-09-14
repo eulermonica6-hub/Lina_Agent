@@ -143,6 +143,50 @@ def test_can_rank_with_confirmed_hard_and_direction_signals() -> None:
     assert any("已确认的硬条件与方向信号" in warning for warning in run.warnings)
 
 
+def test_can_opt_in_to_evidence_backed_automatic_decision_signals() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes(
+        "resume.txt",
+        "2027 届硕士，期望地点上海。目标方向：AI Agent。熟悉 Python。".encode(),
+    )
+    jobs = loader.load_bytes(
+        "jobs.md",
+        """### 1. Agent 实习生 | 甲公司
+**基本信息**
+- 工作地点：上海
+**任职要求**
+- 2027 届本科及以上学历
+- 熟悉 Python
+**岗位职责**
+- 开发 AI Agent
+""".encode(),
+    )
+
+    run = CareerMatchAgent.execute_documents(
+        resume,
+        jobs,
+        auto_decision_signals=True,
+    )
+
+    assert run.matches[0].score == 100
+    assert run.matches[0].hard_compatibility == 1
+    assert run.matches[0].direction_alignment == 1
+    assert len(run.decision_signal_extractions) == 1
+    assert any("自动抽取" in warning for warning in run.warnings)
+
+
+def test_rejects_mixed_automatic_and_confirmed_decision_signals() -> None:
+    loader = LocalDocumentLoader()
+
+    with pytest.raises(ValueError, match="不能同时"):
+        CareerMatchAgent.execute_documents(
+            loader.load_bytes("resume.txt", b"Python"),
+            loader.load_bytes("jobs.md", "### 1. 岗位 | 公司".encode()),
+            decision_signals={1: DecisionSignals(hard_compatibility=1)},
+            auto_decision_signals=True,
+        )
+
+
 def test_reports_empty_candidate_and_no_considered_jobs() -> None:
     loader = LocalDocumentLoader()
     resume = loader.load_bytes("resume.txt", "善于沟通".encode())

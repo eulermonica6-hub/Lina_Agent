@@ -15,10 +15,12 @@ from lina_agent.domain.career_gap import (
 )
 from lina_agent.domain.career_matching import (
     CandidateDocumentProfile,
+    DecisionSignalExtraction,
     DecisionSignals,
     DecisionWeights,
     RankedJobMatch,
     extract_candidate_profile,
+    extract_decision_signals,
     extract_job_skill_profile,
     score_job_match,
 )
@@ -66,6 +68,7 @@ class CareerAgentRun(DomainModel):
     considered_jobs: int = Field(ge=0)
     excluded_inactive_jobs: int = Field(ge=0)
     matches: tuple[RankedJobMatch, ...] = ()
+    decision_signal_extractions: tuple[DecisionSignalExtraction, ...] = ()
     gap_analysis: CareerGapAnalysis
     action_plan: CareerActionPlan | None = None
     action_plan_review: CareerPlanReview | None = None
@@ -93,6 +96,7 @@ class CareerMatchAgent:
         include_inactive: bool = False,
         decision_signals: Mapping[int, DecisionSignals] | None = None,
         decision_weights: DecisionWeights | None = None,
+        auto_decision_signals: bool = False,
     ) -> CareerAgentRun:
         resume = self._loader.load(resume_path)
         job_catalog = self._loader.load(job_catalog_path)
@@ -103,6 +107,7 @@ class CareerMatchAgent:
             include_inactive=include_inactive,
             decision_signals=decision_signals,
             decision_weights=decision_weights,
+            auto_decision_signals=auto_decision_signals,
             planner=self._planner,
         )
 
@@ -115,6 +120,7 @@ class CareerMatchAgent:
         include_inactive: bool = False,
         decision_signals: Mapping[int, DecisionSignals] | None = None,
         decision_weights: DecisionWeights | None = None,
+        auto_decision_signals: bool = False,
         planner: CareerPlanner | None = None,
     ) -> CareerAgentRun:
         return CareerMatchAgent._execute_documents(
@@ -124,6 +130,7 @@ class CareerMatchAgent:
             include_inactive=include_inactive,
             decision_signals=decision_signals,
             decision_weights=decision_weights,
+            auto_decision_signals=auto_decision_signals,
             planner=planner,
         )
 
@@ -136,15 +143,32 @@ class CareerMatchAgent:
         include_inactive: bool,
         decision_signals: Mapping[int, DecisionSignals] | None,
         decision_weights: DecisionWeights | None,
+        auto_decision_signals: bool,
         planner: CareerPlanner | None,
     ) -> CareerAgentRun:
         if top_k < 1:
             raise ValueError("top_k 必须大于等于 1")
+        if auto_decision_signals and decision_signals is not None:
+            raise ValueError("自动决策信号与人工确认信号不能同时提供")
 
         candidate = extract_candidate_profile(resume)
         jobs = parse_job_catalog(job_catalog)
         considered = tuple(job for job in jobs if include_inactive or job.is_active is not False)
         excluded_count = len(jobs) - len(considered)
+        extractions = (
+            tuple(extract_decision_signals(resume, job) for job in considered)
+            if auto_decision_signals
+            else ()
+        )
+        automatic_signals = (
+            {
+                job.catalog_number: extraction.signals
+                for job, extraction in zip(considered, extractions, strict=True)
+            }
+            if auto_decision_signals
+            else None
+        )
+        active_signals = automatic_signals if auto_decision_signals else decision_signals
         ranked = tuple(
             sorted(
                 (
@@ -153,8 +177,8 @@ class CareerMatchAgent:
                         job,
                         extract_job_skill_profile(job),
                         decision_signals=(
-                            decision_signals.get(job.catalog_number)
-                            if decision_signals is not None
+                            active_signals.get(job.catalog_number)
+                            if active_signals is not None
                             else None
                         ),
                         decision_weights=decision_weights,
@@ -170,11 +194,16 @@ class CareerMatchAgent:
                 "综合分使用已确认的硬条件与方向信号，不表示录取概率。"
                 if decision_signals is not None
                 else (
-                    "首版分数表示已识别技能的证据覆盖度，不表示录取概率；"
-                    "学历、年限和毕业时间仍需人工确认。"
+                    "综合分使用自动抽取的证据化信号；未知硬条件不按兼容处理，结果仍需人工确认。"
+                    if auto_decision_signals
+                    else (
+                        "首版分数表示已识别技能的证据覆盖度，不表示录取概率；"
+                        "学历、年限和毕业时间仍需人工确认。"
+                    )
                 )
             )
         ]
+        warnings.extend(warning for extraction in extractions for warning in extraction.warnings)
         if not candidate.skills:
             warnings.append("简历中未识别到技能词，请检查文档读取结果或扩展技能词表。")
         if excluded_count:
@@ -295,6 +324,7 @@ class CareerMatchAgent:
             considered_jobs=len(considered),
             excluded_inactive_jobs=excluded_count,
             matches=ranked,
+            decision_signal_extractions=extractions,
             gap_analysis=gap_analysis,
             action_plan=action_plan,
             action_plan_review=action_plan_review,

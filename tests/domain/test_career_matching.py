@@ -1,8 +1,10 @@
 from lina_agent.domain.career_matching import (
+    ConstraintStatus,
     DecisionSignals,
     DecisionWeights,
     MatchWeights,
     extract_candidate_profile,
+    extract_decision_signals,
     extract_job_skill_profile,
     score_job_match,
 )
@@ -124,3 +126,50 @@ def test_returns_zero_when_job_contains_no_taxonomy_skills() -> None:
     assert result.required_coverage is None
     assert result.preferred_coverage is None
     assert result.contextual_coverage is None
+
+
+def test_extracts_evidence_backed_decision_signals_without_assuming_unknowns() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes(
+        "resume.txt",
+        "2027 届硕士，期望地点上海。目标方向：AI Agent 与大模型应用。".encode(),
+    )
+    job = _job_from(
+        """### 1. Agent 实习生 | 甲公司
+**基本信息**
+- 工作地点：上海
+- 每周到岗 4 天，连续实习 3 个月
+**任职要求**
+- 2026、2027 届本科及以上学历
+**岗位职责**
+- 开发 AI Agent 与大模型应用
+"""
+    )
+
+    extraction = extract_decision_signals(resume, job)
+
+    assert extraction.signals.hard_compatibility == 1
+    assert extraction.signals.direction_alignment == 1
+    assert {item.name: item.status for item in extraction.hard_constraints} == {
+        "graduation_year": ConstraintStatus.MET,
+        "education": ConstraintStatus.MET,
+        "location": ConstraintStatus.MET,
+        "weekly_days": ConstraintStatus.UNKNOWN,
+        "duration_months": ConstraintStatus.UNKNOWN,
+    }
+    assert extraction.directions[0].name == "agent_llm_application"
+    for item in (*extraction.hard_constraints, *extraction.directions):
+        for evidence in (*item.candidate_evidence, *item.job_evidence):
+            source = resume if evidence.document_id == resume.id else None
+            if source is None:
+                assert evidence.text in job.raw_text
+            else:
+                assert source.text[evidence.start_offset : evidence.end_offset] == evidence.text
+
+    availability = extract_decision_signals(
+        loader.load_bytes("availability.txt", "每周实习 5 天，可连续实习 2 个月".encode()),
+        job,
+    )
+    statuses = {item.name: item.status for item in availability.hard_constraints}
+    assert statuses["weekly_days"] is ConstraintStatus.MET
+    assert statuses["duration_months"] is ConstraintStatus.UNMET

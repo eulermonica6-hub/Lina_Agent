@@ -20,6 +20,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="包含已下线或不可投递岗位",
     )
     parser.add_argument(
+        "--auto-decision-signals",
+        action="store_true",
+        help="实验性：自动抽取证据化硬条件和方向信号并用于综合排序",
+    )
+    parser.add_argument(
         "--use-llm",
         action="store_true",
         help="使用经济型 Provider 生成匿名化智能行动计划",
@@ -37,6 +42,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         arguments.jobs,
         top_k=arguments.top,
         include_inactive=arguments.include_inactive,
+        auto_decision_signals=arguments.auto_decision_signals,
     )
     if arguments.format == "json":
         print(json.dumps(run.model_dump(mode="json"), ensure_ascii=False, indent=2))

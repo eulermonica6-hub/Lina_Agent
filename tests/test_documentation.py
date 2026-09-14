@@ -22,6 +22,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/019-official-internship-verification.md",
     "docs/iterations/020-career-matching-gold-baseline.md",
     "docs/iterations/021-decision-signal-ablation.md",
+    "docs/iterations/022-automatic-decision-signal-baseline.md",
 )
 
 

@@ -12,6 +12,7 @@ from lina_agent.evaluation.career_matching import (
     calibrate_match_weights,
     citation_is_valid,
     evaluate_ablations,
+    evaluate_automatic_decision_signals,
     evaluate_career_matching,
     load_gold_dataset,
     main,
@@ -104,6 +105,17 @@ def test_ablation_combines_hard_constraints_and_direction(tmp_path: Path) -> Non
     )
 
 
+def test_evaluates_automatic_signals_separately_from_gold_injection(tmp_path: Path) -> None:
+    report = evaluate_automatic_decision_signals(_write_dataset(tmp_path))
+
+    assert report.job_count == 2
+    assert report.hard_signal_coverage == 0
+    assert report.hard_signal_mae is None
+    assert report.direction_signal_coverage == 0
+    assert report.direction_signal_mae is None
+    assert report.predicted_ranking == (1, 2)
+
+
 def test_calibrates_weights_and_cli_outputs_json(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -133,6 +145,19 @@ def test_ablation_cli_outputs_all_variants(
     payload = json.loads(capsys.readouterr().out)
 
     assert set(payload) == {"skill_only", "hard_skill", "hard_direction_skill"}
+
+
+def test_automatic_signal_cli_outputs_extraction_metrics(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = _write_dataset(tmp_path)
+
+    main([str(dataset_path), "--auto-signals"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["hard_signal_coverage"] == 0
+    assert payload["direction_signal_coverage"] == 0
 
 
 def test_default_cli_outputs_skill_only_report(

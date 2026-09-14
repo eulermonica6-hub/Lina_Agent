@@ -19,6 +19,7 @@ class CareerAgentRequest(BaseModel):
     job_catalog: EncodedDocument
     top_k: int = Field(default=5, ge=1, le=50)
     include_inactive: bool = False
+    auto_decision_signals: bool = False
     use_llm: bool = False
 
 
@@ -33,6 +34,7 @@ def create_agent_run(request: CareerAgentRequest) -> CareerAgentRun:
             catalog,
             top_k=request.top_k,
             include_inactive=request.include_inactive,
+            auto_decision_signals=request.auto_decision_signals,
             planner=LLMCareerPlanner() if request.use_llm else None,
         )
     except (DocumentLoadError, JobCatalogParseError) as error:

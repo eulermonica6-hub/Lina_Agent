@@ -1,5 +1,7 @@
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import Field
@@ -59,6 +61,29 @@ SKILL_TAXONOMY = (
     SkillTerm("Data Analysis", ("Data Analysis", "数据分析")),
 )
 _PREFERRED = re.compile(r"优先|加分|preferred", re.IGNORECASE)
+_GRADUATION = re.compile(r"(?P<year>20\d{2})\s*届")
+_EDUCATION = re.compile(r"(?P<level>大专|本科|硕士|博士)(?:及以上|以上)?(?:学历)?")
+_LOCATION = re.compile(
+    r"(?:期望(?:工作)?地点|意向(?:工作)?地点|工作地点)\s*[:：]?\s*"
+    r"(?P<value>北京|上海|广州|深圳|杭州|南京|苏州|成都|重庆|武汉|西安|天津|长沙|郑州|青岛)"
+)
+_WEEKLY_DAYS = re.compile(r"每周(?:到岗|实习)?\s*(?P<value>[1-7])\s*天")
+_DURATION_MONTHS = re.compile(r"(?:连续)?实习\s*(?P<value>\d+)\s*个?月")
+_EDUCATION_RANK = {"大专": 1, "本科": 2, "硕士": 3, "博士": 4}
+
+
+@dataclass(frozen=True)
+class DirectionTerm:
+    name: str
+    aliases: tuple[str, ...]
+
+
+DIRECTION_TAXONOMY = (
+    DirectionTerm("agent_llm_application", ("AI Agent", "智能体", "Agent", "大模型应用")),
+    DirectionTerm("ai_infrastructure", ("AI Infra", "AI 基础设施", "推理引擎", "CUDA")),
+    DirectionTerm("machine_learning", ("机器学习", "Machine Learning", "深度学习")),
+    DirectionTerm("risk_modeling", ("风控", "风险建模", "支付算法")),
+)
 
 
 class SkillMention(DomainModel):
@@ -94,6 +119,33 @@ class DecisionSignals(DomainModel):
     hard_compatibility: float | None = Field(default=None, ge=0, le=1)
     direction_alignment: float | None = Field(default=None, ge=0, le=1)
     explanations: tuple[str, ...] = ()
+
+
+class ConstraintStatus(StrEnum):
+    MET = "met"
+    UNMET = "unmet"
+    UNKNOWN = "unknown"
+
+
+class DecisionEvidenceItem(DomainModel):
+    name: str = Field(min_length=1)
+    status: ConstraintStatus
+    candidate_evidence: tuple[SourceEvidence, ...] = ()
+    job_evidence: tuple[SourceEvidence, ...] = Field(min_length=1)
+
+
+class DirectionEvidenceItem(DomainModel):
+    name: str = Field(min_length=1)
+    status: ConstraintStatus
+    candidate_evidence: tuple[SourceEvidence, ...] = ()
+    job_evidence: tuple[SourceEvidence, ...] = Field(min_length=1)
+
+
+class DecisionSignalExtraction(DomainModel):
+    signals: DecisionSignals
+    hard_constraints: tuple[DecisionEvidenceItem, ...] = ()
+    directions: tuple[DirectionEvidenceItem, ...] = ()
+    warnings: tuple[str, ...] = ()
 
 
 class DecisionWeights(DomainModel):
@@ -160,6 +212,109 @@ def extract_job_skill_profile(job: CatalogJob) -> JobSkillProfile:
         if mention.skill not in claimed_names
     )
     return JobSkillProfile(required=required, preferred=preferred, contextual=contextual)
+
+
+def extract_decision_signals(
+    candidate_document: IngestedDocument,
+    job: CatalogJob,
+) -> DecisionSignalExtraction:
+    candidate_evidence = tuple(
+        SourceEvidence(
+            document_id=candidate_document.id,
+            text=block.text,
+            start_offset=block.start_offset,
+            end_offset=block.end_offset,
+        )
+        for block in candidate_document.blocks
+    )
+    job_evidence = (*job.basic_info, *job.requirements)
+    hard_constraints = tuple(
+        item
+        for item in (
+            _compare_pattern(
+                "graduation_year",
+                candidate_evidence,
+                job_evidence,
+                _GRADUATION,
+                _year_matches,
+            ),
+            _compare_pattern(
+                "education",
+                candidate_evidence,
+                job_evidence,
+                _EDUCATION,
+                _education_matches,
+            ),
+            _compare_pattern("location", candidate_evidence, job_evidence, _LOCATION),
+            _compare_pattern(
+                "weekly_days",
+                candidate_evidence,
+                job_evidence,
+                _WEEKLY_DAYS,
+                _minimum_matches,
+            ),
+            _compare_pattern(
+                "duration_months",
+                candidate_evidence,
+                job_evidence,
+                _DURATION_MONTHS,
+                _minimum_matches,
+            ),
+        )
+        if item is not None
+    )
+    known_hard = tuple(
+        item.status for item in hard_constraints if item.status is not ConstraintStatus.UNKNOWN
+    )
+    hard_compatibility = (
+        sum(status is ConstraintStatus.MET for status in known_hard) / len(known_hard)
+        if known_hard
+        else None
+    )
+    candidate_has_direction = any(
+        _alias_evidence(candidate_evidence, term.aliases) for term in DIRECTION_TAXONOMY
+    )
+    directions = tuple(
+        item
+        for term in DIRECTION_TAXONOMY
+        if (
+            item := _direction_item(
+                term,
+                candidate_evidence,
+                (job.title_evidence, *job.responsibilities, *job.requirements),
+                candidate_has_direction,
+            )
+        )
+        is not None
+    )
+    known_directions = tuple(
+        item for item in directions if item.status is not ConstraintStatus.UNKNOWN
+    )
+    matched_directions = sum(item.status is ConstraintStatus.MET for item in known_directions)
+    direction_alignment = matched_directions / len(known_directions) if known_directions else None
+    explanations = tuple(
+        [
+            f"已核验硬条件 {len(known_hard)} 项，"
+            f"兼容 {sum(status is ConstraintStatus.MET for status in known_hard)} 项。"
+        ]
+        if known_hard
+        else []
+    ) + tuple(f"方向 {item.name}：{item.status.value}。" for item in directions)
+    warnings = tuple(
+        f"硬条件 {item.name} 缺少候选人证据，请人工确认。"
+        for item in hard_constraints
+        if item.status is ConstraintStatus.UNKNOWN
+    )
+    return DecisionSignalExtraction(
+        signals=DecisionSignals(
+            hard_compatibility=hard_compatibility,
+            direction_alignment=direction_alignment,
+            explanations=explanations,
+        ),
+        hard_constraints=hard_constraints,
+        directions=directions,
+        warnings=warnings,
+    )
 
 
 def score_job_match(
@@ -246,6 +401,126 @@ def _decision_score(
         * 100,
         1,
     )
+
+
+Comparison = Callable[[str, str, re.Pattern[str]], bool]
+
+
+def _compare_pattern(
+    name: str,
+    candidate_items: tuple[SourceEvidence, ...],
+    job_items: tuple[SourceEvidence, ...],
+    pattern: re.Pattern[str],
+    comparator: Comparison | None = None,
+) -> DecisionEvidenceItem | None:
+    job_hits = _pattern_evidence(job_items, pattern)
+    if not job_hits:
+        return None
+    candidate_hits = _pattern_evidence(candidate_items, pattern)
+    status = ConstraintStatus.UNKNOWN
+    if candidate_hits:
+        matches = comparator or _equal_matches
+        status = (
+            ConstraintStatus.MET
+            if matches(candidate_hits[0].text, job_hits[0].text, pattern)
+            else ConstraintStatus.UNMET
+        )
+    return DecisionEvidenceItem(
+        name=name,
+        status=status,
+        candidate_evidence=candidate_hits,
+        job_evidence=job_hits,
+    )
+
+
+def _pattern_evidence(
+    evidence_items: tuple[SourceEvidence, ...],
+    pattern: re.Pattern[str],
+) -> tuple[SourceEvidence, ...]:
+    return tuple(
+        SourceEvidence(
+            document_id=evidence.document_id,
+            text=match.group(),
+            start_offset=evidence.start_offset + match.start(),
+            end_offset=evidence.start_offset + match.end(),
+        )
+        for evidence in evidence_items
+        for match in pattern.finditer(evidence.text)
+    )
+
+
+def _match_group(text: str, pattern: re.Pattern[str], group: str) -> str:
+    match = pattern.search(text)
+    if match is None:  # pragma: no cover - callers only pass extracted evidence
+        raise ValueError("evidence no longer matches its extraction pattern")
+    return match.group(group)
+
+
+def _equal_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
+    return _match_group(candidate, pattern, "value") == _match_group(job, pattern, "value")
+
+
+def _year_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
+    candidate_year = _match_group(candidate, pattern, "year")
+    return candidate_year in {match.group("year") for match in pattern.finditer(job)}
+
+
+def _education_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
+    candidate_level = _match_group(candidate, pattern, "level")
+    job_level = _match_group(job, pattern, "level")
+    return _EDUCATION_RANK[candidate_level] >= _EDUCATION_RANK[job_level]
+
+
+def _minimum_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
+    candidate_value = int(_match_group(candidate, pattern, "value"))
+    job_value = int(_match_group(job, pattern, "value"))
+    return candidate_value >= job_value
+
+
+def _direction_item(
+    term: DirectionTerm,
+    candidate_items: tuple[SourceEvidence, ...],
+    job_items: tuple[SourceEvidence, ...],
+    candidate_has_direction: bool,
+) -> DirectionEvidenceItem | None:
+    job_hits = _alias_evidence(job_items, term.aliases)
+    if not job_hits:
+        return None
+    candidate_hits = _alias_evidence(candidate_items, term.aliases)
+    return DirectionEvidenceItem(
+        name=term.name,
+        status=(
+            ConstraintStatus.MET
+            if candidate_hits
+            else ConstraintStatus.UNMET
+            if candidate_has_direction
+            else ConstraintStatus.UNKNOWN
+        ),
+        candidate_evidence=candidate_hits,
+        job_evidence=job_hits,
+    )
+
+
+def _alias_evidence(
+    evidence_items: tuple[SourceEvidence, ...],
+    aliases: tuple[str, ...],
+) -> tuple[SourceEvidence, ...]:
+    hits: list[SourceEvidence] = []
+    for evidence in evidence_items:
+        match = next(
+            (match for alias in aliases if (match := _alias_pattern(alias).search(evidence.text))),
+            None,
+        )
+        if match is not None:
+            hits.append(
+                SourceEvidence(
+                    document_id=evidence.document_id,
+                    text=match.group(),
+                    start_offset=evidence.start_offset + match.start(),
+                    end_offset=evidence.start_offset + match.end(),
+                )
+            )
+    return tuple(hits[:3])
 
 
 def _extract_skill_mentions(evidence_items: tuple[SourceEvidence, ...]) -> tuple[SkillMention, ...]:
