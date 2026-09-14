@@ -30,6 +30,7 @@
 | 022 | 2026-09-14 | 自动决策信号基线 | 用证据和未知状态连接简历/JD，并独立评测自动排序 | [自动信号基线](iterations/022-automatic-decision-signal-baseline.md) |
 | 023 | 2026-09-14 | 硬条件逐项 Gold 与范围表达 | 用逐项状态和最小证据区分解析遗漏与用户事实缺失 | [逐项硬条件基线](iterations/023-hard-constraint-item-gold.md) |
 | 024 | 2026-09-14 | 候选人投入确认领域契约 | 用独立确认来源补充到岗/时长事实，不伪造文档证据 | [投入确认契约](iterations/024-candidate-availability-confirmation-contract.md) |
+| 025 | 2026-09-15 | 候选人投入确认 Gold 复跑 | 消除投入事实未知值，并定位剩余排序误差 | [确认后 Gold 复跑](iterations/025-confirmed-availability-gold-rerun.md) |
 
 ## 文档入口
 

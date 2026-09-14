@@ -154,6 +154,46 @@ def test_evaluates_automatic_signals_separately_from_gold_injection(tmp_path: Pa
     assert report.predicted_ranking == (1, 2)
 
 
+def test_automatic_signals_use_dataset_candidate_availability(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["candidate_availability"] = {"weekly_days": 5, "duration_months": 12}
+    payload["jobs"][0]["hard_constraint_labels"] = [
+        {
+            "name": "weekly_days",
+            "status": "met",
+            "candidate_evidence": [],
+            "job_evidence": ["每周 5 天"],
+        },
+        {
+            "name": "duration_months",
+            "status": "met",
+            "candidate_evidence": [],
+            "job_evidence": ["至少 1 年"],
+        },
+    ]
+    (dataset_path.parent / "jobs.md").write_text(
+        """### 1. 平台岗位 | [COMPANY_A]
+**基本信息**
+- 每周 5 天；至少 1 年
+### 2. 算法岗位 | [COMPANY_B]
+**任职要求**
+- Python 与 LangGraph
+""",
+        encoding="utf-8",
+    )
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    report = evaluate_automatic_decision_signals(dataset_path)
+
+    assert report.hard_item_count == 2
+    assert report.hard_item_known_rate == 1
+    assert report.hard_item_status_accuracy == 1
+    assert report.unknown_hard_constraint_count == 0
+    assert report.hard_evidence_precision == 1
+    assert report.hard_evidence_recall == 1
+
+
 def test_calibrates_weights_and_cli_outputs_json(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

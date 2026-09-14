@@ -9,6 +9,7 @@ from pydantic import ConfigDict, Field, model_validator
 
 from lina_agent.domain.career_matching import (
     SKILL_TAXONOMY,
+    CandidateAvailabilityConfirmation,
     CandidateDocumentProfile,
     ConstraintStatus,
     DecisionSignals,
@@ -68,6 +69,7 @@ class CareerMatchingGoldDataset(DomainModel):
     job_catalog: str = Field(min_length=1)
     gold_ranking: tuple[int, ...] = Field(min_length=1)
     annotation_policy: str = Field(min_length=1)
+    candidate_availability: CandidateAvailabilityConfirmation | None = None
     jobs: tuple[CareerMatchingGoldJob, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -258,7 +260,14 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
     candidate = extract_candidate_profile(resume)
     jobs = parse_job_catalog(catalog)
     labels = {job.catalog_number: job for job in dataset.jobs}
-    extractions = {job.catalog_number: extract_decision_signals(resume, job) for job in jobs}
+    extractions = {
+        job.catalog_number: extract_decision_signals(
+            resume,
+            job,
+            availability=dataset.candidate_availability,
+        )
+        for job in jobs
+    }
     matches = tuple(
         sorted(
             (

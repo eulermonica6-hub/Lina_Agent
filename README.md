@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.7** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.8** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -114,7 +114,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | Top-K 排序基线 | 默认 Pairwise Accuracy 0.3、Top-1 0.0；仅调技能权重不足以拟合人工排序 |
 | 决策信号消融 | 人工 hard + direction + skill 达到 Pairwise/Top-1 1.0；仅代表 oracle 上限 |
 | 自动信号基线 | 5 JD 上 Pairwise 0.7、Top-1 1.0；硬条件覆盖率 0.6，仍为实验性 opt-in |
-| 硬条件逐项基线 | 18 项状态和证据指标为 1.0；逐项已知率 0.5，仍需候选人确认投入条件 |
+| 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
 | 官方岗位核验 | 覆盖国内外 30 余家公司，5 条上海 AI 实习进入优先投递池 |
@@ -245,7 +245,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。候选人到岗和持续时长确认已具备领域契约，下一步贯通 Agent、API 和 CLI；达到冻结阈值后再讨论默认启用综合排序。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。候选人投入确认已贯通入口和私有 Gold 评测；Pairwise Accuracy 仍为 0.7，因此自动综合排序继续保持显式 opt-in，下一步分析方向标签和排序逆序对。
 
 ## 参考文档
 
@@ -276,6 +276,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [自动决策信号基线](docs/iterations/022-automatic-decision-signal-baseline.md) | 证据化状态、独立自动评测和首轮误差基线 |
 | [硬条件逐项 Gold 与范围表达](docs/iterations/023-hard-constraint-item-gold.md) | 18 项状态/证据基线与 unknown 语义 |
 | [候选人投入确认领域契约](docs/iterations/024-candidate-availability-confirmation-contract.md) | 到岗/时长确认来源与文档证据分离 |
+| [候选人投入确认 Gold 复跑](docs/iterations/025-confirmed-availability-gold-rerun.md) | 真实确认后的逐项、证据与排序指标 |
 
 ## 欢迎讨论
 
