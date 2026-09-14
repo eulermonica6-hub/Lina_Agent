@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.6
+> 适用版本：0.2.7
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -60,7 +60,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.6"
+  "version": "0.2.7"
 }
 ```
 
@@ -153,10 +153,14 @@ uv run --locked lina-match \
 uv run --locked lina-match \
   --resume "data/private/your-resume.docx" \
   --jobs "data/private/AI_Agent_JD.md" \
-  --auto-decision-signals
+  --auto-decision-signals \
+  --candidate-weekly-days 5 \
+  --candidate-duration-months 3
 ```
 
-该模式会抽取毕业届次、学历、地点、每周到岗天数、持续月份和岗位方向，返回逐项双侧证据。缺少候选人证据的硬条件保持 `unknown` 并进入警告，不会被默认为兼容。当前 5 JD 基线上硬条件覆盖率为 `0.6`，因此默认仍使用 skill-only。
+该模式会抽取毕业届次、学历、地点、每周到岗天数、持续月份和岗位方向，返回逐项双侧证据。两个候选人投入参数可单独提供，取值分别为 `1-7` 天和至少 `1` 个月，且必须与 `--auto-decision-signals` 同时使用。API 使用等价的 `candidate_availability` 对象。人工确认以 `user_confirmation` 单独记录，不生成简历原文 offset。
+
+缺少候选人证据或人工确认的硬条件保持 `unknown` 并进入警告，不会被默认为兼容。当前 5 JD 基线上硬条件覆盖率为 `0.6`，因此默认仍使用 skill-only。
 
 ### 4.6 配置经济型模型 Provider
 

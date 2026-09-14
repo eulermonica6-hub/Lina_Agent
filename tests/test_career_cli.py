@@ -86,6 +86,83 @@ def test_cli_outputs_json_and_forwards_inactive_option(
     assert payload["matches"][0]["catalog_number"] == 1
 
 
+def test_cli_forwards_candidate_availability_confirmation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(
+        "### 1. 实习岗位 | 公司\n**基本信息**\n- 每周 4 天；连续 3 个月",
+        encoding="utf-8",
+    )
+
+    main(
+        (
+            "--resume",
+            str(resume),
+            "--jobs",
+            str(jobs),
+            "--auto-decision-signals",
+            "--candidate-weekly-days",
+            "5",
+            "--candidate-duration-months",
+            "2",
+            "--format",
+            "json",
+        )
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    items = {
+        item["name"]: item for item in payload["decision_signal_extractions"][0]["hard_constraints"]
+    }
+    assert items["weekly_days"]["candidate_confirmation"]["value"] == 5
+    assert items["duration_months"]["status"] == "unmet"
+
+
+def test_cli_rejects_availability_without_automatic_signals(
+    tmp_path: Path,
+) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(JOBS, encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        main(
+            (
+                "--resume",
+                str(resume),
+                "--jobs",
+                str(jobs),
+                "--candidate-weekly-days",
+                "5",
+            )
+        )
+
+
+def test_cli_rejects_non_positive_candidate_duration(tmp_path: Path) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(JOBS, encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        main(
+            (
+                "--resume",
+                str(resume),
+                "--jobs",
+                str(jobs),
+                "--auto-decision-signals",
+                "--candidate-duration-months",
+                "0",
+            )
+        )
+
+
 def test_markdown_formatter_explains_empty_result() -> None:
     loader = LocalDocumentLoader()
     resume = loader.load_bytes("resume.txt", "沟通能力".encode())

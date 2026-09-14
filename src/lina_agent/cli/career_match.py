@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from lina_agent.application.career_agent import CareerAgentRun, CareerMatchAgent
+from lina_agent.domain.career_matching import CandidateAvailabilityConfirmation
 from lina_agent.infrastructure.llm_career_planner import LLMCareerPlanner
 
 
@@ -25,6 +26,17 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="实验性：自动抽取证据化硬条件和方向信号并用于综合排序",
     )
     parser.add_argument(
+        "--candidate-weekly-days",
+        type=int,
+        choices=range(1, 8),
+        help="人工确认每周可到岗天数 (1-7)，需同时启用自动决策信号",
+    )
+    parser.add_argument(
+        "--candidate-duration-months",
+        type=int,
+        help="人工确认可连续实习月数，需同时启用自动决策信号",
+    )
+    parser.add_argument(
         "--use-llm",
         action="store_true",
         help="使用经济型 Provider 生成匿名化智能行动计划",
@@ -36,6 +48,22 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="输出格式，默认 markdown",
     )
     arguments = parser.parse_args(argv)
+    has_availability = (
+        arguments.candidate_weekly_days is not None
+        or arguments.candidate_duration_months is not None
+    )
+    if has_availability and not arguments.auto_decision_signals:
+        parser.error("candidate availability requires --auto-decision-signals")
+    if arguments.candidate_duration_months is not None and arguments.candidate_duration_months < 1:
+        parser.error("--candidate-duration-months must be at least 1")
+    candidate_availability = (
+        CandidateAvailabilityConfirmation(
+            weekly_days=arguments.candidate_weekly_days,
+            duration_months=arguments.candidate_duration_months,
+        )
+        if has_availability
+        else None
+    )
     planner = LLMCareerPlanner() if arguments.use_llm else None
     run = CareerMatchAgent(planner=planner).execute_paths(
         arguments.resume,
@@ -43,6 +71,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         top_k=arguments.top,
         include_inactive=arguments.include_inactive,
         auto_decision_signals=arguments.auto_decision_signals,
+        candidate_availability=candidate_availability,
     )
     if arguments.format == "json":
         print(json.dumps(run.model_dump(mode="json"), ensure_ascii=False, indent=2))

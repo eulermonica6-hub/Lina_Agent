@@ -14,6 +14,7 @@ from lina_agent.domain.career_gap import (
     review_action_plan,
 )
 from lina_agent.domain.career_matching import (
+    CandidateAvailabilityConfirmation,
     CandidateDocumentProfile,
     DecisionSignalExtraction,
     DecisionSignals,
@@ -97,6 +98,7 @@ class CareerMatchAgent:
         decision_signals: Mapping[int, DecisionSignals] | None = None,
         decision_weights: DecisionWeights | None = None,
         auto_decision_signals: bool = False,
+        candidate_availability: CandidateAvailabilityConfirmation | None = None,
     ) -> CareerAgentRun:
         resume = self._loader.load(resume_path)
         job_catalog = self._loader.load(job_catalog_path)
@@ -108,6 +110,7 @@ class CareerMatchAgent:
             decision_signals=decision_signals,
             decision_weights=decision_weights,
             auto_decision_signals=auto_decision_signals,
+            candidate_availability=candidate_availability,
             planner=self._planner,
         )
 
@@ -121,6 +124,7 @@ class CareerMatchAgent:
         decision_signals: Mapping[int, DecisionSignals] | None = None,
         decision_weights: DecisionWeights | None = None,
         auto_decision_signals: bool = False,
+        candidate_availability: CandidateAvailabilityConfirmation | None = None,
         planner: CareerPlanner | None = None,
     ) -> CareerAgentRun:
         return CareerMatchAgent._execute_documents(
@@ -131,6 +135,7 @@ class CareerMatchAgent:
             decision_signals=decision_signals,
             decision_weights=decision_weights,
             auto_decision_signals=auto_decision_signals,
+            candidate_availability=candidate_availability,
             planner=planner,
         )
 
@@ -144,19 +149,25 @@ class CareerMatchAgent:
         decision_signals: Mapping[int, DecisionSignals] | None,
         decision_weights: DecisionWeights | None,
         auto_decision_signals: bool,
+        candidate_availability: CandidateAvailabilityConfirmation | None,
         planner: CareerPlanner | None,
     ) -> CareerAgentRun:
         if top_k < 1:
             raise ValueError("top_k 必须大于等于 1")
         if auto_decision_signals and decision_signals is not None:
             raise ValueError("自动决策信号与人工确认信号不能同时提供")
+        if candidate_availability is not None and not auto_decision_signals:
+            raise ValueError("候选人投入确认只能在自动决策信号开启时提供")
 
         candidate = extract_candidate_profile(resume)
         jobs = parse_job_catalog(job_catalog)
         considered = tuple(job for job in jobs if include_inactive or job.is_active is not False)
         excluded_count = len(jobs) - len(considered)
         extractions = (
-            tuple(extract_decision_signals(resume, job) for job in considered)
+            tuple(
+                extract_decision_signals(resume, job, availability=candidate_availability)
+                for job in considered
+            )
             if auto_decision_signals
             else ()
         )

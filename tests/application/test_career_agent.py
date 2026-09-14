@@ -10,6 +10,7 @@ from lina_agent.application.career_agent import (
 from lina_agent.application.career_planner import CareerPlannerError
 from lina_agent.domain.career_gap import CareerGapAnalysis, PlanReviewStatus
 from lina_agent.domain.career_matching import (
+    CandidateAvailabilityConfirmation,
     CandidateDocumentProfile,
     DecisionSignals,
     DecisionWeights,
@@ -173,6 +174,47 @@ def test_can_opt_in_to_evidence_backed_automatic_decision_signals() -> None:
     assert run.matches[0].direction_alignment == 1
     assert len(run.decision_signal_extractions) == 1
     assert any("自动抽取" in warning for warning in run.warnings)
+
+
+def test_forwards_candidate_availability_to_automatic_signals() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    jobs = loader.load_bytes(
+        "jobs.md",
+        """### 1. 实习岗位 | 甲公司
+**基本信息**
+- 每周 4 天；连续 3 个月
+**任职要求**
+- Python
+""".encode(),
+    )
+
+    run = CareerMatchAgent.execute_documents(
+        resume,
+        jobs,
+        auto_decision_signals=True,
+        candidate_availability=CandidateAvailabilityConfirmation(
+            weekly_days=5,
+            duration_months=2,
+        ),
+    )
+
+    items = {item.name: item for item in run.decision_signal_extractions[0].hard_constraints}
+    assert items["weekly_days"].status == "met"
+    assert items["duration_months"].status == "unmet"
+    assert items["weekly_days"].candidate_confirmation is not None
+    assert items["weekly_days"].candidate_confirmation.source == "user_confirmation"
+
+
+def test_rejects_candidate_availability_without_automatic_signals() -> None:
+    loader = LocalDocumentLoader()
+
+    with pytest.raises(ValueError, match="只能在自动决策信号开启时"):
+        CareerMatchAgent.execute_documents(
+            loader.load_bytes("resume.txt", b"Python"),
+            loader.load_bytes("jobs.md", "### 1. 岗位 | 公司".encode()),
+            candidate_availability=CandidateAvailabilityConfirmation(weekly_days=5),
+        )
 
 
 def test_rejects_mixed_automatic_and_confirmed_decision_signals() -> None:

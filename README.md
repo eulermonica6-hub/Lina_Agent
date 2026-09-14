@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.6** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.7** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -169,7 +169,7 @@ uv run --locked lina-match \
   --top 5
 ```
 
-实验性综合排序需显式增加 `--auto-decision-signals`。结果会返回逐项状态与双侧证据，未知硬条件进入警告而不会被默认为兼容。
+实验性综合排序需显式增加 `--auto-decision-signals`。可同时用 `--candidate-weekly-days` 和 `--candidate-duration-months` 提供人工确认的投入条件；确认来源独立记录，不伪造成简历证据。未知硬条件进入警告而不会被默认为兼容。
 
 加入 `--use-llm` 才会联网生成智能计划。默认 `auto` 依次使用多个 Groq 凭据、Agnes 和 NVIDIA；DeepSeek 需要显式选择或允许付费回退。密钥文件、环境变量和实际发送字段见 [使用手册](docs/USER_GUIDE.md)。
 

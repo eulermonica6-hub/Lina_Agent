@@ -45,6 +45,48 @@ async def test_agent_api_runs_evidence_match_workflow(agent_client: AsyncClient)
 
 
 @pytest.mark.asyncio
+async def test_agent_api_accepts_candidate_availability_confirmation(
+    agent_client: AsyncClient,
+) -> None:
+    request = {
+        "resume": _encoded("resume.txt", "Python"),
+        "job_catalog": _encoded(
+            "jobs.md",
+            "### 1. 实习岗位 | 甲公司\n**基本信息**\n- 每周 4 天；连续 3 个月",
+        ),
+        "auto_decision_signals": True,
+        "candidate_availability": {"weekly_days": 5, "duration_months": 2},
+    }
+
+    async with agent_client as client:
+        response = await client.post("/agent/runs", json=request)
+
+    assert response.status_code == 200
+    items = {
+        item["name"]: item
+        for item in response.json()["decision_signal_extractions"][0]["hard_constraints"]
+    }
+    assert items["weekly_days"]["candidate_confirmation"]["source"] == "user_confirmation"
+    assert items["duration_months"]["status"] == "unmet"
+
+
+@pytest.mark.asyncio
+async def test_agent_api_rejects_availability_without_automatic_signals(
+    agent_client: AsyncClient,
+) -> None:
+    request = {
+        "resume": _encoded("resume.txt", "Python"),
+        "job_catalog": _encoded("jobs.md", "### 1. 实习岗位 | 甲公司"),
+        "candidate_availability": {"weekly_days": 5},
+    }
+
+    async with agent_client as client:
+        response = await client.post("/agent/runs", json=request)
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_agent_api_returns_actionable_document_error(
     agent_client: AsyncClient,
 ) -> None:

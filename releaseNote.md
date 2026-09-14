@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.6`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.7`，之后按可验收用户能力递增。
+
+## 0.2.7 - 2026-09-14
+
+- Agent 的路径和文档入口可向自动决策信号透传候选人投入确认。
+- API 新增 `candidate_availability`，误在 skill-only 模式使用时返回 422。
+- CLI 新增 `--candidate-weekly-days` 和 `--candidate-duration-months`，并在未开启自动决策信号时拒绝执行。
+- 确认值继续以 `user_confirmation` 独立记录，不生成伪造的简历原文 offset；默认排序行为不变。
+- 下一步使用真实确认值复跑逐项 Gold，再评估是否满足默认启用门槛。
+- 136 项测试通过，语句与分支覆盖率均为 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.6 - 2026-09-14
 
