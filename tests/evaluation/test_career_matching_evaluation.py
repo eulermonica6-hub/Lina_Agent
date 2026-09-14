@@ -152,6 +152,37 @@ def test_evaluates_automatic_signals_separately_from_gold_injection(tmp_path: Pa
     assert report.hard_evidence_recall == 1
     assert report.hard_evidence_validity_rate == 1
     assert report.predicted_ranking == (1, 2)
+    assert report.job_breakdown[0].catalog_number == 1
+    assert report.job_breakdown[0].hard_compatibility == 1
+    assert report.job_breakdown[0].gold_hard_compatibility == 1
+    assert report.ranking_inversions == ()
+
+
+def test_automatic_signals_report_ranking_inversions(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["gold_ranking"] = [2, 1]
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    report = evaluate_automatic_decision_signals(dataset_path)
+
+    assert report.predicted_ranking == (1, 2)
+    assert report.ranking_inversions[0].gold_preferred == 2
+    assert report.ranking_inversions[0].predicted_preferred == 1
+
+
+def test_ranking_metrics_skip_gold_ties(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["gold_ranking"] = [2, 1]
+    payload["ranking_ties"] = [[1, 2]]
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    report = evaluate_automatic_decision_signals(dataset_path)
+
+    assert report.pairwise_accuracy == 1
+    assert report.top_1_accuracy == 1
+    assert report.ranking_inversions == ()
 
 
 def test_automatic_signals_use_dataset_candidate_availability(tmp_path: Path) -> None:
@@ -273,6 +304,45 @@ def test_rejects_duplicate_hard_constraint_gold_labels(tmp_path: Path) -> None:
     dataset_path.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValueError, match="unique names"):
+        load_gold_dataset(dataset_path)
+
+
+@pytest.mark.parametrize(
+    ("ranking_ties", "message"),
+    (
+        ([[1]], "at least two"),
+        ([[1, 2], [2, 1]], "at most one"),
+        ([[1, 3]], "only contain gold jobs"),
+    ),
+)
+def test_rejects_invalid_ranking_ties(
+    tmp_path: Path,
+    ranking_ties: list[list[int]],
+    message: str,
+) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["ranking_ties"] = ranking_ties
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_gold_dataset(dataset_path)
+
+
+def test_rejects_noncontiguous_ranking_ties(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["jobs"].append(
+        {
+            **payload["jobs"][1],
+            "catalog_number": 3,
+        }
+    )
+    payload["gold_ranking"] = [1, 2, 3]
+    payload["ranking_ties"] = [[1, 3]]
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="contiguous"):
         load_gold_dataset(dataset_path)
 
 

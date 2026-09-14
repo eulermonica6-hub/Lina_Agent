@@ -68,6 +68,7 @@ class CareerMatchingGoldDataset(DomainModel):
     resume: str = Field(min_length=1)
     job_catalog: str = Field(min_length=1)
     gold_ranking: tuple[int, ...] = Field(min_length=1)
+    ranking_ties: tuple[tuple[int, ...], ...] = ()
     annotation_policy: str = Field(min_length=1)
     candidate_availability: CandidateAvailabilityConfirmation | None = None
     jobs: tuple[CareerMatchingGoldJob, ...] = Field(min_length=1)
@@ -81,6 +82,22 @@ class CareerMatchingGoldDataset(DomainModel):
             raise ValueError("gold ranking must not contain duplicates")
         if set(job_numbers) != set(self.gold_ranking):
             raise ValueError("gold ranking must contain every gold job exactly once")
+        tied_numbers = tuple(number for group in self.ranking_ties for number in group)
+        if any(len(group) < 2 for group in self.ranking_ties):
+            raise ValueError("ranking tie groups must contain at least two jobs")
+        if len(set(tied_numbers)) != len(tied_numbers):
+            raise ValueError("jobs may appear in at most one ranking tie group")
+        if not set(tied_numbers) <= set(job_numbers):
+            raise ValueError("ranking tie groups must only contain gold jobs")
+        positions = {number: index for index, number in enumerate(self.gold_ranking)}
+        if any(
+            max(positions[number] for number in group)
+            - min(positions[number] for number in group)
+            + 1
+            != len(group)
+            for group in self.ranking_ties
+        ):
+            raise ValueError("ranking tie groups must be contiguous in the gold ranking")
         return self
 
 
@@ -120,6 +137,27 @@ class CareerMatchingAblationReport(DomainModel):
     hard_direction_skill: CareerMatchingEvaluationReport
 
 
+class AutomaticDirectionStatus(DomainModel):
+    name: str = Field(min_length=1)
+    status: ConstraintStatus
+
+
+class AutomaticDecisionJobBreakdown(DomainModel):
+    catalog_number: int = Field(ge=1)
+    skill_score: float = Field(ge=0, le=100)
+    hard_compatibility: float | None = Field(default=None, ge=0, le=1)
+    gold_hard_compatibility: float = Field(ge=0, le=1)
+    direction_alignment: float | None = Field(default=None, ge=0, le=1)
+    gold_direction_alignment: float = Field(ge=0, le=1)
+    total_score: float = Field(ge=0, le=100)
+    directions: tuple[AutomaticDirectionStatus, ...] = ()
+
+
+class RankingInversion(DomainModel):
+    gold_preferred: int = Field(ge=1)
+    predicted_preferred: int = Field(ge=1)
+
+
 class AutomaticDecisionSignalReport(DomainModel):
     dataset_version: str
     job_count: int = Field(ge=1)
@@ -136,6 +174,8 @@ class AutomaticDecisionSignalReport(DomainModel):
     hard_evidence_validity_rate: float | None = Field(default=None, ge=0, le=1)
     predicted_ranking: tuple[int, ...]
     gold_ranking: tuple[int, ...]
+    job_breakdown: tuple[AutomaticDecisionJobBreakdown, ...]
+    ranking_inversions: tuple[RankingInversion, ...]
     top_1_accuracy: float = Field(ge=0, le=1)
     pairwise_accuracy: float = Field(ge=0, le=1)
 
@@ -236,8 +276,16 @@ def evaluate_career_matching(
         citation_support_rate=_ratio(supported_citations, len(citations)),
         predicted_ranking=predicted_ranking,
         gold_ranking=dataset.gold_ranking,
-        top_1_accuracy=float(predicted_ranking[0] == dataset.gold_ranking[0]),
-        pairwise_accuracy=_pairwise_accuracy(predicted_ranking, dataset.gold_ranking),
+        top_1_accuracy=_top_1_accuracy(
+            predicted_ranking,
+            dataset.gold_ranking,
+            dataset.ranking_ties,
+        ),
+        pairwise_accuracy=_pairwise_accuracy(
+            predicted_ranking,
+            dataset.gold_ranking,
+            dataset.ranking_ties,
+        ),
     )
 
 
@@ -337,6 +385,7 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
         if key in expected_items
     )
     predicted_ranking = tuple(match.catalog_number for match in matches)
+    matches_by_number = {match.catalog_number: match for match in matches}
     return AutomaticDecisionSignalReport(
         dataset_version=dataset.dataset_version,
         job_count=len(jobs),
@@ -373,8 +422,37 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
         ),
         predicted_ranking=predicted_ranking,
         gold_ranking=dataset.gold_ranking,
-        top_1_accuracy=float(predicted_ranking[0] == dataset.gold_ranking[0]),
-        pairwise_accuracy=_pairwise_accuracy(predicted_ranking, dataset.gold_ranking),
+        job_breakdown=tuple(
+            AutomaticDecisionJobBreakdown(
+                catalog_number=job.catalog_number,
+                skill_score=matches_by_number[job.catalog_number].skill_score,
+                hard_compatibility=extractions[job.catalog_number].signals.hard_compatibility,
+                gold_hard_compatibility=labels[job.catalog_number].hard_compatibility,
+                direction_alignment=extractions[job.catalog_number].signals.direction_alignment,
+                gold_direction_alignment=labels[job.catalog_number].direction_alignment,
+                total_score=matches_by_number[job.catalog_number].score,
+                directions=tuple(
+                    AutomaticDirectionStatus(name=item.name, status=item.status)
+                    for item in extractions[job.catalog_number].directions
+                ),
+            )
+            for job in jobs
+        ),
+        ranking_inversions=_ranking_inversions(
+            predicted_ranking,
+            dataset.gold_ranking,
+            dataset.ranking_ties,
+        ),
+        top_1_accuracy=_top_1_accuracy(
+            predicted_ranking,
+            dataset.gold_ranking,
+            dataset.ranking_ties,
+        ),
+        pairwise_accuracy=_pairwise_accuracy(
+            predicted_ranking,
+            dataset.gold_ranking,
+            dataset.ranking_ties,
+        ),
     )
 
 
@@ -498,15 +576,58 @@ def _citation_supports_skill(skill: str, citation: SourceEvidence) -> bool:
     )
 
 
-def _pairwise_accuracy(predicted: tuple[int, ...], gold: tuple[int, ...]) -> float:
+def _top_1_accuracy(
+    predicted: tuple[int, ...],
+    gold: tuple[int, ...],
+    ties: tuple[tuple[int, ...], ...],
+) -> float:
+    top_group = next((group for group in ties if gold[0] in group), (gold[0],))
+    return float(predicted[0] in top_group)
+
+
+def _pairwise_accuracy(
+    predicted: tuple[int, ...],
+    gold: tuple[int, ...],
+    ties: tuple[tuple[int, ...], ...] = (),
+) -> float:
     predicted_positions = {number: index for index, number in enumerate(predicted)}
+    tied_pairs = _tied_pairs(ties)
     correct = 0
     total = 0
     for left_index, left in enumerate(gold):
         for right in gold[left_index + 1 :]:
+            if frozenset((left, right)) in tied_pairs:
+                continue
             total += 1
             correct += predicted_positions[left] < predicted_positions[right]
     return _ratio(correct, total)
+
+
+def _ranking_inversions(
+    predicted: tuple[int, ...],
+    gold: tuple[int, ...],
+    ties: tuple[tuple[int, ...], ...] = (),
+) -> tuple[RankingInversion, ...]:
+    predicted_positions = {number: index for index, number in enumerate(predicted)}
+    tied_pairs = _tied_pairs(ties)
+    return tuple(
+        RankingInversion(gold_preferred=left, predicted_preferred=right)
+        for left_index, left in enumerate(gold)
+        for right in gold[left_index + 1 :]
+        if frozenset((left, right)) not in tied_pairs
+        and predicted_positions[left] > predicted_positions[right]
+    )
+
+
+def _tied_pairs(
+    ties: tuple[tuple[int, ...], ...],
+) -> set[frozenset[int]]:
+    return {
+        frozenset((left, right))
+        for group in ties
+        for left_index, left in enumerate(group)
+        for right in group[left_index + 1 :]
+    }
 
 
 def _ratio(numerator: int, denominator: int) -> float:

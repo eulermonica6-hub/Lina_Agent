@@ -31,6 +31,7 @@
 | 023 | 2026-09-14 | 硬条件逐项 Gold 与范围表达 | 用逐项状态和最小证据区分解析遗漏与用户事实缺失 | [逐项硬条件基线](iterations/023-hard-constraint-item-gold.md) |
 | 024 | 2026-09-14 | 候选人投入确认领域契约 | 用独立确认来源补充到岗/时长事实，不伪造文档证据 | [投入确认契约](iterations/024-candidate-availability-confirmation-contract.md) |
 | 025 | 2026-09-15 | 候选人投入确认 Gold 复跑 | 消除投入事实未知值，并定位剩余排序误差 | [确认后 Gold 复跑](iterations/025-confirmed-availability-gold-rerun.md) |
+| 026 | 2026-09-15 | 排序并列与逆序对分析 | 尊重同优先级偏好，并将排序误差定位到具体分量 | [并列与逆序分析](iterations/026-ranking-ties-and-inversion-analysis.md) |
 
 ## 文档入口
 
