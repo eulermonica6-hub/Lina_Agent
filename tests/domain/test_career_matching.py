@@ -1,6 +1,7 @@
 import pytest
 
 from lina_agent.domain.career_matching import (
+    CandidateAvailabilityConfirmation,
     ConstraintStatus,
     DecisionSignals,
     DecisionWeights,
@@ -243,3 +244,38 @@ def test_keeps_only_the_candidate_evidence_used_for_constraint_comparison() -> N
     education = next(item for item in extraction.hard_constraints if item.name == "education")
     assert education.status is ConstraintStatus.MET
     assert tuple(item.text for item in education.candidate_evidence) == ("硕士",)
+
+
+def test_applies_confirmed_availability_without_fabricating_document_evidence() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", "Python 项目".encode())
+    job = _job_from(
+        """### 1. 实习岗位 | 甲公司
+**基本信息**
+- 每周 4 天；连续 3 个月
+"""
+    )
+
+    unknown = extract_decision_signals(resume, job)
+    confirmed = extract_decision_signals(
+        resume,
+        job,
+        availability=CandidateAvailabilityConfirmation(
+            weekly_days=5,
+            duration_months=2,
+        ),
+    )
+
+    assert {item.name: item.status for item in unknown.hard_constraints} == {
+        "weekly_days": ConstraintStatus.UNKNOWN,
+        "duration_months": ConstraintStatus.UNKNOWN,
+    }
+    confirmed_items = {item.name: item for item in confirmed.hard_constraints}
+    assert confirmed_items["weekly_days"].status is ConstraintStatus.MET
+    assert confirmed_items["duration_months"].status is ConstraintStatus.UNMET
+    assert confirmed_items["weekly_days"].candidate_evidence == ()
+    assert confirmed_items["weekly_days"].candidate_confirmation is not None
+    assert confirmed_items["weekly_days"].candidate_confirmation.value == 5
+    assert confirmed_items["weekly_days"].candidate_confirmation.source == "user_confirmation"
+    assert confirmed.signals.hard_compatibility == 0.5
+    assert confirmed.warnings == ()

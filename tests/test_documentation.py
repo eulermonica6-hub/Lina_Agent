@@ -25,6 +25,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/021-decision-signal-ablation.md",
     "docs/iterations/022-automatic-decision-signal-baseline.md",
     "docs/iterations/023-hard-constraint-item-gold.md",
+    "docs/iterations/024-candidate-availability-confirmation-contract.md",
 )
 
 

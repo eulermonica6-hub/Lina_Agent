@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.5** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.6** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 128 个测试通过 |
+| 自动化测试 | 129 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -245,7 +245,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步采集候选人每周到岗和持续时长确认，降低真实 unknown；达到冻结阈值后再讨论默认启用综合排序。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。候选人到岗和持续时长确认已具备领域契约，下一步贯通 Agent、API 和 CLI；达到冻结阈值后再讨论默认启用综合排序。
 
 ## 参考文档
 
@@ -275,6 +275,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [决策信号桥接与排序消融](docs/iterations/021-decision-signal-ablation.md) | 人工硬条件/方向信号、三组消融与自动抽取边界 |
 | [自动决策信号基线](docs/iterations/022-automatic-decision-signal-baseline.md) | 证据化状态、独立自动评测和首轮误差基线 |
 | [硬条件逐项 Gold 与范围表达](docs/iterations/023-hard-constraint-item-gold.md) | 18 项状态/证据基线与 unknown 语义 |
+| [候选人投入确认领域契约](docs/iterations/024-candidate-availability-confirmation-contract.md) | 到岗/时长确认来源与文档证据分离 |
 
 ## 欢迎讨论
 

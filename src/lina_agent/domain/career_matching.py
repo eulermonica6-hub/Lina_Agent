@@ -132,10 +132,27 @@ class ConstraintStatus(StrEnum):
     UNKNOWN = "unknown"
 
 
+class ConfirmationUnit(StrEnum):
+    DAYS_PER_WEEK = "days_per_week"
+    MONTHS = "months"
+
+
+class CandidateAvailabilityConfirmation(DomainModel):
+    weekly_days: int | None = Field(default=None, ge=1, le=7)
+    duration_months: int | None = Field(default=None, ge=1)
+
+
+class ConfirmedCandidateFact(DomainModel):
+    value: int = Field(ge=1)
+    unit: ConfirmationUnit
+    source: str = "user_confirmation"
+
+
 class DecisionEvidenceItem(DomainModel):
     name: str = Field(min_length=1)
     status: ConstraintStatus
     candidate_evidence: tuple[SourceEvidence, ...] = ()
+    candidate_confirmation: ConfirmedCandidateFact | None = None
     job_evidence: tuple[SourceEvidence, ...] = Field(min_length=1)
 
 
@@ -222,6 +239,7 @@ def extract_job_skill_profile(job: CatalogJob) -> JobSkillProfile:
 def extract_decision_signals(
     candidate_document: IngestedDocument,
     job: CatalogJob,
+    availability: CandidateAvailabilityConfirmation | None = None,
 ) -> DecisionSignalExtraction:
     candidate_evidence = tuple(
         SourceEvidence(
@@ -251,19 +269,29 @@ def extract_decision_signals(
                 _education_matches,
             ),
             _compare_pattern("location", candidate_evidence, job_evidence, _LOCATION),
-            _compare_pattern(
-                "weekly_days",
-                candidate_evidence,
-                job_evidence,
-                _WEEKLY_DAYS,
-                _minimum_matches,
+            _with_confirmation(
+                _compare_pattern(
+                    "weekly_days",
+                    candidate_evidence,
+                    job_evidence,
+                    _WEEKLY_DAYS,
+                    _minimum_matches,
+                ),
+                availability.weekly_days if availability is not None else None,
+                ConfirmationUnit.DAYS_PER_WEEK,
+                _integer_value,
             ),
-            _compare_pattern(
-                "duration_months",
-                candidate_evidence,
-                job_evidence,
-                _DURATION,
-                _duration_matches,
+            _with_confirmation(
+                _compare_pattern(
+                    "duration_months",
+                    candidate_evidence,
+                    job_evidence,
+                    _DURATION,
+                    _duration_matches,
+                ),
+                availability.duration_months if availability is not None else None,
+                ConfirmationUnit.MONTHS,
+                _duration_months,
             ),
         )
         if item is not None
@@ -409,6 +437,28 @@ def _decision_score(
 
 
 Comparison = Callable[[str, str, re.Pattern[str]], bool]
+RequirementValue = Callable[[str, re.Pattern[str]], int]
+
+
+def _with_confirmation(
+    item: DecisionEvidenceItem | None,
+    value: int | None,
+    unit: ConfirmationUnit,
+    requirement_value: RequirementValue,
+) -> DecisionEvidenceItem | None:
+    if item is None or value is None:
+        return item
+    required = requirement_value(item.job_evidence[0].text, _pattern_for_unit(unit))
+    return item.model_copy(
+        update={
+            "status": ConstraintStatus.MET if value >= required else ConstraintStatus.UNMET,
+            "candidate_confirmation": ConfirmedCandidateFact(value=value, unit=unit),
+        }
+    )
+
+
+def _pattern_for_unit(unit: ConfirmationUnit) -> re.Pattern[str]:
+    return _WEEKLY_DAYS if unit is ConfirmationUnit.DAYS_PER_WEEK else _DURATION
 
 
 def _compare_pattern(
@@ -481,9 +531,13 @@ def _education_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bo
 
 
 def _minimum_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
-    candidate_value = int(_match_group(candidate, pattern, "value"))
-    job_value = int(_match_group(job, pattern, "value"))
+    candidate_value = _integer_value(candidate, pattern)
+    job_value = _integer_value(job, pattern)
     return candidate_value >= job_value
+
+
+def _integer_value(text: str, pattern: re.Pattern[str]) -> int:
+    return int(_match_group(text, pattern, "value"))
 
 
 def _duration_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:

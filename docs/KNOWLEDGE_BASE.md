@@ -29,6 +29,7 @@
 | 021 | 2026-09-14 | 决策信号桥接与排序消融 | 验证硬条件与方向信息对人工 Top-K 的贡献 | [决策信号消融](iterations/021-decision-signal-ablation.md) |
 | 022 | 2026-09-14 | 自动决策信号基线 | 用证据和未知状态连接简历/JD，并独立评测自动排序 | [自动信号基线](iterations/022-automatic-decision-signal-baseline.md) |
 | 023 | 2026-09-14 | 硬条件逐项 Gold 与范围表达 | 用逐项状态和最小证据区分解析遗漏与用户事实缺失 | [逐项硬条件基线](iterations/023-hard-constraint-item-gold.md) |
+| 024 | 2026-09-14 | 候选人投入确认领域契约 | 用独立确认来源补充到岗/时长事实，不伪造文档证据 | [投入确认契约](iterations/024-candidate-availability-confirmation-contract.md) |
 
 ## 文档入口
 
