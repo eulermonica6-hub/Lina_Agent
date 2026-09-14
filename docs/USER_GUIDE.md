@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.0
+> 适用版本：0.2.1
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -23,32 +23,29 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | 联网岗位和公司查询 | 不可用 | 尚无 Search Provider 或来源适配器 |
 | DOCX 简历解析 | 可用 | 支持正文、表格和文本框中的文字 |
 | PDF/OCR | 不可用 | 尚不处理 PDF、扫描件和图片内文字 |
+| 官方 JD 离线摄取 | 开发工具 | 人工运行脚本，输出仅保存到 Git 忽略的私有目录 |
 | 数据持久化 | 不可用 | 重启后画像和岗位会丢失 |
 
 ## 2. 启动 Lina
 
 ### 2.1 首次安装
 
-要求 macOS、Linux 或 Windows WSL，并安装 Python 3.12+。
+要求 macOS、Linux、Windows 或 Windows WSL，并安装 Python 3.12+ 与 uv。
 
 ```bash
 cp .env.example .env
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
+uv sync --extra dev --locked
+uv run --extra dev --locked playwright install chromium
 ```
 
-项目当前不要求全局安装 `uv`。已经使用 `uv` 的环境也可以执行：
-
-```bash
-uv sync --extra dev
-```
+Linux 首次安装浏览器时，将最后一条命令改为 `playwright install --with-deps chromium`，同时安装 Chromium 所需系统库。
 
 ### 2.2 启动服务
 
 在项目根目录运行：
 
 ```bash
-.venv/bin/python -m uvicorn lina_agent.main:app --app-dir src --reload --port 8000
+uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 ```
 
 保持终端运行，然后访问：
@@ -63,7 +60,7 @@ uv sync --extra dev
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.0"
+  "version": "0.2.1"
 }
 ```
 
@@ -250,7 +247,7 @@ curl -X POST http://127.0.0.1:8000/matches \
 先访问 <http://127.0.0.1:8000/health>。如果返回 Lina 信息，说明服务已经运行，无需重复启动。否则改用其他端口：
 
 ```bash
-.venv/bin/python -m uvicorn lina_agent.main:app --app-dir src --reload --port 8001
+uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8001
 ```
 
 然后访问 <http://127.0.0.1:8001/>。
@@ -288,10 +285,12 @@ Groq 单个凭据出现 401/403、429、网络错误、无效响应或部分 5xx
 提交变更前运行：
 
 ```bash
-.venv/bin/ruff format --check .
-.venv/bin/ruff check .
-.venv/bin/pyright
-.venv/bin/python -m pytest --cov --cov-branch
+uv lock --check
+uv run --extra dev --locked ruff format --check .
+uv run --extra dev --locked ruff check .
+uv run --extra dev --locked pyright
+uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failure \
+  --cov=lina_agent --cov-branch --cov-fail-under=100
 ```
 
 当前阶段的实现与复盘见 [MVP 实现日志](MVP_IMPLEMENTATION.md)和 [JD 解析迭代日志](iterations/002-jd-constraint-extraction.md)。
@@ -301,7 +300,7 @@ Groq 单个凭据出现 401/403、429、网络错误、无效响应或部分 5xx
 开发者可以对固定的 6 例匿名标注集运行离线评测：
 
 ```bash
-PYTHONPATH=src .venv/bin/python -m lina_agent.evaluation.job_parser \
+uv run --locked python -m lina_agent.evaluation.job_parser \
   tests/fixtures/job_parser_evaluation.json
 ```
 

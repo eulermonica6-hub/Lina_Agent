@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from lina_agent.domain.documents import (
     DocumentBlock,
@@ -85,3 +86,14 @@ def test_rejects_document_without_supported_job_headings() -> None:
 
     with pytest.raises(JobCatalogParseError, match="没有找到"):
         parse_job_catalog(document)
+
+
+def test_document_block_rejects_non_increasing_offsets() -> None:
+    with pytest.raises(ValidationError, match="end_offset must be greater than start_offset"):
+        DocumentBlock(
+            index=0,
+            kind=DocumentBlockKind.PARAGRAPH,
+            text="Python",
+            start_offset=10,
+            end_offset=4,
+        )

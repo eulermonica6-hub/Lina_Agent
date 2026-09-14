@@ -35,3 +35,13 @@ def test_source_evidence_requires_non_empty_text() -> None:
             start_offset=0,
             end_offset=1,
         )
+
+
+def test_source_evidence_rejects_non_increasing_offsets() -> None:
+    with pytest.raises(ValidationError, match="end_offset must be greater than start_offset"):
+        SourceEvidence(
+            document_id=uuid4(),
+            text="Python",
+            start_offset=10,
+            end_offset=4,
+        )

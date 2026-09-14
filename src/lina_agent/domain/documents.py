@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from lina_agent.domain.models import DomainModel
+from lina_agent.domain.models import DomainModel, TextSpan
 
 
 class DocumentFormat(StrEnum):
@@ -18,12 +18,10 @@ class DocumentBlockKind(StrEnum):
     PARAGRAPH = "paragraph"
 
 
-class DocumentBlock(DomainModel):
+class DocumentBlock(TextSpan):
     index: int = Field(ge=0)
     kind: DocumentBlockKind
     text: str = Field(min_length=1)
-    start_offset: int = Field(ge=0)
-    end_offset: int = Field(gt=0)
 
 
 class IngestedDocument(DomainModel):

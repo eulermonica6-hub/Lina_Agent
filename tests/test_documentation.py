@@ -16,6 +16,9 @@ IMPORTANT_DOCUMENTS = (
     "docs/DOCUMENTATION_GOVERNANCE.md",
     "docs/DATA_ANNOTATION.md",
     "docs/evaluations/JD_PARSER_BASELINE.md",
+    "docs/iterations/017-public-jd-ingestion.md",
+    "docs/iterations/018-shanghai-ai-internship-scope.md",
+    "docs/iterations/019-official-internship-verification.md",
 )
 
 

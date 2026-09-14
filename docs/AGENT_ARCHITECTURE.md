@@ -1,7 +1,7 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.0
-> 基线提交：`9782913`（`Build verifiable multi-node agent core`）
+> 适用版本：0.2.1
+> 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
 ## 1. 一句话结论
@@ -420,28 +420,11 @@ sequenceDiagram
 
 CI 在 Ubuntu 和 Windows 上执行锁文件检查、依赖同步、Chromium 安装、Ruff、Pyright strict、pytest 和 100% 覆盖率；失败时上传 Playwright Trace。
 
-### 11.2 本地未跟踪采集实验
+### 11.2 官方 JD 离线摄取
 
-当前工作区还有未进入 Git 的 `scripts/*.cjs` 和 `check_job_site_login.cjs`。它们不属于 0.2.0 发布包、CI 或 Agent Tool Registry。
+`scripts/ingest_amazon_ai_jobs.py` 使用官方公开接口抓取固定职位集合，并将原始快照和匿名副本分层写入 `data/private/`。脚本不绕过登录、验证码或 TLS 校验；固定职位消失时明确失败，避免数据集随搜索排序静默漂移。
 
-| 类别 | 当前输入 | 当前输出 | 外部副作用/风险 |
-| --- | --- | --- | --- |
-| 登录状态探针 | 已开启的 Chrome CDP `127.0.0.1:9222` | stdout JSON | 访问招聘网站；读取 cookie 名称/长度/到期时间，不输出值 |
-| 认证页面采集 | 硬编码 Markdown 岗位列表、登录浏览器 | `data/*authenticated_job_pages*.json` | 保存完整页面正文和选择器文本；可能含个人化页面内容 |
-| BOSS 页面诊断 | 固定或命令行 URL/编号 | stdout 或 `data/*.json` | 导航页面、等待验证、读取 DOM |
-| JD 分类构建 | 硬编码 Markdown 文件 | 新 Markdown 文件和统计 stdout | 写项目根目录；分类规则硬编码 |
-
-当前问题：
-
-- 输入/输出文件名带固定日期，不可复用；
-- 部分脚本依赖本机绝对 Node runtime 路径；
-- 没有 `package.json` / Node lock，不可在 CI 重建；
-- 直接连接登录 Chrome，属于有状态且高隐私适配器；
-- 输出 Schema 没有 Pydantic/JSON Schema 契约；
-- 采集结果尚未进入 `IngestedDocument`、`CatalogJob` 或 Agent Trace；
-- 没有幂等键、内容指纹、来源失败分类和 robots/站点策略记录。
-
-本轮只增加 Git 忽略保护：`.browser-profile-jobs/`、认证页面 JSON 不会被误提交。正式化之前不要让 Supervisor 自动调用这些脚本。
+该脚本是人工触发的数据准备工具，不属于 Agent Tool Registry，也不代表产品已实现在线岗位采集。原始职位对象、完整正文和匿名结果均受 Git 忽略规则保护；正式接入 Supervisor 前仍需统一到 `IngestedDocument`、来源失败分类、内容指纹和可审计 Trace。
 
 ## 12. 隐私与传输边界
 

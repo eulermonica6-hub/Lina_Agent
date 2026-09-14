@@ -1,7 +1,8 @@
 from enum import StrEnum
+from typing import Self
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EducationLevel(StrEnum):
@@ -16,11 +17,20 @@ class DomainModel(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
-class SourceEvidence(DomainModel):
-    document_id: UUID
-    text: str = Field(min_length=1)
+class TextSpan(DomainModel):
     start_offset: int = Field(ge=0)
     end_offset: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_offset_range(self) -> Self:
+        if self.end_offset <= self.start_offset:
+            raise ValueError("end_offset must be greater than start_offset")
+        return self
+
+
+class SourceEvidence(TextSpan):
+    document_id: UUID
+    text: str = Field(min_length=1)
 
 
 class CandidateProfile(DomainModel):

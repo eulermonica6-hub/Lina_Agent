@@ -22,6 +22,9 @@
 | 014 | 2026-08-27 | 可验证、可降级的多节点 Agent 内核 | 聚合多岗位能力缺口，约束并复核 LLM 计划，模型失败时保留确定性结果 | [多节点核心迭代](iterations/014-verifiable-multi-node-agent-core.md) |
 | 015 | 2026-08-27 | Agent 架构与数据流基线 | 明确双内核、完整输入输出、数据传输、实验脚本边界与后续收敛顺序 | [架构与数据流迭代](iterations/015-agent-architecture-dataflow-baseline.md) |
 | 016 | 2026-08-27 | VS Code 工程框架与完整技术书 | 用统一工作区、调试任务、代码地图和演进规则降低后续接手与迭代成本 | [工程框架迭代](iterations/016-vscode-engineering-handbook.md) |
+| 017 | 2026-09-03 | 公开真实 JD 摄取与匿名化 | 从官方来源建立 10 条正式岗负例候选 | [真实 JD 摄取迭代](iterations/017-public-jd-ingestion.md) |
+| 018 | 2026-09-03 | 上海 AI 实习目标范围修正 | 区分正式岗负例与待资格核验的实习候选 | [上海实习范围迭代](iterations/018-shanghai-ai-internship-scope.md) |
+| 019 | 2026-09-14 | 国内外大厂实习资格核验 | 用官网证据建立上海 AI 实习优先投递池 | [大厂实习核验](iterations/019-official-internship-verification.md) |
 
 ## 文档入口
 
