@@ -25,6 +25,7 @@
 | 017 | 2026-09-03 | 公开真实 JD 摄取与匿名化 | 从官方来源建立 10 条正式岗负例候选 | [真实 JD 摄取迭代](iterations/017-public-jd-ingestion.md) |
 | 018 | 2026-09-03 | 上海 AI 实习目标范围修正 | 区分正式岗负例与待资格核验的实习候选 | [上海实习范围迭代](iterations/018-shanghai-ai-internship-scope.md) |
 | 019 | 2026-09-14 | 国内外大厂实习资格核验 | 用官网证据建立上海 AI 实习优先投递池 | [大厂实习核验](iterations/019-official-internship-verification.md) |
+| 020 | 2026-09-14 | 技能证据与 Top-K Gold 基线 | 用真实匿名 Gold 量化抽取、引用、排序和权重边界 | [技能排序评测](iterations/020-career-matching-gold-baseline.md) |
 
 ## 文档入口
 
@@ -39,6 +40,7 @@
 | 复盘实现过程 | 本知识库的迭代索引 | 决策、失败、心得、验证和面试素材 |
 | 查看岗位监控设计 | [岗位监控设计](JOB_MONITORING.md) | 尚未实现的来源、调度和可靠性方案 |
 | 查看能力指标 | [JD 解析基线评测](evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果与失败分类 |
+| 查看技能排序指标 | [技能证据与 Top-K 基线](evaluations/CAREER_MATCHING_BASELINE.md) | 技能、匹配、引用、排序和权重校准结果 |
 | 管理重要文档 | [文档治理](DOCUMENTATION_GOVERNANCE.md) | 文档职责、事实来源和版本 Review 清单 |
 | 准备评测数据 | [数据匿名化与标注指南](DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核流程 |
 

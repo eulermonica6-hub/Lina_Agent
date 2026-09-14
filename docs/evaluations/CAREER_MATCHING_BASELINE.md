@@ -1,0 +1,47 @@
+# 技能证据与 Top-K 排序基线
+
+> 数据版本：`2026-09-14-v1`
+> 数据范围：5 条上海 AI 实习匿名 JD + 1 份匿名简历
+> 隐私边界：原始 JD、匿名目录、Gold Label 和完整 JSON 报告均位于 `data/private/`
+
+## 指标口径
+
+- **技能 Precision / Recall**：比较岗位内 `required`、`preferred`、`contextual` 三类规范技能标签。
+- **匹配 Precision / Recall**：比较模型认定“简历有证据支持”的岗位技能与人工 Gold。
+- **引用有效率**：引用的文档 ID 和字符偏移必须精确还原引用文本。
+- **引用支持率**：引用文本必须是对应规范技能的已登记别名，不能只靠邻近文本推断。
+- **Pairwise Accuracy**：Gold 排名中任意两个岗位的相对顺序是否预测正确。
+- **Top-1 Accuracy**：预测首位是否等于人工首位。
+
+## 首轮结果
+
+| 指标 | 默认权重 `0.7 / 0.2 / 0.1` |
+| --- | ---: |
+| 岗位技能 Precision / Recall / Exact Match | `1.000 / 1.000 / 1.000` |
+| 候选人匹配 Precision / Recall / Exact Match | `1.000 / 1.000 / 1.000` |
+| 引用有效率 / 支持率 | `1.000 / 1.000`（64 条引用） |
+| 预测排序 | `4 > 5 > 2 > 1 > 3` |
+| Gold 排序 | `1 > 2 > 3 > 4 > 5` |
+| Pairwise Accuracy | `0.300` |
+| Top-1 Accuracy | `0.000` |
+
+20 组可解释权重网格中，最佳结果为 `required=0.7`、`preferred=0.0`、`contextual=0.3`，预测排序 `4 > 2 > 5 > 1 > 3`，Pairwise Accuracy 提升到 `0.400`，Top-1 仍为 `0.000`。
+
+## 校准结论
+
+不修改默认权重。当前 Gold 排名综合了实习时长、方向贴合度和发展目标，而评分器只看已识别技能覆盖率。岗位 4 的技能要求较少且均有简历证据，因此即使一年承诺是明显风险，仍会获得高分。仅调三类技能权重无法表达该信息，继续拟合会在 5 条小样本上制造虚假改善。
+
+下一轮应先加入两个确定性特征，再重新校准：
+
+1. 硬条件兼容度：毕业年份、地点、每周天数、持续月份和学历。
+2. 方向适配度：Agent 主线、通用 ML、基础设施、风控算法等目标岗位族偏好。
+
+## 复现
+
+```bash
+uv run --locked python -m lina_agent.evaluation.career_matching \
+  data/private/evaluation/career_matching_gold_v1.json --calibrate \
+  > data/private/evaluation/career_matching_report_v1.json
+```
+
+Gold 必须在查看模型输出前冻结；若因标注越界修订，应记录理由并完整重跑。当前数据只用于建立工程基线，不代表生产准确率。

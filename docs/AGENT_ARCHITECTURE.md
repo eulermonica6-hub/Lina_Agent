@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.1
+> 适用版本：0.2.2
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -444,7 +444,7 @@ CI 在 Ubuntu 和 Windows 上执行锁文件检查、依赖同步、Chromium 安
 | 优先级 | 缺口 | 直接影响 |
 | --- | --- | --- |
 | P0 | 两套候选人/岗位模型未统一 | 硬条件和技能 Top-K 无法同时参与一次决策 |
-| P0 | 没有人工 Gold Set 的技能/Top-K 指标 | 无法判断词表和排序是否真的改善 |
+| P0 | 5 条 Gold 缺少硬条件与方向适配标签 | 能测量词表与引用，但无法解释人工 Top-K |
 | P0 | Agent Run、证据和确认状态不持久化 | 无历史、恢复、比较或反馈闭环 |
 | P1 | Loader/Planner 在应用层和路由直接构造 | 难以替换适配器、做后台任务和故障注入 |
 | P1 | API LLM 调用同步且逐 Provider 最长 30 秒 | 多 key 连续失败时请求延迟可能累积 |
@@ -499,15 +499,17 @@ CareerAgentState
 
 ## 15. 后续迭代顺序
 
-### Iteration A：Gold Set 与契约冻结
+### Iteration A：Gold Set 与契约冻结（已完成首轮）
 
 1. 从私有真实样本制作匿名候选人技能标注、JD required/preferred 标注和人工 Top-K；
-2. 为 `CareerAgentRun` 增加稳定 JSON Fixture 和兼容性测试；
+2. 为 Gold 数据集增加版本化 Schema、一致性校验和边界测试；
 3. 输出技能 Precision/Recall、引用支持率、Top-K 一致性，而不仅是代码覆盖率。
 
 完成标准：修改词表、权重或 Prompt 时能量化回归。
 
-### Iteration B：统一模型桥接
+当前结果：技能、匹配和引用指标均为 `1.0`；默认排序 Pairwise Accuracy 为 `0.3`，20 组权重搜索最高 `0.4`，证明排序缺少硬条件与方向适配特征。
+
+### Iteration B：统一模型桥接（下一步）
 
 1. 定义 `CandidateAggregate` / `JobAggregate` 或过渡 mapper；
 2. 把 Web 硬条件过滤放到文件 Agent 排序之前；

@@ -1,4 +1,5 @@
 from lina_agent.domain.career_matching import (
+    MatchWeights,
     extract_candidate_profile,
     extract_job_skill_profile,
     score_job_match,
@@ -31,6 +32,11 @@ def test_extracts_canonical_candidate_skills_with_precise_evidence() -> None:
     )
     assert "Agent" not in {mention.skill for mention in boundary_profile.skills}
 
+    alias_profile = extract_candidate_profile(
+        LocalDocumentLoader().load_bytes("aliases.txt", b"LLMs and HTTP API")
+    )
+    assert {mention.skill for mention in alias_profile.skills} == {"LLM", "REST API"}
+
 
 def test_classifies_requirements_and_scores_evidence_coverage() -> None:
     candidate_document = LocalDocumentLoader().load_bytes(
@@ -62,6 +68,14 @@ def test_classifies_requirements_and_scores_evidence_coverage() -> None:
     assert [item.skill for item in result.missing_required] == ["LangGraph"]
     assert [item.skill for item in result.matched_preferred] == ["RAG"]
     assert result.matched_contextual == ()
+
+    calibrated = score_job_match(
+        candidate,
+        job,
+        job_skills,
+        MatchWeights(required=0.5, preferred=0.5, contextual=0),
+    )
+    assert calibrated.score == 75.0
 
 
 def test_returns_zero_when_job_contains_no_taxonomy_skills() -> None:

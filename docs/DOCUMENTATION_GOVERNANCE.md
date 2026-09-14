@@ -19,6 +19,7 @@
 | `docs/JOB_MONITORING.md` | 岗位监控规划与契约 | 监控设计或实现状态变化 |
 | `docs/DATA_ANNOTATION.md` | 数据匿名化、标注和复核规范 | 数据 Schema、标签语义或隐私流程变化 |
 | `docs/evaluations/JD_PARSER_BASELINE.md` | 已测量的解析指标与失败分析 | 数据集、解析器或指标结果变化 |
+| `docs/evaluations/CAREER_MATCHING_BASELINE.md` | 技能、匹配、引用和 Top-K 排序基线 | Gold、词表、权重、排序特征或指标变化 |
 
 所有重要文档必须从 `README.md` 直接链接。`tests/test_documentation.py` 自动检查文件存在和链接完整性。
 

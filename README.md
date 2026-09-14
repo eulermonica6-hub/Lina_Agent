@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.1** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.2** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -93,7 +93,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 明确约束 | 确定性解析器 | 可复现，易于回归测试 |
 | 资格判断 | 纯领域规则 | 结果稳定，并能返回完整失败原因 |
 | 模糊表达 | 警告 + 人工复核 | 避免把偏好条件误判为硬性要求 |
-| 技能证据映射 | 当前确定性词表；待真实标注校准 | 先获得可重复基线，再引入语义抽取 |
+| 技能证据映射 | 确定性词表；已完成 5 条真实匿名 Gold 首轮校准 | 抽取与引用已稳定，排序待加入硬条件和方向特征 |
 | 行动计划 | 显式 opt-in 的 Planner + 确定性 Reviewer | 输入最小化；输出必须通过 Schema、技能白名单和优先级复核 |
 | 外部副作用 | 规划中的人工审批节点 | 让用户保持对高影响操作的控制权 |
 
@@ -103,13 +103,15 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 104 个测试通过 |
+| 自动化测试 | 111 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
 | API 契约 | FastAPI + Pydantic v2 |
 | 解析器评测 | Precision 1.0、Recall 0.625、Exact Match 0.5 |
 | 评测语料 | 6 个合成、人工标注、版本化案例 |
+| 技能证据评测 | 5 条真实匿名 JD；技能与匹配 Precision/Recall、引用有效率/支持率均为 1.0 |
+| Top-K 排序基线 | 默认 Pairwise Accuracy 0.3、Top-1 0.0；仅调技能权重不足以拟合人工排序 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
 | 官方岗位核验 | 覆盖国内外 30 余家公司，5 条上海 AI 实习进入优先投递池 |
@@ -184,6 +186,13 @@ uv run --locked python -m lina_agent.evaluation.job_parser \
     tests/fixtures/job_parser_evaluation.json
 ```
 
+运行私有技能证据与 Top-K 校准：
+
+```bash
+uv run --locked python -m lina_agent.evaluation.career_matching \
+  data/private/evaluation/career_matching_gold_v1.json --calibrate
+```
+
 ## API 接口
 
 | 方法 | 路径 | 用途 |
@@ -227,11 +236,11 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 当前尚未实现，也不会提前宣称：
 
 - 尚不支持 PDF、扫描件 OCR、页眉页脚或图片内文字；
-- 当前技能匹配是确定性词表覆盖，尚未完成人工 Top-K 与语义抽取评测；
+- 当前技能匹配已完成人工 Gold 评测，但排序仍只使用确定性词表覆盖，尚未接入硬条件和方向适配特征；
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步先为已通过官网核验的候选保存完整 JD 快照，并与真实匿名简历建立人工技能/Top-K 标注，校准词表、权重和引用支持率；随后再持久化文档、确认状态与 Agent Run。PDF、持续采集和新版 Web 展示不会先于这条质量基线。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步把硬条件兼容度和方向适配度接入排序，在冻结 Gold 上完成消融评测；随后再持久化文档、确认状态与 Agent Run。PDF、持续采集和新版 Web 展示不会先于这条质量基线。
 
 ## 参考文档
 
@@ -251,10 +260,12 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |
 | [MVP 实现记录](docs/MVP_IMPLEMENTATION.md) | 首个工作台的实现过程与历史复盘 |
 | [解析器评测基线](docs/evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果和失败分类 |
+| [技能证据与 Top-K 基线](docs/evaluations/CAREER_MATCHING_BASELINE.md) | 真实匿名 Gold、引用支持率、排序指标和权重校准结论 |
 | [岗位监控设计](docs/JOB_MONITORING.md) | 尚未实现的来源适配、快照、去重和周报设计 |
 | [公开 JD 摄取记录](docs/iterations/017-public-jd-ingestion.md) | 官方来源、匿名化边界和正式岗负例数据 |
 | [上海实习范围修正](docs/iterations/018-shanghai-ai-internship-scope.md) | 目标约束修正和腾讯职位族证据边界 |
 | [国内外大厂实习核验](docs/iterations/019-official-internship-verification.md) | 30 余家公司官网覆盖、资格证据和优先投递池 |
+| [技能证据与 Top-K Gold 基线](docs/iterations/020-career-matching-gold-baseline.md) | 完整 JD 快照、人工标注、首轮排序和校准失败分析 |
 
 ## 欢迎讨论
 

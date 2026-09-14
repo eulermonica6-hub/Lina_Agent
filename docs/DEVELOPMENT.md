@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.1`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.2`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一 TXT/Markdown/DOCX 摄取、真实 JD 目录解析、技能证据排序、经济型 Provider、有界 Supervisor 和首轮官网岗位核验已完成。下一步先保存优先候选的完整 JD，并制作匿名人工技能与 Top-K 标注，不先扩展 PDF 或持续采集。
+Repository、统一 TXT/Markdown/DOCX 摄取、真实 JD 目录解析、技能证据排序、经济型 Provider、有界 Supervisor、官网岗位核验和首轮匿名 Gold 评测已完成。下一步把硬条件兼容度与方向适配度接入文件 Agent 排序，并在冻结 Gold 上完成消融评测，不先扩展 PDF、持续采集或新版前端。
 
 ### 目标
 

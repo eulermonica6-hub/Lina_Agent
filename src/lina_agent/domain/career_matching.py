@@ -19,7 +19,7 @@ SKILL_TAXONOMY = (
     SkillTerm("Agent", ("AI Agent", "智能体", "Agent")),
     SkillTerm("Multi-Agent", ("Multi-Agent", "Multi Agent", "多智能体")),
     SkillTerm("RAG", ("检索增强生成", "RAG")),
-    SkillTerm("LLM", ("大语言模型", "大模型", "LLM")),
+    SkillTerm("LLM", ("大语言模型", "大模型", "LLMs", "LLM")),
     SkillTerm("LangChain", ("LangChain",)),
     SkillTerm("LangGraph", ("LangGraph",)),
     SkillTerm("Dify", ("Dify",)),
@@ -34,7 +34,9 @@ SKILL_TAXONOMY = (
     SkillTerm("SQL", ("PostgreSQL", "MySQL", "SQL")),
     SkillTerm("FastAPI", ("FastAPI",)),
     SkillTerm("Pydantic", ("Pydantic",)),
-    SkillTerm("REST API", ("RESTful API", "REST API", "API 接口")),
+    SkillTerm(
+        "REST API", ("RESTful API", "REST API", "HTTP / API", "HTTP API", "APIs", "API 接口")
+    ),
     SkillTerm("Docker", ("Docker",)),
     SkillTerm("Git", ("GitHub", "Git")),
     SkillTerm("Linux", ("Linux",)),
@@ -80,6 +82,12 @@ class EvidenceMatch(DomainModel):
     skill: str = Field(min_length=1)
     candidate_evidence: SourceEvidence
     job_evidence: SourceEvidence
+
+
+class MatchWeights(DomainModel):
+    required: float = Field(default=0.7, ge=0)
+    preferred: float = Field(default=0.2, ge=0)
+    contextual: float = Field(default=0.1, ge=0)
 
 
 class RankedJobMatch(DomainModel):
@@ -142,7 +150,9 @@ def score_job_match(
     candidate: CandidateDocumentProfile,
     job: CatalogJob,
     skills: JobSkillProfile,
+    weights: MatchWeights | None = None,
 ) -> RankedJobMatch:
+    active_weights = weights or MatchWeights()
     candidate_by_skill = {mention.skill: mention for mention in candidate.skills}
     matched_required, missing_required = _partition_matches(candidate_by_skill, skills.required)
     matched_preferred, missing_preferred = _partition_matches(candidate_by_skill, skills.preferred)
@@ -154,11 +164,11 @@ def score_job_match(
     weighted = tuple(
         (coverage, weight)
         for coverage, weight in (
-            (required_coverage, 0.7),
-            (preferred_coverage, 0.2),
-            (contextual_coverage, 0.1),
+            (required_coverage, active_weights.required),
+            (preferred_coverage, active_weights.preferred),
+            (contextual_coverage, active_weights.contextual),
         )
-        if coverage is not None
+        if coverage is not None and weight > 0
     )
     score = (
         round(
