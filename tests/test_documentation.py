@@ -15,6 +15,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/JOB_MONITORING.md",
     "docs/DOCUMENTATION_GOVERNANCE.md",
     "docs/DATA_ANNOTATION.md",
+    "docs/DECISION_SIGNAL_RULES.md",
     "docs/evaluations/JD_PARSER_BASELINE.md",
     "docs/evaluations/CAREER_MATCHING_BASELINE.md",
     "docs/iterations/017-public-jd-ingestion.md",
@@ -23,6 +24,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/020-career-matching-gold-baseline.md",
     "docs/iterations/021-decision-signal-ablation.md",
     "docs/iterations/022-automatic-decision-signal-baseline.md",
+    "docs/iterations/023-hard-constraint-item-gold.md",
 )
 
 

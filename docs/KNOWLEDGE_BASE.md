@@ -28,6 +28,7 @@
 | 020 | 2026-09-14 | 技能证据与 Top-K Gold 基线 | 用真实匿名 Gold 量化抽取、引用、排序和权重边界 | [技能排序评测](iterations/020-career-matching-gold-baseline.md) |
 | 021 | 2026-09-14 | 决策信号桥接与排序消融 | 验证硬条件与方向信息对人工 Top-K 的贡献 | [决策信号消融](iterations/021-decision-signal-ablation.md) |
 | 022 | 2026-09-14 | 自动决策信号基线 | 用证据和未知状态连接简历/JD，并独立评测自动排序 | [自动信号基线](iterations/022-automatic-decision-signal-baseline.md) |
+| 023 | 2026-09-14 | 硬条件逐项 Gold 与范围表达 | 用逐项状态和最小证据区分解析遗漏与用户事实缺失 | [逐项硬条件基线](iterations/023-hard-constraint-item-gold.md) |
 
 ## 文档入口
 
@@ -44,6 +45,7 @@
 | 查看能力指标 | [JD 解析基线评测](evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果与失败分类 |
 | 查看技能排序指标 | [技能证据与 Top-K 基线](evaluations/CAREER_MATCHING_BASELINE.md) | 技能、匹配、引用、排序和权重校准结果 |
 | 管理重要文档 | [文档治理](DOCUMENTATION_GOVERNANCE.md) | 文档职责、事实来源和版本 Review 清单 |
+| 维护决策信号 | [决策信号行为准则](DECISION_SIGNAL_RULES.md) | 抽取、证据、Gold、评测与发布约束 |
 | 准备评测数据 | [数据匿名化与标注指南](DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核流程 |
 
 ## 每次迭代的完成标准

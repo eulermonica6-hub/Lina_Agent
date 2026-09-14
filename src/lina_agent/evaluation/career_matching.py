@@ -10,6 +10,7 @@ from pydantic import ConfigDict, Field, model_validator
 from lina_agent.domain.career_matching import (
     SKILL_TAXONOMY,
     CandidateDocumentProfile,
+    ConstraintStatus,
     DecisionSignals,
     DecisionWeights,
     JobSkillProfile,
@@ -35,7 +36,22 @@ class CareerMatchingGoldJob(DomainModel):
     hard_compatibility: float = Field(ge=0, le=1)
     direction_alignment: float = Field(ge=0, le=1)
     decision_notes: tuple[str, ...] = Field(min_length=1)
+    hard_constraint_labels: tuple["HardConstraintGoldLabel", ...] = ()
     review_status: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_unique_hard_constraint_labels(self) -> "CareerMatchingGoldJob":
+        names = tuple(label.name for label in self.hard_constraint_labels)
+        if len(set(names)) != len(names):
+            raise ValueError("hard constraint labels must use unique names per job")
+        return self
+
+
+class HardConstraintGoldLabel(DomainModel):
+    name: str = Field(min_length=1)
+    status: ConstraintStatus
+    candidate_evidence: tuple[str, ...] = ()
+    job_evidence: tuple[str, ...] = Field(min_length=1)
 
 
 class MatchingAblation(StrEnum):
@@ -110,6 +126,12 @@ class AutomaticDecisionSignalReport(DomainModel):
     direction_signal_coverage: float = Field(ge=0, le=1)
     direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
     unknown_hard_constraint_count: int = Field(ge=0)
+    hard_item_count: int = Field(ge=0)
+    hard_item_known_rate: float | None = Field(default=None, ge=0, le=1)
+    hard_item_status_accuracy: float | None = Field(default=None, ge=0, le=1)
+    hard_evidence_precision: float | None = Field(default=None, ge=0, le=1)
+    hard_evidence_recall: float | None = Field(default=None, ge=0, le=1)
+    hard_evidence_validity_rate: float | None = Field(default=None, ge=0, le=1)
     predicted_ranking: tuple[int, ...]
     gold_ranking: tuple[int, ...]
     top_1_accuracy: float = Field(ge=0, le=1)
@@ -262,6 +284,49 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
         for number, extraction in extractions.items()
         if extraction.signals.direction_alignment is not None
     )
+    expected_items = {
+        (job.catalog_number, label.name): label
+        for job in dataset.jobs
+        for label in job.hard_constraint_labels
+    }
+    predicted_items = {
+        (number, item.name): item
+        for number, extraction in extractions.items()
+        for item in extraction.hard_constraints
+    }
+    status_matches = sum(
+        predicted_items.get(key) is not None and predicted_items[key].status is label.status
+        for key, label in expected_items.items()
+    )
+    expected_evidence = {
+        (number, name, side, text)
+        for (number, name), label in expected_items.items()
+        for side, texts in (
+            ("candidate", label.candidate_evidence),
+            ("job", label.job_evidence),
+        )
+        for text in texts
+    }
+    predicted_evidence = {
+        (number, item.name, side, evidence.text)
+        for (number, _), item in predicted_items.items()
+        for side, evidence_items in (
+            ("candidate", item.candidate_evidence),
+            ("job", item.job_evidence),
+        )
+        for evidence in evidence_items
+    }
+    valid_predicted_evidence = sum(
+        citation_is_valid((item.name, evidence), resume, catalog)
+        for (number, _), item in predicted_items.items()
+        if (number, item.name) in expected_items
+        for evidence in (*item.candidate_evidence, *item.job_evidence)
+    )
+    evaluated_predicted_evidence_count = sum(
+        len(item.candidate_evidence) + len(item.job_evidence)
+        for key, item in predicted_items.items()
+        if key in expected_items
+    )
     predicted_ranking = tuple(match.catalog_number for match in matches)
     return AutomaticDecisionSignalReport(
         dataset_version=dataset.dataset_version,
@@ -274,6 +339,28 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
             item.status == "unknown"
             for extraction in extractions.values()
             for item in extraction.hard_constraints
+        ),
+        hard_item_count=len(expected_items),
+        hard_item_known_rate=_optional_ratio(
+            sum(
+                item.status is not ConstraintStatus.UNKNOWN
+                for key, item in predicted_items.items()
+                if key in expected_items
+            ),
+            len(expected_items),
+        ),
+        hard_item_status_accuracy=_optional_ratio(status_matches, len(expected_items)),
+        hard_evidence_precision=_optional_ratio(
+            len(predicted_evidence & expected_evidence),
+            len(predicted_evidence),
+        ),
+        hard_evidence_recall=_optional_ratio(
+            len(predicted_evidence & expected_evidence),
+            len(expected_evidence),
+        ),
+        hard_evidence_validity_rate=_optional_ratio(
+            valid_predicted_evidence,
+            evaluated_predicted_evidence_count,
         ),
         predicted_ranking=predicted_ranking,
         gold_ranking=dataset.gold_ranking,
@@ -415,6 +502,10 @@ def _pairwise_accuracy(predicted: tuple[int, ...], gold: tuple[int, ...]) -> flo
 
 def _ratio(numerator: int, denominator: int) -> float:
     return numerator / denominator if denominator else 1.0
+
+
+def _optional_ratio(numerator: int, denominator: int) -> float | None:
+    return numerator / denominator if denominator else None
 
 
 def _mean_absolute_error(pairs: Iterable[tuple[float, float]]) -> float | None:

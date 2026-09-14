@@ -51,6 +51,14 @@ def _write_dataset(tmp_path: Path) -> Path:
                 "hard_compatibility": 1.0,
                 "direction_alignment": 1.0,
                 "decision_notes": ["兼容且方向匹配"],
+                "hard_constraint_labels": [
+                    {
+                        "name": "location",
+                        "status": "met",
+                        "candidate_evidence": ["期望城市：上海"],
+                        "job_evidence": ["上海"],
+                    }
+                ],
                 "review_status": "reviewed",
             },
             {
@@ -106,13 +114,43 @@ def test_ablation_combines_hard_constraints_and_direction(tmp_path: Path) -> Non
 
 
 def test_evaluates_automatic_signals_separately_from_gold_injection(tmp_path: Path) -> None:
-    report = evaluate_automatic_decision_signals(_write_dataset(tmp_path))
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    (dataset_path.parent / "resume.md").write_text(
+        "Python RAG\n期望城市：上海",
+        encoding="utf-8",
+    )
+    (dataset_path.parent / "jobs.md").write_text(
+        """### 1. 平台岗位 | [COMPANY_A]
+**基本信息**
+- 上海
+**岗位职责**
+- Agent 开发
+**任职要求**
+- Python
+- RAG 优先
+### 2. 算法岗位 | [COMPANY_B]
+**任职要求**
+- Python 与 LangGraph
+""",
+        encoding="utf-8",
+    )
+    payload["jobs"][0]["hard_constraint_labels"][0]["candidate_evidence"] = ["期望城市：上海"]
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    report = evaluate_automatic_decision_signals(dataset_path)
 
     assert report.job_count == 2
-    assert report.hard_signal_coverage == 0
-    assert report.hard_signal_mae is None
+    assert report.hard_signal_coverage == 0.5
+    assert report.hard_signal_mae == 0
     assert report.direction_signal_coverage == 0
     assert report.direction_signal_mae is None
+    assert report.hard_item_count == 1
+    assert report.hard_item_known_rate == 1
+    assert report.hard_item_status_accuracy == 1
+    assert report.hard_evidence_precision == 1
+    assert report.hard_evidence_recall == 1
+    assert report.hard_evidence_validity_rate == 1
     assert report.predicted_ranking == (1, 2)
 
 
@@ -184,6 +222,17 @@ def test_rejects_inconsistent_gold_ranking(tmp_path: Path) -> None:
     dataset_path.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValueError, match="every gold job"):
+        load_gold_dataset(dataset_path)
+
+
+def test_rejects_duplicate_hard_constraint_gold_labels(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    label = payload["jobs"][0]["hard_constraint_labels"][0]
+    payload["jobs"][0]["hard_constraint_labels"].append(label)
+    dataset_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="unique names"):
         load_gold_dataset(dataset_path)
 
 

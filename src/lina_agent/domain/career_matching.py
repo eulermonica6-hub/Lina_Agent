@@ -61,14 +61,19 @@ SKILL_TAXONOMY = (
     SkillTerm("Data Analysis", ("Data Analysis", "数据分析")),
 )
 _PREFERRED = re.compile(r"优先|加分|preferred", re.IGNORECASE)
-_GRADUATION = re.compile(r"(?P<year>20\d{2})\s*届")
+_GRADUATION = re.compile(r"(?P<year>20\d{2})\s*(?:届|年)(?P<onward>及以后)?")
 _EDUCATION = re.compile(r"(?P<level>大专|本科|硕士|博士)(?:及以上|以上)?(?:学历)?")
 _LOCATION = re.compile(
-    r"(?:期望(?:工作)?地点|意向(?:工作)?地点|工作地点)\s*[:：]?\s*"
+    r"(?:(?:期望(?:工作)?地点|意向(?:工作)?地点|工作地点|期望城市)\s*[:：]?\s*|^)"
     r"(?P<value>北京|上海|广州|深圳|杭州|南京|苏州|成都|重庆|武汉|西安|天津|长沙|郑州|青岛)"
 )
 _WEEKLY_DAYS = re.compile(r"每周(?:到岗|实习)?\s*(?P<value>[1-7])\s*天")
-_DURATION_MONTHS = re.compile(r"(?:连续)?实习\s*(?P<value>\d+)\s*个?月")
+_DURATION = re.compile(
+    r"(?:(?:可)?(?:连续)?(?:至少持续|至少)?实习(?:至少)?|(?:可)?连续|至少)\s*"
+    r"(?P<value>\d+|一)"
+    r"(?:\s*(?:-|\u2013|\u2014|至|到)\s*(?P<upper>\d+))?\s*个?"
+    r"(?P<unit>月|年)"
+)
 _EDUCATION_RANK = {"大专": 1, "本科": 2, "硕士": 3, "博士": 4}
 
 
@@ -257,8 +262,8 @@ def extract_decision_signals(
                 "duration_months",
                 candidate_evidence,
                 job_evidence,
-                _DURATION_MONTHS,
-                _minimum_matches,
+                _DURATION,
+                _duration_matches,
             ),
         )
         if item is not None
@@ -428,7 +433,7 @@ def _compare_pattern(
     return DecisionEvidenceItem(
         name=name,
         status=status,
-        candidate_evidence=candidate_hits,
+        candidate_evidence=candidate_hits[:1],
         job_evidence=job_hits,
     )
 
@@ -461,8 +466,12 @@ def _equal_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
 
 
 def _year_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
-    candidate_year = _match_group(candidate, pattern, "year")
-    return candidate_year in {match.group("year") for match in pattern.finditer(job)}
+    candidate_year = int(_match_group(candidate, pattern, "year"))
+    job_year = int(_match_group(job, pattern, "year"))
+    job_match = pattern.search(job)
+    if job_match is not None and job_match.group("onward") is not None:
+        return candidate_year >= job_year
+    return candidate_year in {int(match.group("year")) for match in pattern.finditer(job)}
 
 
 def _education_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
@@ -475,6 +484,16 @@ def _minimum_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool
     candidate_value = int(_match_group(candidate, pattern, "value"))
     job_value = int(_match_group(job, pattern, "value"))
     return candidate_value >= job_value
+
+
+def _duration_matches(candidate: str, job: str, pattern: re.Pattern[str]) -> bool:
+    return _duration_months(candidate, pattern) >= _duration_months(job, pattern)
+
+
+def _duration_months(text: str, pattern: re.Pattern[str]) -> int:
+    value = _match_group(text, pattern, "value")
+    amount = 1 if value == "一" else int(value)
+    return amount * 12 if _match_group(text, pattern, "unit") == "年" else amount
 
 
 def _direction_item(

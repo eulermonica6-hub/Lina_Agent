@@ -1,3 +1,5 @@
+import pytest
+
 from lina_agent.domain.career_matching import (
     ConstraintStatus,
     DecisionSignals,
@@ -173,3 +175,71 @@ def test_extracts_evidence_backed_decision_signals_without_assuming_unknowns() -
     statuses = {item.name: item.status for item in availability.hard_constraints}
     assert statuses["weekly_days"] is ConstraintStatus.MET
     assert statuses["duration_months"] is ConstraintStatus.UNMET
+
+
+@pytest.mark.parametrize(
+    ("candidate_availability", "job_requirement", "expected_status"),
+    [
+        ("可连续实习至少一年", "至少 1 年", ConstraintStatus.MET),
+        ("可连续实习 4 个月", "连续 3-4 个月", ConstraintStatus.MET),
+        ("可连续实习 2 个月", "至少持续实习 3 个月", ConstraintStatus.UNMET),
+        ("可连续实习 6 个月", "连续实习 3 至 6 个月", ConstraintStatus.MET),
+    ],
+)
+def test_normalizes_internship_duration_ranges(
+    candidate_availability: str,
+    job_requirement: str,
+    expected_status: ConstraintStatus,
+) -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", candidate_availability.encode())
+    job = _job_from(
+        f"""### 1. 实习岗位 | 甲公司
+**基本信息**
+- {job_requirement}
+"""
+    )
+
+    extraction = extract_decision_signals(resume, job)
+
+    duration = next(item for item in extraction.hard_constraints if item.name == "duration_months")
+    assert duration.status is expected_status
+
+
+def test_matches_graduation_onward_and_bare_catalog_location() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes(
+        "resume.txt",
+        "期望城市：上海；预计毕业：2028 年".encode(),
+    )
+    job = _job_from(
+        """### 1. 实习岗位 | 甲公司
+**基本信息**
+- 上海；2027 届及以后在读
+"""
+    )
+
+    extraction = extract_decision_signals(resume, job)
+
+    statuses = {item.name: item.status for item in extraction.hard_constraints}
+    assert statuses == {
+        "graduation_year": ConstraintStatus.MET,
+        "location": ConstraintStatus.MET,
+    }
+
+
+def test_keeps_only_the_candidate_evidence_used_for_constraint_comparison() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", "最高学历硕士；此前获得本科学历".encode())
+    job = _job_from(
+        """### 1. 实习岗位 | 甲公司
+**基本信息**
+- 本科及以上学历
+"""
+    )
+
+    extraction = extract_decision_signals(resume, job)
+
+    education = next(item for item in extraction.hard_constraints if item.name == "education")
+    assert education.status is ConstraintStatus.MET
+    assert tuple(item.text for item in education.candidate_evidence) == ("硕士",)

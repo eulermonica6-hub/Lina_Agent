@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.4** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.5** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 121 个测试通过 |
+| 自动化测试 | 128 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -114,6 +114,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | Top-K 排序基线 | 默认 Pairwise Accuracy 0.3、Top-1 0.0；仅调技能权重不足以拟合人工排序 |
 | 决策信号消融 | 人工 hard + direction + skill 达到 Pairwise/Top-1 1.0；仅代表 oracle 上限 |
 | 自动信号基线 | 5 JD 上 Pairwise 0.7、Top-1 1.0；硬条件覆盖率 0.6，仍为实验性 opt-in |
+| 硬条件逐项基线 | 18 项状态和证据指标为 1.0；逐项已知率 0.5，仍需候选人确认投入条件 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
 | 官方岗位核验 | 覆盖国内外 30 余家公司，5 条上海 AI 实习进入优先投递池 |
@@ -240,11 +241,11 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 当前尚未实现，也不会提前宣称：
 
 - 尚不支持 PDF、扫描件 OCR、页眉页脚或图片内文字；
-- 当前 Agent 可选消费人工确认的硬条件和方向信号，但 CLI/API 尚未自动抽取或默认启用综合排序；
+- 当前 Agent 可显式启用自动硬条件/方向抽取，但综合排序默认仍关闭；
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步扩展投入时长表达并建立逐项信号 Gold，降低未知率和方向误差；达到冻结阈值后再讨论默认启用综合排序。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步采集候选人每周到岗和持续时长确认，降低真实 unknown；达到冻结阈值后再讨论默认启用综合排序。
 
 ## 参考文档
 
@@ -261,6 +262,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [0.2.0 发布测试手册](docs/RELEASE_TESTING_0.2.0.md) | 从多节点缺口、LLM 计划、Reviewer、降级到 Web 边界的逐步验收 |
 | [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |
 | [数据匿名化与标注指南](docs/DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核方法 |
+| [决策信号行为准则](docs/DECISION_SIGNAL_RULES.md) | 自动抽取、未知状态、最小证据、Gold 与发布规则 |
 | [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |
 | [MVP 实现记录](docs/MVP_IMPLEMENTATION.md) | 首个工作台的实现过程与历史复盘 |
 | [解析器评测基线](docs/evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果和失败分类 |
@@ -272,6 +274,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [技能证据与 Top-K Gold 基线](docs/iterations/020-career-matching-gold-baseline.md) | 完整 JD 快照、人工标注、首轮排序和校准失败分析 |
 | [决策信号桥接与排序消融](docs/iterations/021-decision-signal-ablation.md) | 人工硬条件/方向信号、三组消融与自动抽取边界 |
 | [自动决策信号基线](docs/iterations/022-automatic-decision-signal-baseline.md) | 证据化状态、独立自动评测和首轮误差基线 |
+| [硬条件逐项 Gold 与范围表达](docs/iterations/023-hard-constraint-item-gold.md) | 18 项状态/证据基线与 unknown 语义 |
 
 ## 欢迎讨论
 
