@@ -36,12 +36,24 @@
 1. 硬条件兼容度：毕业年份、地点、每周天数、持续月份和学历。
 2. 方向适配度：Agent 主线、通用 ML、基础设施、风控算法等目标岗位族偏好。
 
+## 决策信号消融
+
+在人工确认的硬条件兼容度和方向适配度上运行 oracle 消融：
+
+| 组合 | Pairwise Accuracy | Top-1 Accuracy |
+| --- | ---: | ---: |
+| skill-only | `0.300` | `0.000` |
+| hard + skill | `0.300` | `0.000` |
+| hard + direction + skill | `1.000` | `1.000` |
+
+这证明当前 5 条样本中方向偏好是主要缺失变量，但不代表自动抽取准确率。下一步需分别评测信号抽取和组合排序，不能把人工标签结果包装成线上能力。
+
 ## 复现
 
 ```bash
 uv run --locked python -m lina_agent.evaluation.career_matching \
-  data/private/evaluation/career_matching_gold_v1.json --calibrate \
-  > data/private/evaluation/career_matching_report_v1.json
+  data/private/evaluation/career_matching_gold_v1.json --ablate \
+  > data/private/evaluation/career_matching_ablation_v2.json
 ```
 
 Gold 必须在查看模型输出前冻结；若因标注越界修订，应记录理由并完整重跑。当前数据只用于建立工程基线，不代表生产准确率。

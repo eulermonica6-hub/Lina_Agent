@@ -9,7 +9,12 @@ from lina_agent.application.career_agent import (
 )
 from lina_agent.application.career_planner import CareerPlannerError
 from lina_agent.domain.career_gap import CareerGapAnalysis, PlanReviewStatus
-from lina_agent.domain.career_matching import CandidateDocumentProfile, RankedJobMatch
+from lina_agent.domain.career_matching import (
+    CandidateDocumentProfile,
+    DecisionSignals,
+    DecisionWeights,
+    RankedJobMatch,
+)
 from lina_agent.domain.career_planning import CareerActionPlan, CareerPlanAction
 from lina_agent.infrastructure.document_loader import LocalDocumentLoader
 
@@ -106,6 +111,36 @@ def test_can_include_inactive_jobs_and_apply_top_k() -> None:
     assert run.excluded_inactive_jobs == 0
     assert len(run.matches) == 1
     assert not any("排除了" in warning for warning in run.warnings)
+
+
+def test_can_rank_with_confirmed_hard_and_direction_signals() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    jobs = loader.load_bytes(
+        "jobs.md",
+        """### 1. Agent 岗位 | 甲公司
+**任职要求**
+- Python 与 LangGraph
+### 2. 通用岗位 | 乙公司
+**任职要求**
+- Python
+""".encode(),
+    )
+
+    run = CareerMatchAgent.execute_documents(
+        resume,
+        jobs,
+        decision_signals={
+            1: DecisionSignals(hard_compatibility=1, direction_alignment=1),
+            2: DecisionSignals(hard_compatibility=1, direction_alignment=0),
+        },
+        decision_weights=DecisionWeights(skill=0.3, hard=0.2, direction=0.5),
+    )
+
+    assert [match.catalog_number for match in run.matches] == [1, 2]
+    assert run.matches[0].skill_score == 50
+    assert run.matches[0].score == 85
+    assert any("已确认的硬条件与方向信号" in warning for warning in run.warnings)
 
 
 def test_reports_empty_candidate_and_no_considered_jobs() -> None:

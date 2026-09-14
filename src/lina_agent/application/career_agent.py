@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -14,6 +15,8 @@ from lina_agent.domain.career_gap import (
 )
 from lina_agent.domain.career_matching import (
     CandidateDocumentProfile,
+    DecisionSignals,
+    DecisionWeights,
     RankedJobMatch,
     extract_candidate_profile,
     extract_job_skill_profile,
@@ -88,6 +91,8 @@ class CareerMatchAgent:
         *,
         top_k: int = 5,
         include_inactive: bool = False,
+        decision_signals: Mapping[int, DecisionSignals] | None = None,
+        decision_weights: DecisionWeights | None = None,
     ) -> CareerAgentRun:
         resume = self._loader.load(resume_path)
         job_catalog = self._loader.load(job_catalog_path)
@@ -96,6 +101,8 @@ class CareerMatchAgent:
             job_catalog,
             top_k=top_k,
             include_inactive=include_inactive,
+            decision_signals=decision_signals,
+            decision_weights=decision_weights,
             planner=self._planner,
         )
 
@@ -106,6 +113,8 @@ class CareerMatchAgent:
         *,
         top_k: int = 5,
         include_inactive: bool = False,
+        decision_signals: Mapping[int, DecisionSignals] | None = None,
+        decision_weights: DecisionWeights | None = None,
         planner: CareerPlanner | None = None,
     ) -> CareerAgentRun:
         return CareerMatchAgent._execute_documents(
@@ -113,6 +122,8 @@ class CareerMatchAgent:
             job_catalog,
             top_k=top_k,
             include_inactive=include_inactive,
+            decision_signals=decision_signals,
+            decision_weights=decision_weights,
             planner=planner,
         )
 
@@ -123,6 +134,8 @@ class CareerMatchAgent:
         *,
         top_k: int,
         include_inactive: bool,
+        decision_signals: Mapping[int, DecisionSignals] | None,
+        decision_weights: DecisionWeights | None,
         planner: CareerPlanner | None,
     ) -> CareerAgentRun:
         if top_k < 1:
@@ -135,7 +148,17 @@ class CareerMatchAgent:
         ranked = tuple(
             sorted(
                 (
-                    score_job_match(candidate, job, extract_job_skill_profile(job))
+                    score_job_match(
+                        candidate,
+                        job,
+                        extract_job_skill_profile(job),
+                        decision_signals=(
+                            decision_signals.get(job.catalog_number)
+                            if decision_signals is not None
+                            else None
+                        ),
+                        decision_weights=decision_weights,
+                    )
                     for job in considered
                 ),
                 key=lambda match: (-match.score, match.catalog_number),
@@ -143,7 +166,14 @@ class CareerMatchAgent:
         )
 
         warnings = [
-            "首版分数表示已识别技能的证据覆盖度，不表示录取概率；学历、年限和毕业时间仍需人工确认。"
+            (
+                "综合分使用已确认的硬条件与方向信号，不表示录取概率。"
+                if decision_signals is not None
+                else (
+                    "首版分数表示已识别技能的证据覆盖度，不表示录取概率；"
+                    "学历、年限和毕业时间仍需人工确认。"
+                )
+            )
         ]
         if not candidate.skills:
             warnings.append("简历中未识别到技能词，请检查文档读取结果或扩展技能词表。")

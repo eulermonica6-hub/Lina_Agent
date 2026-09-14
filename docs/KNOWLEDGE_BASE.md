@@ -26,6 +26,7 @@
 | 018 | 2026-09-03 | 上海 AI 实习目标范围修正 | 区分正式岗负例与待资格核验的实习候选 | [上海实习范围迭代](iterations/018-shanghai-ai-internship-scope.md) |
 | 019 | 2026-09-14 | 国内外大厂实习资格核验 | 用官网证据建立上海 AI 实习优先投递池 | [大厂实习核验](iterations/019-official-internship-verification.md) |
 | 020 | 2026-09-14 | 技能证据与 Top-K Gold 基线 | 用真实匿名 Gold 量化抽取、引用、排序和权重边界 | [技能排序评测](iterations/020-career-matching-gold-baseline.md) |
+| 021 | 2026-09-14 | 决策信号桥接与排序消融 | 验证硬条件与方向信息对人工 Top-K 的贡献 | [决策信号消融](iterations/021-decision-signal-ablation.md) |
 
 ## 文档入口
 

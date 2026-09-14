@@ -1,6 +1,7 @@
 import argparse
 import json
 from collections.abc import Iterable, Sequence
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, cast
 
@@ -9,6 +10,8 @@ from pydantic import ConfigDict, Field, model_validator
 from lina_agent.domain.career_matching import (
     SKILL_TAXONOMY,
     CandidateDocumentProfile,
+    DecisionSignals,
+    DecisionWeights,
     JobSkillProfile,
     MatchWeights,
     SkillMention,
@@ -28,7 +31,16 @@ class CareerMatchingGoldJob(DomainModel):
     preferred: tuple[str, ...] = ()
     contextual: tuple[str, ...] = ()
     candidate_supported: tuple[str, ...] = ()
+    hard_compatibility: float = Field(ge=0, le=1)
+    direction_alignment: float = Field(ge=0, le=1)
+    decision_notes: tuple[str, ...] = Field(min_length=1)
     review_status: str = Field(min_length=1)
+
+
+class MatchingAblation(StrEnum):
+    SKILL_ONLY = "skill-only"
+    HARD_SKILL = "hard+skill"
+    HARD_DIRECTION_SKILL = "hard+direction+skill"
 
 
 class CareerMatchingGoldDataset(DomainModel):
@@ -55,7 +67,9 @@ class CareerMatchingGoldDataset(DomainModel):
 
 class CareerMatchingEvaluationReport(DomainModel):
     dataset_version: str
+    ablation: MatchingAblation
     weights: MatchWeights
+    decision_weights: DecisionWeights | None = None
     job_count: int
     skill_true_positives: int
     skill_false_positives: int
@@ -81,6 +95,12 @@ class CareerMatchingCalibrationReport(DomainModel):
     evaluated_weight_sets: int = Field(ge=1)
 
 
+class CareerMatchingAblationReport(DomainModel):
+    skill_only: CareerMatchingEvaluationReport
+    hard_skill: CareerMatchingEvaluationReport
+    hard_direction_skill: CareerMatchingEvaluationReport
+
+
 def load_gold_dataset(path: Path) -> CareerMatchingGoldDataset:
     payload = cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
     return CareerMatchingGoldDataset.model_validate(payload)
@@ -89,6 +109,7 @@ def load_gold_dataset(path: Path) -> CareerMatchingGoldDataset:
 def evaluate_career_matching(
     dataset_path: Path,
     weights: MatchWeights | None = None,
+    ablation: MatchingAblation = MatchingAblation.SKILL_ONLY,
 ) -> CareerMatchingEvaluationReport:
     dataset = load_gold_dataset(dataset_path)
     loader = LocalDocumentLoader()
@@ -101,10 +122,19 @@ def evaluate_career_matching(
 
     active_weights = weights or MatchWeights()
     profiles = {job.catalog_number: extract_job_skill_profile(job) for job in jobs}
+    labels = {job.catalog_number: job for job in dataset.jobs}
+    decision_weights = _decision_weights(ablation)
     matches = tuple(
         sorted(
             (
-                score_job_match(candidate, job, profiles[job.catalog_number], active_weights)
+                score_job_match(
+                    candidate,
+                    job,
+                    profiles[job.catalog_number],
+                    active_weights,
+                    decision_signals=_decision_signals(labels[job.catalog_number], ablation),
+                    decision_weights=decision_weights,
+                )
                 for job in jobs
             ),
             key=lambda match: (-match.score, match.catalog_number),
@@ -149,7 +179,9 @@ def evaluate_career_matching(
     predicted_ranking = tuple(match.catalog_number for match in matches)
     return CareerMatchingEvaluationReport(
         dataset_version=dataset.dataset_version,
+        ablation=ablation,
         weights=active_weights,
+        decision_weights=decision_weights,
         job_count=len(jobs),
         skill_true_positives=true_positives,
         skill_false_positives=false_positives,
@@ -167,6 +199,17 @@ def evaluate_career_matching(
         gold_ranking=dataset.gold_ranking,
         top_1_accuracy=float(predicted_ranking[0] == dataset.gold_ranking[0]),
         pairwise_accuracy=_pairwise_accuracy(predicted_ranking, dataset.gold_ranking),
+    )
+
+
+def evaluate_ablations(dataset_path: Path) -> CareerMatchingAblationReport:
+    return CareerMatchingAblationReport(
+        skill_only=evaluate_career_matching(dataset_path, ablation=MatchingAblation.SKILL_ONLY),
+        hard_skill=evaluate_career_matching(dataset_path, ablation=MatchingAblation.HARD_SKILL),
+        hard_direction_skill=evaluate_career_matching(
+            dataset_path,
+            ablation=MatchingAblation.HARD_DIRECTION_SKILL,
+        ),
     )
 
 
@@ -188,6 +231,29 @@ def calibrate_match_weights(dataset_path: Path) -> CareerMatchingCalibrationRepo
         calibrated=calibrated,
         evaluated_weight_sets=len(candidates),
     )
+
+
+def _decision_signals(
+    job: CareerMatchingGoldJob,
+    ablation: MatchingAblation,
+) -> DecisionSignals | None:
+    if ablation is MatchingAblation.SKILL_ONLY:
+        return None
+    return DecisionSignals(
+        hard_compatibility=job.hard_compatibility,
+        direction_alignment=(
+            job.direction_alignment if ablation is MatchingAblation.HARD_DIRECTION_SKILL else None
+        ),
+        explanations=job.decision_notes,
+    )
+
+
+def _decision_weights(ablation: MatchingAblation) -> DecisionWeights | None:
+    if ablation is MatchingAblation.SKILL_ONLY:
+        return None
+    if ablation is MatchingAblation.HARD_SKILL:
+        return DecisionWeights(skill=0.7, hard=0.3, direction=0)
+    return DecisionWeights(skill=0.3, hard=0.2, direction=0.5)
 
 
 def _gold_skill_labels(
@@ -305,12 +371,16 @@ def main(arguments: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Evaluate and calibrate skill-evidence ranking.")
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--calibrate", action="store_true")
+    parser.add_argument("--ablate", action="store_true")
     parsed_arguments = parser.parse_args(arguments)
-    report = (
-        calibrate_match_weights(parsed_arguments.dataset)
-        if parsed_arguments.calibrate
-        else evaluate_career_matching(parsed_arguments.dataset)
-    )
+    if parsed_arguments.calibrate and parsed_arguments.ablate:
+        parser.error("--calibrate and --ablate are mutually exclusive")
+    if parsed_arguments.calibrate:
+        report = calibrate_match_weights(parsed_arguments.dataset)
+    elif parsed_arguments.ablate:
+        report = evaluate_ablations(parsed_arguments.dataset)
+    else:
+        report = evaluate_career_matching(parsed_arguments.dataset)
     print(report.model_dump_json(indent=2))
 
 

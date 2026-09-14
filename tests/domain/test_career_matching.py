@@ -1,4 +1,6 @@
 from lina_agent.domain.career_matching import (
+    DecisionSignals,
+    DecisionWeights,
     MatchWeights,
     extract_candidate_profile,
     extract_job_skill_profile,
@@ -64,6 +66,7 @@ def test_classifies_requirements_and_scores_evidence_coverage() -> None:
     assert result.preferred_coverage == 1.0
     assert result.contextual_coverage == 0.0
     assert result.score == 55.0
+    assert result.skill_score == 55.0
     assert [item.skill for item in result.matched_required] == ["Python"]
     assert [item.skill for item in result.missing_required] == ["LangGraph"]
     assert [item.skill for item in result.matched_preferred] == ["RAG"]
@@ -76,6 +79,39 @@ def test_classifies_requirements_and_scores_evidence_coverage() -> None:
         MatchWeights(required=0.5, preferred=0.5, contextual=0),
     )
     assert calibrated.score == 75.0
+
+    combined = score_job_match(
+        candidate,
+        job,
+        job_skills,
+        decision_signals=DecisionSignals(
+            hard_compatibility=1,
+            direction_alignment=0.8,
+            explanations=("硬条件兼容", "方向高度匹配"),
+        ),
+        decision_weights=DecisionWeights(skill=0.3, hard=0.2, direction=0.5),
+    )
+    assert combined.skill_score == 55.0
+    assert combined.score == 76.5
+    assert combined.decision_explanations == ("硬条件兼容", "方向高度匹配")
+
+    direction_only = score_job_match(
+        candidate,
+        job,
+        job_skills,
+        decision_signals=DecisionSignals(direction_alignment=1),
+        decision_weights=DecisionWeights(skill=0, hard=0, direction=1),
+    )
+    assert direction_only.score == 100
+
+    no_active_component = score_job_match(
+        candidate,
+        job,
+        job_skills,
+        decision_signals=DecisionSignals(),
+        decision_weights=DecisionWeights(skill=0, hard=0, direction=0),
+    )
+    assert no_active_component.score == 0
 
 
 def test_returns_zero_when_job_contains_no_taxonomy_skills() -> None:

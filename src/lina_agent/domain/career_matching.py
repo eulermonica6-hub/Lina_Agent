@@ -90,12 +90,28 @@ class MatchWeights(DomainModel):
     contextual: float = Field(default=0.1, ge=0)
 
 
+class DecisionSignals(DomainModel):
+    hard_compatibility: float | None = Field(default=None, ge=0, le=1)
+    direction_alignment: float | None = Field(default=None, ge=0, le=1)
+    explanations: tuple[str, ...] = ()
+
+
+class DecisionWeights(DomainModel):
+    skill: float = Field(default=0.3, ge=0)
+    hard: float = Field(default=0.2, ge=0)
+    direction: float = Field(default=0.5, ge=0)
+
+
 class RankedJobMatch(DomainModel):
     catalog_number: int = Field(ge=1)
     title: str = Field(min_length=1)
     company: str = Field(min_length=1)
     source_url: str | None = None
     score: float = Field(ge=0, le=100)
+    skill_score: float = Field(default=0, ge=0, le=100)
+    hard_compatibility: float | None = Field(default=None, ge=0, le=1)
+    direction_alignment: float | None = Field(default=None, ge=0, le=1)
+    decision_explanations: tuple[str, ...] = ()
     required_coverage: float | None = Field(default=None, ge=0, le=1)
     preferred_coverage: float | None = Field(default=None, ge=0, le=1)
     contextual_coverage: float | None = Field(default=None, ge=0, le=1)
@@ -151,6 +167,8 @@ def score_job_match(
     job: CatalogJob,
     skills: JobSkillProfile,
     weights: MatchWeights | None = None,
+    decision_signals: DecisionSignals | None = None,
+    decision_weights: DecisionWeights | None = None,
 ) -> RankedJobMatch:
     active_weights = weights or MatchWeights()
     candidate_by_skill = {mention.skill: mention for mention in candidate.skills}
@@ -170,7 +188,7 @@ def score_job_match(
         )
         if coverage is not None and weight > 0
     )
-    score = (
+    skill_score = (
         round(
             sum(coverage * weight for coverage, weight in weighted)
             / sum(weight for _, weight in weighted)
@@ -180,12 +198,21 @@ def score_job_match(
         if weighted
         else 0.0
     )
+    score = _decision_score(skill_score, decision_signals, decision_weights)
     return RankedJobMatch(
         catalog_number=job.catalog_number,
         title=job.title,
         company=job.company,
         source_url=job.source_url,
         score=score,
+        skill_score=skill_score,
+        hard_compatibility=(
+            decision_signals.hard_compatibility if decision_signals is not None else None
+        ),
+        direction_alignment=(
+            decision_signals.direction_alignment if decision_signals is not None else None
+        ),
+        decision_explanations=(decision_signals.explanations if decision_signals else ()),
         required_coverage=required_coverage,
         preferred_coverage=preferred_coverage,
         contextual_coverage=contextual_coverage,
@@ -194,6 +221,30 @@ def score_job_match(
         matched_preferred=matched_preferred,
         missing_preferred=missing_preferred,
         matched_contextual=matched_contextual,
+    )
+
+
+def _decision_score(
+    skill_score: float,
+    signals: DecisionSignals | None,
+    weights: DecisionWeights | None,
+) -> float:
+    if signals is None:
+        return skill_score
+    active_weights = weights or DecisionWeights()
+    components = [(skill_score / 100, active_weights.skill)]
+    if signals.hard_compatibility is not None:
+        components.append((signals.hard_compatibility, active_weights.hard))
+    if signals.direction_alignment is not None:
+        components.append((signals.direction_alignment, active_weights.direction))
+    weighted = tuple((value, weight) for value, weight in components if weight > 0)
+    if not weighted:
+        return 0.0
+    return round(
+        sum(value * weight for value, weight in weighted)
+        / sum(weight for _, weight in weighted)
+        * 100,
+        1,
     )
 
 

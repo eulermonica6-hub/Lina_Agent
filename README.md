@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.2** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.3** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 111 个测试通过 |
+| 自动化测试 | 116 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -112,6 +112,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 评测语料 | 6 个合成、人工标注、版本化案例 |
 | 技能证据评测 | 5 条真实匿名 JD；技能与匹配 Precision/Recall、引用有效率/支持率均为 1.0 |
 | Top-K 排序基线 | 默认 Pairwise Accuracy 0.3、Top-1 0.0；仅调技能权重不足以拟合人工排序 |
+| 决策信号消融 | 人工 hard + direction + skill 达到 Pairwise/Top-1 1.0；仅代表 oracle 上限 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
 | 官方岗位核验 | 覆盖国内外 30 余家公司，5 条上海 AI 实习进入优先投递池 |
@@ -190,7 +191,7 @@ uv run --locked python -m lina_agent.evaluation.job_parser \
 
 ```bash
 uv run --locked python -m lina_agent.evaluation.career_matching \
-  data/private/evaluation/career_matching_gold_v1.json --calibrate
+  data/private/evaluation/career_matching_gold_v1.json --ablate
 ```
 
 ## API 接口
@@ -236,11 +237,11 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 当前尚未实现，也不会提前宣称：
 
 - 尚不支持 PDF、扫描件 OCR、页眉页脚或图片内文字；
-- 当前技能匹配已完成人工 Gold 评测，但排序仍只使用确定性词表覆盖，尚未接入硬条件和方向适配特征；
+- 当前 Agent 可选消费人工确认的硬条件和方向信号，但 CLI/API 尚未自动抽取或默认启用综合排序；
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步把硬条件兼容度和方向适配度接入排序，在冻结 Gold 上完成消融评测；随后再持久化文档、确认状态与 Agent Run。PDF、持续采集和新版 Web 展示不会先于这条质量基线。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。下一步从简历/JD 自动提取带证据的硬条件与方向信号，在冻结 Gold 上独立评测后再启用综合排序；随后持久化文档、确认状态与 Agent Run。
 
 ## 参考文档
 
@@ -266,6 +267,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [上海实习范围修正](docs/iterations/018-shanghai-ai-internship-scope.md) | 目标约束修正和腾讯职位族证据边界 |
 | [国内外大厂实习核验](docs/iterations/019-official-internship-verification.md) | 30 余家公司官网覆盖、资格证据和优先投递池 |
 | [技能证据与 Top-K Gold 基线](docs/iterations/020-career-matching-gold-baseline.md) | 完整 JD 快照、人工标注、首轮排序和校准失败分析 |
+| [决策信号桥接与排序消融](docs/iterations/021-decision-signal-ablation.md) | 人工硬条件/方向信号、三组消融与自动抽取边界 |
 
 ## 欢迎讨论
 

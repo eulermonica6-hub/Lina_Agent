@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.2
+> 适用版本：0.2.3
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -509,11 +509,13 @@ CareerAgentState
 
 当前结果：技能、匹配和引用指标均为 `1.0`；默认排序 Pairwise Accuracy 为 `0.3`，20 组权重搜索最高 `0.4`，证明排序缺少硬条件与方向适配特征。
 
-### Iteration B：统一模型桥接（下一步）
+### Iteration B：统一模型桥接（进行中）
 
 1. 定义 `CandidateAggregate` / `JobAggregate` 或过渡 mapper；
 2. 把 Web 硬条件过滤放到文件 Agent 排序之前；
 3. 保证同一结论同时引用硬条件事实和技能证据。
+
+当前已完成已确认 `DecisionSignals` 到综合评分的可选桥接；自动抽取、证据确认和默认启用仍未完成。
 
 完成标准：一次 Agent Run 同时给出硬条件结果和证据 Top-K。
 

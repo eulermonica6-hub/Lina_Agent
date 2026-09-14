@@ -5,11 +5,13 @@ from uuid import uuid4
 
 import pytest
 
-from lina_agent.domain.career_matching import MatchWeights
+from lina_agent.domain.career_matching import DecisionWeights, MatchWeights
 from lina_agent.domain.models import SourceEvidence
 from lina_agent.evaluation.career_matching import (
+    MatchingAblation,
     calibrate_match_weights,
     citation_is_valid,
+    evaluate_ablations,
     evaluate_career_matching,
     load_gold_dataset,
     main,
@@ -45,6 +47,9 @@ def _write_dataset(tmp_path: Path) -> Path:
                 "preferred": ["RAG"],
                 "contextual": ["Agent"],
                 "candidate_supported": ["Python", "RAG"],
+                "hard_compatibility": 1.0,
+                "direction_alignment": 1.0,
+                "decision_notes": ["兼容且方向匹配"],
                 "review_status": "reviewed",
             },
             {
@@ -53,6 +58,9 @@ def _write_dataset(tmp_path: Path) -> Path:
                 "preferred": [],
                 "contextual": [],
                 "candidate_supported": ["Python"],
+                "hard_compatibility": 0.0,
+                "direction_alignment": 0.0,
+                "decision_notes": ["硬条件不兼容"],
                 "review_status": "reviewed",
             },
         ],
@@ -77,6 +85,23 @@ def test_evaluates_skills_citations_and_ranking(tmp_path: Path) -> None:
     assert report.predicted_ranking == (1, 2)
     assert report.top_1_accuracy == 1.0
     assert report.pairwise_accuracy == 1.0
+    assert report.ablation is MatchingAblation.SKILL_ONLY
+    assert report.decision_weights is None
+
+
+def test_ablation_combines_hard_constraints_and_direction(tmp_path: Path) -> None:
+    report = evaluate_ablations(_write_dataset(tmp_path))
+
+    assert report.skill_only.predicted_ranking == (1, 2)
+    assert report.hard_skill.predicted_ranking == (1, 2)
+    assert report.hard_direction_skill.predicted_ranking == (1, 2)
+    assert report.hard_skill.decision_weights is not None
+    assert report.hard_skill.decision_weights.direction == 0
+    assert report.hard_direction_skill.decision_weights == DecisionWeights(
+        skill=0.3,
+        hard=0.2,
+        direction=0.5,
+    )
 
 
 def test_calibrates_weights_and_cli_outputs_json(
@@ -96,6 +121,35 @@ def test_calibrates_weights_and_cli_outputs_json(
         "preferred": 0.2,
         "contextual": 0.1,
     }
+
+
+def test_ablation_cli_outputs_all_variants(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = _write_dataset(tmp_path)
+
+    main([str(dataset_path), "--ablate"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert set(payload) == {"skill_only", "hard_skill", "hard_direction_skill"}
+
+
+def test_default_cli_outputs_skill_only_report(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = _write_dataset(tmp_path)
+
+    main([str(dataset_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["ablation"] == "skill-only"
+
+
+def test_cli_rejects_calibration_with_ablation(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit):
+        main([str(_write_dataset(tmp_path)), "--calibrate", "--ablate"])
 
 
 def test_rejects_inconsistent_gold_ranking(tmp_path: Path) -> None:
