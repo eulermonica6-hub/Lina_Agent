@@ -85,8 +85,12 @@ class DirectionTerm:
 
 DIRECTION_TAXONOMY = (
     DirectionTerm("agent_llm_application", ("AI Agent", "智能体", "Agent", "大模型应用")),
-    DirectionTerm("ai_infrastructure", ("AI Infra", "AI 基础设施", "推理引擎", "CUDA")),
+    DirectionTerm("ai_infrastructure", ("AI Infra", "AI 基础设施", "智能运维", "推理引擎")),
     DirectionTerm("machine_learning", ("机器学习", "Machine Learning", "深度学习")),
+    DirectionTerm(
+        "fullstack_ai_testing",
+        ("Full Stack", "full-stack", "CUDA", "AI 测试", "AI 应用自动化测试"),
+    ),
     DirectionTerm("risk_modeling", ("风控", "风险建模", "支付算法")),
 )
 
@@ -142,9 +146,22 @@ class CandidateAvailabilityConfirmation(DomainModel):
     duration_months: int | None = Field(default=None, ge=1)
 
 
+class CandidateDirectionPreferenceConfirmation(DomainModel):
+    agent_llm_application: float | None = Field(default=None, ge=0, le=1)
+    ai_infrastructure: float | None = Field(default=None, ge=0, le=1)
+    machine_learning: float | None = Field(default=None, ge=0, le=1)
+    fullstack_ai_testing: float | None = Field(default=None, ge=0, le=1)
+    risk_modeling: float | None = Field(default=None, ge=0, le=1)
+
+
 class ConfirmedCandidateFact(DomainModel):
     value: int = Field(ge=1)
     unit: ConfirmationUnit
+    source: str = "user_confirmation"
+
+
+class ConfirmedDirectionPreference(DomainModel):
+    score: float = Field(ge=0, le=1)
     source: str = "user_confirmation"
 
 
@@ -160,6 +177,7 @@ class DirectionEvidenceItem(DomainModel):
     name: str = Field(min_length=1)
     status: ConstraintStatus
     candidate_evidence: tuple[SourceEvidence, ...] = ()
+    candidate_confirmation: ConfirmedDirectionPreference | None = None
     job_evidence: tuple[SourceEvidence, ...] = Field(min_length=1)
 
 
@@ -240,6 +258,7 @@ def extract_decision_signals(
     candidate_document: IngestedDocument,
     job: CatalogJob,
     availability: CandidateAvailabilityConfirmation | None = None,
+    direction_preferences: CandidateDirectionPreferenceConfirmation | None = None,
 ) -> DecisionSignalExtraction:
     candidate_evidence = tuple(
         SourceEvidence(
@@ -316,6 +335,7 @@ def extract_decision_signals(
                 candidate_evidence,
                 (job.title_evidence, *job.responsibilities, *job.requirements),
                 candidate_has_direction,
+                _direction_preference(direction_preferences, term.name),
             )
         )
         is not None
@@ -323,8 +343,15 @@ def extract_decision_signals(
     known_directions = tuple(
         item for item in directions if item.status is not ConstraintStatus.UNKNOWN
     )
-    matched_directions = sum(item.status is ConstraintStatus.MET for item in known_directions)
-    direction_alignment = matched_directions / len(known_directions) if known_directions else None
+    direction_values = tuple(
+        item.candidate_confirmation.score
+        if item.candidate_confirmation is not None
+        else float(item.status is ConstraintStatus.MET)
+        for item in known_directions
+    )
+    direction_alignment = (
+        sum(direction_values) / len(direction_values) if direction_values else None
+    )
     explanations = tuple(
         [
             f"已核验硬条件 {len(known_hard)} 项，"
@@ -555,6 +582,7 @@ def _direction_item(
     candidate_items: tuple[SourceEvidence, ...],
     job_items: tuple[SourceEvidence, ...],
     candidate_has_direction: bool,
+    confirmed_preference: float | None,
 ) -> DirectionEvidenceItem | None:
     job_hits = _alias_evidence(job_items, term.aliases)
     if not job_hits:
@@ -562,16 +590,42 @@ def _direction_item(
     candidate_hits = _alias_evidence(candidate_items, term.aliases)
     return DirectionEvidenceItem(
         name=term.name,
-        status=(
-            ConstraintStatus.MET
-            if candidate_hits
-            else ConstraintStatus.UNMET
-            if candidate_has_direction
-            else ConstraintStatus.UNKNOWN
-        ),
+        status=_direction_status(candidate_hits, candidate_has_direction, confirmed_preference),
         candidate_evidence=candidate_hits,
+        candidate_confirmation=(
+            ConfirmedDirectionPreference(score=confirmed_preference)
+            if confirmed_preference is not None
+            else None
+        ),
         job_evidence=job_hits,
     )
+
+
+def _direction_status(
+    candidate_hits: tuple[SourceEvidence, ...],
+    candidate_has_direction: bool,
+    confirmed_preference: float | None,
+) -> ConstraintStatus:
+    if confirmed_preference is not None:
+        return ConstraintStatus.MET if confirmed_preference > 0 else ConstraintStatus.UNMET
+    if candidate_hits:
+        return ConstraintStatus.MET
+    return ConstraintStatus.UNMET if candidate_has_direction else ConstraintStatus.UNKNOWN
+
+
+def _direction_preference(
+    preferences: CandidateDirectionPreferenceConfirmation | None,
+    name: str,
+) -> float | None:
+    if preferences is None:
+        return None
+    return {
+        "agent_llm_application": preferences.agent_llm_application,
+        "ai_infrastructure": preferences.ai_infrastructure,
+        "machine_learning": preferences.machine_learning,
+        "fullstack_ai_testing": preferences.fullstack_ai_testing,
+        "risk_modeling": preferences.risk_modeling,
+    }[name]
 
 
 def _alias_evidence(

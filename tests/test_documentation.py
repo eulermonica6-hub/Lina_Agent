@@ -28,6 +28,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/024-candidate-availability-confirmation-contract.md",
     "docs/iterations/025-confirmed-availability-gold-rerun.md",
     "docs/iterations/026-ranking-ties-and-inversion-analysis.md",
+    "docs/iterations/027-direction-preference-confirmation-contract.md",
 )
 
 

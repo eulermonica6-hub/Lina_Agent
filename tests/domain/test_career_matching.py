@@ -2,6 +2,7 @@ import pytest
 
 from lina_agent.domain.career_matching import (
     CandidateAvailabilityConfirmation,
+    CandidateDirectionPreferenceConfirmation,
     ConstraintStatus,
     DecisionSignals,
     DecisionWeights,
@@ -279,3 +280,47 @@ def test_applies_confirmed_availability_without_fabricating_document_evidence() 
     assert confirmed_items["weekly_days"].candidate_confirmation.source == "user_confirmation"
     assert confirmed.signals.hard_compatibility == 0.5
     assert confirmed.warnings == ()
+
+
+def test_applies_confirmed_direction_preferences_without_fabricating_evidence() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", "目标方向：AI Agent 与大模型应用".encode())
+    preferences = CandidateDirectionPreferenceConfirmation(
+        agent_llm_application=1.0,
+        ai_infrastructure=0.8,
+        machine_learning=0.6,
+        fullstack_ai_testing=0.0,
+        risk_modeling=0.0,
+    )
+    platform_job = _job_from(
+        """### 1. Agent 研发实习生-AI Infra | 甲公司
+**岗位职责**
+- 参与 AI Agent 和智能运维平台建设
+"""
+    )
+    testing_job = _job_from(
+        """### 1. CUDA Full Stack 与 AI 测试开发实习生 | 乙公司
+**岗位职责**
+- 开发 AI Agent 功能并执行 AI 应用自动化测试
+"""
+    )
+
+    platform = extract_decision_signals(
+        resume,
+        platform_job,
+        direction_preferences=preferences,
+    )
+    testing = extract_decision_signals(
+        resume,
+        testing_job,
+        direction_preferences=preferences,
+    )
+
+    assert platform.signals.direction_alignment == 0.9
+    assert testing.signals.direction_alignment == 0.5
+    testing_items = {item.name: item for item in testing.directions}
+    confirmation = testing_items["fullstack_ai_testing"].candidate_confirmation
+    assert confirmation is not None
+    assert confirmation.score == 0
+    assert confirmation.source == "user_confirmation"
+    assert testing_items["fullstack_ai_testing"].candidate_evidence == ()

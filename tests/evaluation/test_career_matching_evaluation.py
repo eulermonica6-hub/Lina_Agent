@@ -225,6 +225,33 @@ def test_automatic_signals_use_dataset_candidate_availability(tmp_path: Path) ->
     assert report.hard_evidence_recall == 1
 
 
+def test_automatic_signals_use_dataset_direction_preferences(tmp_path: Path) -> None:
+    dataset_path = _write_dataset(tmp_path)
+    payload = json.loads(dataset_path.read_text(encoding="utf-8"))
+    payload["candidate_direction_preferences"] = {
+        "agent_llm_application": 1.0,
+        "ai_infrastructure": 0.8,
+    }
+    payload["jobs"][0]["direction_alignment"] = 0.9
+    (dataset_path.parent / "jobs.md").write_text(
+        """### 1. Agent 平台岗位-AI Infra | [COMPANY_A]
+**岗位职责**
+- 参与 AI Agent 与智能运维平台建设
+### 2. 算法岗位 | [COMPANY_B]
+**任职要求**
+- Python 与 LangGraph
+""",
+        encoding="utf-8",
+    )
+    dataset_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    report = evaluate_automatic_decision_signals(dataset_path)
+
+    breakdown = next(item for item in report.job_breakdown if item.catalog_number == 1)
+    assert breakdown.direction_alignment == 0.9
+    assert breakdown.gold_direction_alignment == 0.9
+
+
 def test_calibrates_weights_and_cli_outputs_json(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
