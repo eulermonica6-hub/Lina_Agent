@@ -64,12 +64,12 @@ _PREFERRED = re.compile(r"优先|加分|preferred", re.IGNORECASE)
 _GRADUATION = re.compile(r"(?P<year>20\d{2})\s*(?:届|年)(?P<onward>及以后)?")
 _EDUCATION = re.compile(r"(?P<level>大专|本科|硕士|博士)(?:及以上|以上)?(?:学历)?")
 _LOCATION = re.compile(
-    r"(?:(?:期望(?:工作)?地点|意向(?:工作)?地点|工作地点|期望城市)\s*[:：]?\s*|^)"
+    r"(?:(?:期望(?:工作)?地点|意向(?:工作)?地点|工作地点|期望城市)\s*[:：]?\s*|^|[、，,]\s*)"
     r"(?P<value>北京|上海|广州|深圳|杭州|南京|苏州|成都|重庆|武汉|西安|天津|长沙|郑州|青岛)"
 )
-_WEEKLY_DAYS = re.compile(r"每周(?:到岗|实习)?\s*(?P<value>[1-7])\s*天")
+_WEEKLY_DAYS = re.compile(r"每周(?:到岗|实习)?\s*(?:不少于|至少)?\s*(?P<value>[1-7])\s*天")
 _DURATION = re.compile(
-    r"(?:(?:可)?(?:连续)?(?:至少持续|至少)?实习(?:至少)?|(?:可)?连续|至少)\s*"
+    r"(?:(?:可)?(?:连续)?(?:至少持续|至少)?实习(?:至少|不少于)?|(?:可)?连续|至少)\s*"
     r"(?P<value>\d+|一)"
     r"(?:\s*(?:-|\u2013|\u2014|至|到)\s*(?P<upper>\d+))?\s*个?"
     r"(?P<unit>月|年)"
@@ -85,14 +85,19 @@ class DirectionTerm:
 
 DIRECTION_TAXONOMY = (
     DirectionTerm("agent_llm_application", ("AI Agent", "智能体", "Agent", "大模型应用")),
-    DirectionTerm("ai_infrastructure", ("AI Infra", "AI 基础设施", "智能运维", "推理引擎")),
-    DirectionTerm("machine_learning", ("机器学习", "Machine Learning", "深度学习")),
+    DirectionTerm(
+        "ai_infrastructure",
+        ("AI Infra", "AI 基础设施", "智能运维", "推理引擎", "推理优化", "TensorRT", "GPU 计算"),
+    ),
+    DirectionTerm(
+        "machine_learning",
+        ("机器学习", "Machine Learning", "深度学习", "模型评测"),
+    ),
     DirectionTerm(
         "fullstack_ai_testing",
         (
             "Full Stack",
             "full-stack",
-            "CUDA",
             "AI 测试",
             "AI 应用自动化测试",
             "测试自动化",
@@ -100,6 +105,7 @@ DIRECTION_TAXONOMY = (
         ),
     ),
     DirectionTerm("risk_modeling", ("风控", "风险建模", "支付算法")),
+    DirectionTerm("ai_product", ("AI 产品", "AI 社区产品", "AI Native")),
 )
 
 
@@ -160,6 +166,7 @@ class CandidateDirectionPreferenceConfirmation(DomainModel):
     machine_learning: float | None = Field(default=None, ge=0, le=1)
     fullstack_ai_testing: float | None = Field(default=None, ge=0, le=1)
     risk_modeling: float | None = Field(default=None, ge=0, le=1)
+    ai_product: float | None = Field(default=None, ge=0, le=1)
 
 
 class ConfirmedCandidateFact(DomainModel):
@@ -295,7 +302,13 @@ def extract_decision_signals(
                 _EDUCATION,
                 _education_matches,
             ),
-            _compare_pattern("location", candidate_evidence, job_evidence, _LOCATION),
+            _compare_pattern(
+                "location",
+                candidate_evidence,
+                job_evidence,
+                _LOCATION,
+                job_evidence_group="value",
+            ),
             _with_confirmation(
                 _compare_pattern(
                     "weekly_days",
@@ -327,9 +340,7 @@ def extract_decision_signals(
         item.status for item in hard_constraints if item.status is not ConstraintStatus.UNKNOWN
     )
     hard_compatibility = (
-        sum(status is ConstraintStatus.MET for status in known_hard) / len(known_hard)
-        if known_hard
-        else None
+        0.0 if ConstraintStatus.UNMET in known_hard else 1.0 if known_hard else None
     )
     candidate_has_direction = any(
         _alias_evidence(candidate_evidence, term.aliases) for term in DIRECTION_TAXONOMY
@@ -454,6 +465,8 @@ def _decision_score(
 ) -> float:
     if signals is None:
         return skill_score
+    if signals.hard_compatibility == 0:
+        return 0.0
     active_weights = weights or DecisionWeights()
     components = [(skill_score / 100, active_weights.skill)]
     if signals.hard_compatibility is not None:
@@ -502,8 +515,14 @@ def _compare_pattern(
     job_items: tuple[SourceEvidence, ...],
     pattern: re.Pattern[str],
     comparator: Comparison | None = None,
+    job_evidence_group: str | None = None,
 ) -> DecisionEvidenceItem | None:
-    job_hits = _pattern_evidence(job_items, pattern)
+    job_hits = _pattern_evidence(
+        job_items,
+        pattern,
+        evidence_group=job_evidence_group,
+        exclude_preferred=True,
+    )
     if not job_hits:
         return None
     candidate_hits = _pattern_evidence(candidate_items, pattern)
@@ -512,7 +531,7 @@ def _compare_pattern(
         matches = comparator or _equal_matches
         status = (
             ConstraintStatus.MET
-            if matches(candidate_hits[0].text, job_hits[0].text, pattern)
+            if any(matches(candidate_hits[0].text, job_hit.text, pattern) for job_hit in job_hits)
             else ConstraintStatus.UNMET
         )
     return DecisionEvidenceItem(
@@ -526,17 +545,34 @@ def _compare_pattern(
 def _pattern_evidence(
     evidence_items: tuple[SourceEvidence, ...],
     pattern: re.Pattern[str],
+    *,
+    evidence_group: str | None = None,
+    exclude_preferred: bool = False,
 ) -> tuple[SourceEvidence, ...]:
     return tuple(
         SourceEvidence(
             document_id=evidence.document_id,
-            text=match.group(),
-            start_offset=evidence.start_offset + match.start(),
-            end_offset=evidence.start_offset + match.end(),
+            text=match.group(evidence_group) if evidence_group is not None else match.group(),
+            start_offset=evidence.start_offset
+            + (match.start(evidence_group) if evidence_group is not None else match.start()),
+            end_offset=evidence.start_offset
+            + (match.end(evidence_group) if evidence_group is not None else match.end()),
         )
         for evidence in evidence_items
         for match in pattern.finditer(evidence.text)
+        if not exclude_preferred or not _match_is_preferred(evidence.text, match)
     )
+
+
+def _match_is_preferred(text: str, match: re.Match[str]) -> bool:
+    clause_start = max(text.rfind(separator, 0, match.start()) for separator in ("；", ";", "。"))
+    clause_ends = tuple(
+        index
+        for separator in ("；", ";", "。")
+        if (index := text.find(separator, match.end())) >= 0
+    )
+    clause_end = min(clause_ends, default=len(text))
+    return _PREFERRED.search(text[clause_start + 1 : clause_end]) is not None
 
 
 def _match_group(text: str, pattern: re.Pattern[str], group: str) -> str:
@@ -633,6 +669,7 @@ def _direction_preference(
         "machine_learning": preferences.machine_learning,
         "fullstack_ai_testing": preferences.fullstack_ai_testing,
         "risk_modeling": preferences.risk_modeling,
+        "ai_product": preferences.ai_product,
     }[name]
 
 

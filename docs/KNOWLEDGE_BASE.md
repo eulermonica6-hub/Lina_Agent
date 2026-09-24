@@ -36,6 +36,7 @@
 | 028 | 2026-09-24 | 方向偏好入口接线 | 在 Agent、API、CLI 使用同一确认契约并防止静默丢参 | [方向偏好入口](iterations/028-direction-preference-entry-wiring.md) |
 | 029 | 2026-09-24 | 多冻结 Gold 套件基线 | 分离方向族覆盖、样本规模、宏平均和最差集稳定性 | [多 Gold 套件](iterations/029-multi-gold-suite-baseline.md) |
 | 030 | 2026-09-24 | 第二个冻结 Gold 与官方 JD 回归 | 用真实测试自动化措辞发现方向召回缺口并补 coverage 指标 | [第二 Gold 回归](iterations/030-second-gold-official-jd.md) |
+| 031 | 2026-09-24 | 国内外大厂 JD 扩展与硬门槛排序 | 用 5 条新增官方 JD 修复多城市、范围、方向和 hard veto | [国内外 JD 扩展](iterations/031-domestic-global-jd-expansion.md) |
 
 ## 文档入口
 

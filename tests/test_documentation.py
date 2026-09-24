@@ -32,6 +32,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/028-direction-preference-entry-wiring.md",
     "docs/iterations/029-multi-gold-suite-baseline.md",
     "docs/iterations/030-second-gold-official-jd.md",
+    "docs/iterations/031-domestic-global-jd-expansion.md",
 )
 
 

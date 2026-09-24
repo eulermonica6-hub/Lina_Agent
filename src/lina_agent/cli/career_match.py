@@ -16,6 +16,7 @@ DIRECTION_ARGUMENTS = (
     ("machine-learning", "machine_learning", "通用机器学习"),
     ("fullstack-ai-testing", "fullstack_ai_testing", "全栈 AI 测试"),
     ("risk-modeling", "risk_modeling", "风险建模"),
+    ("ai-product", "ai_product", "AI 产品"),
 )
 
 

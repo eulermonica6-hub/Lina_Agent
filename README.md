@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.13** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.14** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 157 个测试通过 |
+| 自动化测试 | 163 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -114,7 +114,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | Top-K 排序基线 | 默认 Pairwise Accuracy 0.3、Top-1 0.0；仅调技能权重不足以拟合人工排序 |
 | 决策信号消融 | 人工 hard + direction + skill 达到 Pairwise/Top-1 1.0；仅代表 oracle 上限 |
 | 自动信号基线 | 方向确认后 5 JD 并列 Gold 上 Pairwise/Top-1 1.0/1.0；仍为实验性 opt-in |
-| 多 Gold 稳定性 | 2 个冻结集、6 个岗位；方向 coverage/MAE 为 1.0/0.0，第二集仍需扩展 |
+| 多 Gold 稳定性 | 2 个冻结集、11 个岗位；扩展集 Pairwise 0.933，保留 1 个技能缺口逆序 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -253,7 +253,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已贯通 Agent/API/CLI，第二个独立 Gold 已加入稳定性套件；综合排序继续保持显式 opt-in，下一步扩展第二集并确认内部排序。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已贯通 Agent/API/CLI，国内外 11 岗进入双 Gold 套件；综合排序继续保持显式 opt-in，下一步把唯一逆序转化为技能证据计划。
 
 ## 参考文档
 
@@ -290,6 +290,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [方向偏好入口接线](docs/iterations/028-direction-preference-entry-wiring.md) | Agent、API、CLI 透传与入口校验 |
 | [多冻结 Gold 套件基线](docs/iterations/029-multi-gold-suite-baseline.md) | 方向族覆盖、宏平均、最差集与扩展边界 |
 | [第二个冻结 Gold 与官方 JD 回归](docs/iterations/030-second-gold-official-jd.md) | 官方正文、coverage 缺口和真实措辞回归 |
+| [国内外大厂 JD 扩展](docs/iterations/031-domestic-global-jd-expansion.md) | 多城市、范围、方向、hard veto 与保留逆序 |
 
 ## 欢迎讨论
 

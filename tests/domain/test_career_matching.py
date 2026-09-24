@@ -119,6 +119,14 @@ def test_classifies_requirements_and_scores_evidence_coverage() -> None:
     )
     assert no_active_component.score == 0
 
+    hard_rejected = score_job_match(
+        candidate,
+        job,
+        job_skills,
+        decision_signals=DecisionSignals(hard_compatibility=0, direction_alignment=1),
+    )
+    assert hard_rejected.score == 0
+
 
 def test_returns_zero_when_job_contains_no_taxonomy_skills() -> None:
     candidate = extract_candidate_profile(LocalDocumentLoader().load_bytes("resume.txt", b"Python"))
@@ -278,7 +286,7 @@ def test_applies_confirmed_availability_without_fabricating_document_evidence() 
     assert confirmed_items["weekly_days"].candidate_confirmation is not None
     assert confirmed_items["weekly_days"].candidate_confirmation.value == 5
     assert confirmed_items["weekly_days"].candidate_confirmation.source == "user_confirmation"
-    assert confirmed.signals.hard_compatibility == 0.5
+    assert confirmed.signals.hard_compatibility == 0
     assert confirmed.warnings == ()
 
 
@@ -345,3 +353,128 @@ def test_recognizes_test_automation_as_fullstack_ai_testing_direction() -> None:
     assert extraction.signals.direction_alignment == 0
     assert extraction.directions[0].name == "fullstack_ai_testing"
     assert extraction.directions[0].status == "unmet"
+
+
+def test_matches_any_supported_job_location() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", "期望城市：上海".encode())
+    job = _job_from(
+        """### 1. Agent 研究实习生 | 甲公司
+**基本信息**
+- 北京、上海、杭州
+"""
+    )
+
+    extraction = extract_decision_signals(resume, job)
+
+    location = next(item for item in extraction.hard_constraints if item.name == "location")
+    assert location.status == "met"
+    assert [item.text for item in location.job_evidence] == ["北京", "上海", "杭州"]
+
+
+def test_ignores_preferred_availability_as_hard_constraint() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. Agent 实习生 | 甲公司
+**基本信息**
+- 每周 4 天以上；能实习 6 个月以上者优先
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        availability=CandidateAvailabilityConfirmation(weekly_days=5, duration_months=12),
+    )
+
+    assert [item.name for item in extraction.hard_constraints] == ["weekly_days"]
+
+
+def test_extracts_not_less_than_availability_requirements() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. 模型评测实习生 | 甲公司
+**基本信息**
+- 每周不少于 4 天；实习不少于 4 个月
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        availability=CandidateAvailabilityConfirmation(weekly_days=5, duration_months=12),
+    )
+
+    items = {item.name: item for item in extraction.hard_constraints}
+    assert items["weekly_days"].status == "met"
+    assert items["duration_months"].status == "met"
+
+
+def test_applies_confirmed_ai_product_preference() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. AI 社区产品培训生 | 甲公司
+**岗位职责**
+- 以 AI Native 方式建设社区产品
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        direction_preferences=CandidateDirectionPreferenceConfirmation(ai_product=0.6),
+    )
+
+    assert extraction.signals.direction_alignment == 0.6
+    assert extraction.directions[0].name == "ai_product"
+
+
+def test_recognizes_model_evaluation_as_machine_learning_direction() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. 大模型算法评测实习生 | 甲公司
+**岗位职责**
+- 建设模型评测系统并指导模型训练
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        direction_preferences=CandidateDirectionPreferenceConfirmation(machine_learning=0.7),
+    )
+
+    assert extraction.signals.direction_alignment == 0.7
+    assert extraction.directions[0].name == "machine_learning"
+
+
+def test_classifies_tensorrt_inference_as_ai_infrastructure_not_testing() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. AI Computing Software Development Intern | 甲公司
+**岗位职责**
+- 使用 TensorRT 优化 LLM 推理和 GPU 计算性能
+- 使用 CUDA 开发深度学习算子
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        direction_preferences=CandidateDirectionPreferenceConfirmation(
+            ai_infrastructure=0.8,
+            machine_learning=0.7,
+            fullstack_ai_testing=0.0,
+        ),
+    )
+
+    assert extraction.signals.direction_alignment == 0.75
+    assert {item.name for item in extraction.directions} == {
+        "ai_infrastructure",
+        "machine_learning",
+    }
