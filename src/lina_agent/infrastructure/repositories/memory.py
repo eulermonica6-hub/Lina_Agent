@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from lina_agent.application.agent_run_snapshot import AgentRunSnapshot
 from lina_agent.domain.models import CandidateProfile, JobPosting
 
 
@@ -31,3 +32,23 @@ class InMemoryJobPostingRepository:
 
     async def list_all(self) -> list[JobPosting]:
         return [job.model_copy(deep=True) for job in self._jobs.values()]
+
+
+class InMemoryAgentRunSnapshotRepository:
+    def __init__(self) -> None:
+        self._snapshots: dict[UUID, AgentRunSnapshot] = {}
+
+    async def save(self, snapshot: AgentRunSnapshot) -> None:
+        self._snapshots[snapshot.run_id] = snapshot.model_copy(deep=True)
+
+    async def get(self, run_id: UUID) -> AgentRunSnapshot | None:
+        snapshot = self._snapshots.get(run_id)
+        return snapshot.model_copy(deep=True) if snapshot is not None else None
+
+    async def list_recent(self, limit: int) -> list[AgentRunSnapshot]:
+        snapshots = sorted(
+            self._snapshots.values(),
+            key=lambda snapshot: snapshot.created_at,
+            reverse=True,
+        )[:limit]
+        return [snapshot.model_copy(deep=True) for snapshot in snapshots]

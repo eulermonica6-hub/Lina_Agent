@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.20
+> 适用版本：0.2.21
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -11,7 +11,7 @@ Lina 当前由两个并行内核组成：
 1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
 2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核。
 
-两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或 Agent Run 持久化。因此当前最重要的工程任务不是增加 UI，而是定义版本化 Run 快照。
+两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合、文档版本或执行检查点。结构化实体和脱敏 Agent Run Snapshot 已持久化，下一步是文档引用与确认版本。
 
 ## 2. 系统边界总图
 
@@ -67,7 +67,7 @@ flowchart LR
 - 原始文件只进入 `LocalDocumentLoader`；
 - 确定性节点消费带字符偏移的证据；
 - LLM 只接收规范化技能和岗位摘要，不接收原始简历文本；
-- 文件 Agent 的结果只返回调用方，当前不会写入 Repository；
+- 文件 Agent 的完整结果返回调用方；服务端只保存不含原文 evidence 的版本化 Snapshot；
 - Web SQLite Repository 只保存旧的 `CandidateProfile` 和 `JobPosting`，不会保存文件、证据、Top-K 或计划。
 
 ## 3. 运行入口与外部契约
@@ -80,7 +80,9 @@ flowchart LR
 | `POST /jobs/parse` | `{description}` | 确定性硬条件解析 | `JobConstraintExtraction` | 无，只预览 |
 | `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写本地 SQLite 岗位表 |
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
-| `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 当前无持久化；可选外部 LLM 调用 |
+| `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
+| `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |
+| `GET /agent/runs?limit=N` | 1..100 | 按创建时间查询最近历史 | `AgentRunSnapshot[]` | 无 |
 | `lina-match` | 简历路径、JD 路径、CLI 参数 | 运行同一文件 Agent | Markdown 或 JSON stdout | 当前无持久化；可选外部 LLM 调用 |
 | `python -m lina_agent.evaluation.job_parser` | 标注数据集路径 | 运行 JD 解析评测 | JSON stdout | 无 |
 | `uvicorn lina_agent.main:app` | 环境配置 | 装配 FastAPI、Repository、路由和静态文件 | HTTP 服务 | development/production 连接本地 SQLite |
@@ -335,7 +337,7 @@ Reviewer 通过才把计划放进正式 `action_plan`。失败时运行状态为
 
 | 字段 | 来源节点 | 语义 |
 | --- | --- | --- |
-| `run_id` | Supervisor | 本次运行随机 UUID；当前不持久化 |
+| `run_id` | Supervisor | 本次运行随机 UUID；用于 Snapshot 主键 |
 | `state` | Supervisor | `complete` 或模型增强失败后的 `degraded` |
 | `candidate` | Candidate Analyst | 候选人技能及证据 |
 | `job_catalog_document_id` | Document Ingestor | JD 文档稳定 ID |
@@ -349,12 +351,13 @@ Reviewer 通过才把计划放进正式 `action_plan`。失败时运行状态为
 | `steps` | 各节点 | 角色、`complete/failed/skipped` 和摘要 |
 | `warnings` | Supervisor | 分数边界、排除项、降级原因 |
 
-输出目前有两个去向：
+输出目前有三个去向：
 
 - CLI 将其格式化为 Markdown 或完整 JSON 后写 stdout；
 - API 将其序列化为 HTTP JSON。
+- API 成功后将脱敏、版本化 Snapshot 写入 SQLite。
 
-当前没有第三个去向：不会保存数据库、事件日志、Trace 后端或文件。
+Snapshot 不保存原文 evidence、offset、Base64 输入、源文件名或 step summary；完整响应仍由调用方负责。
 
 ## 8. Web 结构化决策链
 
@@ -405,12 +408,12 @@ sequenceDiagram
 | --- | --- | --- | --- |
 | Web 候选人/岗位 | `data/lina.db` SQLite Repository | 本地数据库文件 | 服务重启后可恢复 |
 | Agent 中间状态 | Python 局部变量 | 单次请求/CLI 进程 | 不可恢复 |
-| Agent Run | HTTP/stdout | 调用完成后由调用方负责 | 服务端不可恢复 |
+| Agent Run Snapshot | `agent_run_snapshots` SQLite 表 | 本地数据库文件 | 可查询历史，不可恢复执行 |
 | 文档身份 | SHA-256 + UUIDv5 | 同一 bytes 稳定 | 可重新计算 |
 | LLM Key | `.env`、环境变量、私有 key 文件 | 本机配置 | 不进入响应或 Git |
 | Playwright Trace | `test-results/` | 测试失败 | CI artifact，可复现前端失败 |
 
-下一阶段仍需要 `DocumentRepository`、聚合版本、`AgentRunRepository` 和检查点表，不能只把最终 Run JSON 塞进现有实体表。
+下一阶段仍需要 `DocumentRepository`、确认版本和检查点表；Snapshot 只保存稳定引用和脱敏结果。
 
 ## 11. 工程脚本与自动化
 
@@ -451,7 +454,7 @@ CI 在 Ubuntu 和 Windows 上执行锁文件检查、依赖同步、Chromium 安
 | --- | --- | --- |
 | P0 | 两套候选人/岗位模型未统一 | 硬条件和技能 Top-K 无法同时参与一次决策 |
 | P0 | 5 条 Gold 缺少硬条件与方向适配标签 | 能测量词表与引用，但无法解释人工 Top-K |
-| P0 | Agent Run、证据和确认状态不持久化 | 无历史、恢复、比较或反馈闭环 |
+| P0 | 文档、证据和确认版本未持久化 | Snapshot 可查询，但无法做证据 diff、重放或恢复 |
 | P1 | Loader/Planner 在应用层和路由直接构造 | 难以替换适配器、做后台任务和故障注入 |
 | P1 | API LLM 调用同步且逐 Provider 最长 30 秒 | 多 key 连续失败时请求延迟可能累积 |
 | P1 | 采集脚本未形成 Source Adapter | 无幂等、快照、去重、变更检测和统一错误 |

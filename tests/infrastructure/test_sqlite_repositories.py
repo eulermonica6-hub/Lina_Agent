@@ -1,11 +1,20 @@
 import asyncio
+import sqlite3
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
 
+from lina_agent.application.agent_run_snapshot import (
+    AgentRunRequestSnapshot,
+    AgentRunSnapshot,
+    AgentStepSnapshot,
+)
+from lina_agent.application.career_agent import AgentRole, AgentRunState, AgentStepStatus
 from lina_agent.domain.models import CandidateProfile, EducationLevel, JobPosting
 from lina_agent.infrastructure.repositories.sqlite import (
+    SQLiteAgentRunSnapshotRepository,
     SQLiteCandidateProfileRepository,
     SQLiteJobPostingRepository,
 )
@@ -62,3 +71,69 @@ async def test_concurrent_candidate_writes_are_persisted(tmp_path: Path) -> None
 
     restored = await SQLiteCandidateProfileRepository(tmp_path / "lina.db").list_all()
     assert {candidate.id for candidate in restored} == {candidate.id for candidate in candidates}
+
+
+@pytest.mark.asyncio
+async def test_version_one_database_migrates_to_snapshot_schema(tmp_path: Path) -> None:
+    database_path = tmp_path / "lina.db"
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            "CREATE TABLE candidate_profiles (id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+        )
+        connection.execute("PRAGMA user_version = 1")
+
+    repository = SQLiteCandidateProfileRepository(database_path)
+    await repository.list_all()
+
+    with sqlite3.connect(database_path) as connection:
+        version = connection.execute("PRAGMA user_version").fetchone()
+        tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+    assert version == (2,)
+    assert {"candidate_profiles", "job_postings", "agent_run_snapshots"} <= tables
+
+
+@pytest.mark.asyncio
+async def test_agent_run_snapshots_persist_in_recent_order(tmp_path: Path) -> None:
+    database_path = tmp_path / "lina.db"
+    repository = SQLiteAgentRunSnapshotRepository(database_path)
+    older = _snapshot(datetime(2026, 9, 24, tzinfo=UTC))
+    newer = _snapshot(older.created_at + timedelta(minutes=1))
+
+    await repository.save(newer)
+    await repository.save(older)
+
+    restored = await SQLiteAgentRunSnapshotRepository(database_path).list_recent(1)
+    assert restored == [newer]
+    assert await repository.get(older.run_id) == older
+
+
+def _snapshot(created_at: datetime) -> AgentRunSnapshot:
+    return AgentRunSnapshot(
+        run_id=uuid4(),
+        created_at=created_at,
+        state=AgentRunState.COMPLETE,
+        candidate_document_id=uuid4(),
+        job_catalog_document_id=uuid4(),
+        total_jobs=0,
+        considered_jobs=0,
+        excluded_inactive_jobs=0,
+        request=AgentRunRequestSnapshot(
+            top_k=1,
+            include_inactive=False,
+            auto_decision_signals=False,
+            use_llm=False,
+        ),
+        steps=(
+            AgentStepSnapshot(
+                name="ingest_resume",
+                role=AgentRole.DOCUMENT_INGESTOR,
+                status=AgentStepStatus.COMPLETE,
+            ),
+        ),
+        warning_count=0,
+    )

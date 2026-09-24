@@ -1,9 +1,12 @@
 import base64
+import json
+from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from lina_agent.api.routes import agent as agent_route
+from lina_agent.config import Settings
 from lina_agent.domain.career_gap import CareerGapAnalysis
 from lina_agent.domain.career_matching import CandidateDocumentProfile, RankedJobMatch
 from lina_agent.domain.career_planning import CareerActionPlan, CareerPlanAction
@@ -19,7 +22,8 @@ def _encoded(filename: str, text: str) -> dict[str, str]:
 
 @pytest.fixture
 def agent_client() -> AsyncClient:
-    return AsyncClient(transport=ASGITransport(app=create_app()), base_url="http://test")
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
 @pytest.mark.asyncio
@@ -42,6 +46,89 @@ async def test_agent_api_runs_evidence_match_workflow(agent_client: AsyncClient)
     assert payload["matches"][0]["score"] == 100
     assert payload["matches"][0]["matched_required"][0]["skill"] == "Python"
     assert payload["matches"][0]["matched_preferred"][0]["skill"] == "RAG"
+
+
+@pytest.mark.asyncio
+async def test_agent_run_snapshot_survives_restart_without_raw_document_text(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(environment="development", database_path=tmp_path / "lina.db")
+    request = {
+        "resume": _encoded("private-person-name.txt", "Python PRIVATE_RESUME_SENTINEL"),
+        "job_catalog": _encoded(
+            "private-company-jobs.md",
+            """### 1. Agent 实习生 | [COMPANY_A]
+**岗位职责**
+- PRIVATE_JOB_SENTINEL
+**任职要求**
+- Python
+""",
+        ),
+        "top_k": 1,
+        "auto_decision_signals": True,
+        "candidate_direction_preferences": {"agent_llm_application": 1.0},
+    }
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(settings)),
+        base_url="http://test",
+    ) as client:
+        create_response = await client.post("/agent/runs", json=request)
+
+    run_id = create_response.json()["run_id"]
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(settings)),
+        base_url="http://test",
+    ) as client:
+        response = await client.get(f"/agent/runs/{run_id}")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema_version"] == 1
+    assert payload["run_id"] == run_id
+    assert payload["matches"][0]["matched_required_skills"] == ["Python"]
+    assert payload["request"]["candidate_direction_preferences"]["agent_llm_application"] == 1
+    serialized = json.dumps(payload, ensure_ascii=False)
+    assert "PRIVATE_RESUME_SENTINEL" not in serialized
+    assert "PRIVATE_JOB_SENTINEL" not in serialized
+    assert "private-person-name.txt" not in serialized
+    assert "private-company-jobs.md" not in serialized
+    assert "start_offset" not in serialized
+    assert "end_offset" not in serialized
+
+
+@pytest.mark.asyncio
+async def test_agent_run_snapshot_list_is_recent_first_and_bounded(
+    agent_client: AsyncClient,
+) -> None:
+    requests = (
+        {
+            "resume": _encoded("first.txt", "Python"),
+            "job_catalog": _encoded("first.md", "### 1. First | 甲公司"),
+        },
+        {
+            "resume": _encoded("second.txt", "RAG"),
+            "job_catalog": _encoded("second.md", "### 1. Second | 乙公司"),
+        },
+    )
+    async with agent_client as client:
+        first = await client.post("/agent/runs", json=requests[0])
+        second = await client.post("/agent/runs", json=requests[1])
+        response = await client.get("/agent/runs", params={"limit": 1})
+
+    assert response.status_code == 200
+    assert [item["run_id"] for item in response.json()] == [second.json()["run_id"]]
+    assert first.json()["run_id"] != second.json()["run_id"]
+
+
+@pytest.mark.asyncio
+async def test_agent_run_snapshot_returns_404_for_unknown_id(
+    agent_client: AsyncClient,
+) -> None:
+    async with agent_client as client:
+        response = await client.get("/agent/runs/00000000-0000-0000-0000-000000000000")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "agent run not found"
 
 
 @pytest.mark.asyncio

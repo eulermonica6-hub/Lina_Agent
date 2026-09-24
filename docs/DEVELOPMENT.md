@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.20`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.21`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、性能证据和结构化 SQLite 持久化已完成。CUDA GPU 验收延期，下一步定义版本化 Agent Run Snapshot。
+Repository、统一文档摄取、双 Gold 套件、性能证据、结构化 SQLite 和脱敏 Agent Run Snapshot 已完成。下一步定义文档引用与候选确认版本。
 
 ### 目标
 

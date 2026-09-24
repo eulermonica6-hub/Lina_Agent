@@ -1,8 +1,8 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.20
+> 适用版本：0.2.21
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
-> 数据存储：结构化画像与岗位默认保存到本地 SQLite；文件 Agent Run 仍不保存
+> 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
 ## 1. 当前能力边界
 
@@ -25,7 +25,7 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | PDF/OCR | 不可用 | 尚不处理 PDF、扫描件和图片内文字 |
 | 官方 JD 离线摄取 | 开发工具 | 人工运行脚本，输出仅保存到 Git 忽略的私有目录 |
 | 结构化数据持久化 | 可用 | 画像和岗位默认保存到 `data/lina.db`，重启后可恢复 |
-| Agent Run 持久化 | 不可用 | 文件 Agent 的证据、Top-K、Trace 和计划仍由调用方保存 |
+| Agent Run Snapshot | 可用 | 保存请求确认、分数、技能/gap 摘要、步骤状态和计划，不保存原文 evidence |
 
 ## 2. 启动 Lina
 
@@ -61,7 +61,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.20"
+  "version": "0.2.21"
 }
 ```
 
@@ -273,12 +273,14 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 `POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
 
+成功运行后，Lina 将脱敏 Snapshot 保存到 SQLite。`GET /agent/runs/{run_id}` 查询单条，`GET /agent/runs?limit=20` 查询最近记录。Snapshot 不包含 Base64 输入、原文 evidence、offset 或源文件名，因此不能替代调用方保存的完整即时响应。
+
 请求默认 `auto_decision_signals=false`、`use_llm=false`，完全本地运行。设置 `auto_decision_signals=true` 会启用本地确定性综合排序，并在 `decision_signal_extractions` 返回逐项证据；只有明确设置 `use_llm=true` 才会调用经济型 Provider。Provider 或 Schema 失败时 HTTP 请求仍返回确定性结果，`state` 为 `degraded`，失败节点的 `status` 为 `failed`。这表示模型增强失败，不表示 Top-K 和缺口分析失败。
 
 ## 6. 数据与隐私
 
 - 结构化画像和岗位默认写入 `data/lina.db`；该文件含个人求职信息，已被 Git 忽略且不应放入共享目录。
-- 文件 Agent 的原始文档、证据、Top-K、Trace 和行动计划仍不会写入数据库。
+- 文件 Agent 的脱敏 Snapshot 会写入数据库；原始文档、evidence text、offset 和私密文件名不会写入。
 - 当前没有登录和访问控制，只应在本机使用，不要直接暴露到公网。
 - 原始真实简历应放在 `data/private/`，该目录被 Git 忽略。
 - 提交代码前运行 `git status`，确认没有个人姓名、手机号、邮箱或完整简历进入版本控制。

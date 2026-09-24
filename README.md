@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.20** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.21** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 174 个测试通过 |
+| 自动化测试 | 179 个测试通过 |
 | 推理实验测试 | 本机 16 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
@@ -120,6 +120,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | C++ 扩展证据 | RMSNorm C++ `0.136ms`、相对 Python `1.60x`，最大误差 `1.91e-6` |
 | CUDA 扩展状态 | Kernel、runner preflight 和 GPU workflow 已完成；真实 NVIDIA artifact 待运行 |
 | 结构化持久化 | Web 候选人画像与岗位使用本地 SQLite，跨服务重启可恢复 |
+| Agent Run 历史 | 脱敏 Snapshot 可跨重启查询；不保存原文、offset 或私密文件名 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -255,6 +256,8 @@ uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.b
 | `POST` | `/jobs` | 保存用户确认后的岗位 |
 | `POST` | `/matches` | 执行确定性硬条件检查 |
 | `POST` | `/agent/runs` | 以 Base64 文件运行证据 Agent；`use_llm=true` 时显式启用计划与复核 |
+| `GET` | `/agent/runs/{run_id}` | 查询单条版本化脱敏 Agent Run Snapshot |
+| `GET` | `/agent/runs?limit=20` | 按创建时间倒序查询最近 Snapshot |
 
 抽取示例：
 
@@ -290,7 +293,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持 PDF、扫描件 OCR、页眉页脚或图片内文字；
 - 当前 Agent 可显式启用自动硬条件/方向抽取，但综合排序默认仍关闭；
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
-- 结构化 Web 候选人画像和岗位已使用本地 SQLite 持久化；文件 Agent Run、证据和计划仍未持久化，也没有公开部署。
+- 结构化 Web 候选人/岗位与脱敏 Agent Run Snapshot 已使用本地 SQLite 持久化；原始文档、evidence 和执行检查点仍未持久化，也没有公开部署。
 
 当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。国内外 11 岗进入双 Gold 套件，唯一逆序已转化为技能证据计划；PyTorch CPU/MPS、C++ RMSNorm 已实测，CUDA kernel 已实现但仍等待真实 NVIDIA artifact。综合排序继续保持显式 opt-in。
 
@@ -337,6 +340,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [CUDA Runner 设置](docs/CUDA_RUNNER_SETUP.md) | NVIDIA 主机要求、安全注册、labels、preflight 与 artifact 验收 |
 | [CUDA Runner Preflight](docs/iterations/036-cuda-runner-preflight.md) | 外部硬件门禁、阻塞事实和 token 安全边界 |
 | [SQLite 结构化状态持久化](docs/iterations/037-sqlite-structured-state-persistence.md) | Repository 替换、跨重启恢复、并发与隐私边界 |
+| [版本化 Agent Run Snapshot](docs/iterations/038-versioned-agent-run-snapshots.md) | 脱敏投影、schema v2、历史查询与恢复边界 |
 
 ## 欢迎讨论
 

@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.20`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.21`，之后按可验收用户能力递增。
+
+## 0.2.21 - 2026-09-24
+
+- 新增 `AgentRunSnapshot(schema_version=1)`，保存文档引用、请求确认、匹配/gap 摘要、步骤状态、计划与 Review。
+- Snapshot 明确排除 Base64 输入、原文 evidence、offset、源文件名、step summary 和 warning 原文。
+- POST `/agent/runs` 成功后持久化 Snapshot；新增单条与最近列表 GET API，支持跨 FastAPI app 重启查询。
+- SQLite schema 从 v1 统一迁移到 v2；recent 按 UTC `created_at` 排序，不依赖 rowid。
+- 下一步定义文档引用和候选确认版本；历史可查询不等于执行可恢复。
+- 179 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.20 - 2026-09-24
 

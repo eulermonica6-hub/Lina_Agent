@@ -6,9 +6,16 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
+from lina_agent.application.agent_run_snapshot import AgentRunSnapshot
 from lina_agent.domain.models import CandidateProfile, DomainModel, JobPosting
 
-TableName = Literal["candidate_profiles", "job_postings"]
+TableName = Literal["candidate_profiles", "job_postings", "agent_run_snapshots"]
+_SCHEMA_TABLES: tuple[TableName, ...] = (
+    "candidate_profiles",
+    "job_postings",
+    "agent_run_snapshots",
+)
+_SCHEMA_VERSION = 2
 
 
 class _SQLiteJsonStore[ModelT: DomainModel]:
@@ -61,15 +68,16 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
         try:
             connection.execute("PRAGMA busy_timeout = 5000")
             connection.execute("PRAGMA journal_mode = WAL")
-            connection.execute(
-                f"""
-                CREATE TABLE IF NOT EXISTS {self._table} (
-                    id TEXT PRIMARY KEY,
-                    payload TEXT NOT NULL
+            for table in _SCHEMA_TABLES:
+                connection.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {table} (
+                        id TEXT PRIMARY KEY,
+                        payload TEXT NOT NULL
+                    )
+                    """
                 )
-                """
-            )
-            connection.execute("PRAGMA user_version = 1")
+            connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
             yield connection
             connection.commit()
         finally:
@@ -110,3 +118,22 @@ class SQLiteJobPostingRepository:
 
     async def list_all(self) -> list[JobPosting]:
         return await self._store.list_all()
+
+
+class SQLiteAgentRunSnapshotRepository:
+    def __init__(self, database_path: Path) -> None:
+        self._store = _SQLiteJsonStore(
+            database_path,
+            "agent_run_snapshots",
+            AgentRunSnapshot,
+        )
+
+    async def save(self, snapshot: AgentRunSnapshot) -> None:
+        await self._store.save(snapshot.run_id, snapshot)
+
+    async def get(self, run_id: UUID) -> AgentRunSnapshot | None:
+        return await self._store.get(run_id)
+
+    async def list_recent(self, limit: int) -> list[AgentRunSnapshot]:
+        snapshots = await self._store.list_all()
+        return sorted(snapshots, key=lambda snapshot: snapshot.created_at, reverse=True)[:limit]

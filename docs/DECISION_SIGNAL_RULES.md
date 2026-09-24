@@ -39,6 +39,7 @@
 18. 无 NVIDIA runtime/NVCC 时不得宣称 CUDA 已验收；条件 skip 必须说明原因，并由真实 GPU artifact 关闭验证缺口。
 19. 外部 runner 必须先通过机器可读 preflight；注册 token 只在目标主机终端使用，不进入仓库、对话或 artifact。
 20. 持久化必须通过 Repository 边界和跨实例重启测试；Agent Run 在定义版本、引用和隐私字段前不得塞入现有实体 JSON。
+21. Agent Run 历史必须保存脱敏 Snapshot；原文 evidence、offset、Base64 输入和源文件名只能通过独立文档边界引用。
 
 ## 发布
 

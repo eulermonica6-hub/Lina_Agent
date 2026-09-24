@@ -1,6 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
+from lina_agent.application.agent_run_snapshot import AgentRunSnapshot
 from lina_agent.domain.models import CandidateProfile, JobPosting
 
 
@@ -18,3 +19,11 @@ class JobPostingRepository(Protocol):
     async def get(self, job_id: UUID) -> JobPosting | None: ...
 
     async def list_all(self) -> list[JobPosting]: ...
+
+
+class AgentRunSnapshotRepository(Protocol):
+    async def save(self, snapshot: AgentRunSnapshot) -> None: ...
+
+    async def get(self, run_id: UUID) -> AgentRunSnapshot | None: ...
+
+    async def list_recent(self, limit: int) -> list[AgentRunSnapshot]: ...
