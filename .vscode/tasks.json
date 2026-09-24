@@ -187,6 +187,24 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Experiment: PyTorch inference baseline",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "inference",
+        "--locked",
+        "python",
+        "experiments/pytorch_inference/benchmark.py",
+        "--devices",
+        "auto",
+        "--output",
+        "data/private/evaluation/pytorch_inference_baseline_v1.json"
+      ],
+      "problemMatcher": []
     }
   ]
 }

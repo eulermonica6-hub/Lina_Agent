@@ -1,0 +1,27 @@
+name: Inference Benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --extra dev --extra inference --locked
+      - run: uv run --extra dev --extra inference --locked pytest experiments/pytorch_inference/test_benchmark.py
+      - run: >-
+          uv run --extra inference --locked python experiments/pytorch_inference/benchmark.py
+          --devices cpu --iterations 5 --warmup 2 --output pytorch-inference-cpu.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-inference-cpu
+          path: pytorch-inference-cpu.json

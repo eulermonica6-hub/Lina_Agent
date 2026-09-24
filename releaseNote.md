@@ -1,6 +1,14 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.15`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.16`，之后按可验收用户能力递增。
+
+## 0.2.16 - 2026-09-24
+
+- 新增独立 PyTorch causal decoder 推理实验，固定模型、输入、warmup、同步和 JSON 报告契约。
+- 新增 `inference` optional extra、专用测试、VS Code 任务和手动 CPU benchmark workflow，不污染默认安装与主 CI。
+- Apple Silicon 实测 MPS median `5.42ms`、`94.5k tokens/s`，相对 CPU 加速 `3.28x`，最大绝对误差 `1.19e-6`。
+- 该结果是合成小模型技能证据，不宣称生产 LLM serving；下一步实现 C++ PyTorch 扩展。
+- 核心 167 项与推理专项 4 项测试通过；核心语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.15 - 2026-09-24
 
