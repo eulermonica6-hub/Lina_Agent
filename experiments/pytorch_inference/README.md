@@ -6,7 +6,7 @@ This experiment creates reproducible PyTorch evidence for the NVIDIA AI Computin
 
 ```bash
 uv sync --extra dev --extra inference --locked
-uv run --extra inference --locked python experiments/pytorch_inference/benchmark.py \
+uv run --extra inference --locked python -m experiments.pytorch_inference.benchmark \
   --devices auto \
   --output data/private/evaluation/pytorch_inference_baseline_v1.json
 ```

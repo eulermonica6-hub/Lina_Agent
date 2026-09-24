@@ -78,7 +78,7 @@ MPS 当前分配约 `13.71 MB`；MPS 与 CPU 输出最大绝对误差为 `1.19e-
 
 ```bash
 uv sync --extra dev --extra inference --locked
-uv run --extra inference --locked python experiments/pytorch_inference/benchmark.py \
+uv run --extra inference --locked python -m experiments.pytorch_inference.benchmark \
   --devices auto \
   --output data/private/evaluation/pytorch_inference_baseline_v1.json
 ```

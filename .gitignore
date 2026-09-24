@@ -26,6 +26,7 @@ htmlcov/
 test-results/
 dist/
 build/
+experiments/**/.build/
 
 # Private job-search data must never be committed.
 data/private/

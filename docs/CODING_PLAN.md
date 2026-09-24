@@ -1,6 +1,6 @@
 # Lina Career Agent Coding Plan
 
-> 状态：Phase 2B.12 已完成 PyTorch CPU/MPS 推理基线，MPS 吞吐相对 CPU 为 `3.28x`。下一步实现 C++ PyTorch 扩展，不默认启用综合排序。
+> 状态：Phase 2B.13 已完成 PyTorch C++ RMSNorm 扩展，C++ 相对 Python reference 为 `1.60x`。下一步在 NVIDIA 环境实现 CUDA Kernel，不默认启用综合排序。
 
 > 能力边界：当前 LLM 只用于显式 opt-in 的结构化行动计划，并由确定性 Reviewer 检查目标技能和任务结构；没有对话、联网搜索、公司查询、简历改写、持久化或恢复。技能覆盖已完成 5 条人工 Gold 首轮校准，但缺口优先级和最终排序尚未接入硬条件与方向特征。目标架构和后续功能均为路线图，不代表已经实现。
 
@@ -26,7 +26,11 @@ TXT/Markdown/DOCX 统一证据摄取（已完成）
    -> 扩展第二集并确认内部排序/ties（已完成）
    -> 针对真实逆序生成技能证据计划（已完成）
    -> 执行 PyTorch 推理基线项目（已完成）
-   -> 实现 C++ PyTorch 扩展与误差基准（下一步）
+   -> 实现 C++ PyTorch 扩展与误差基准（已完成）
+   -> NVIDIA 环境 CUDA Kernel 与 benchmark（下一步）
+   -> 技能证据回写简历并复跑排序
+   -> 候选事实、JD、Agent Run 和 benchmark 持久化
+   -> 可解释状态图、岗位监控、简历优化与学习闭环
    -> LLM 结构化语义映射、引用验证与确定性评分
    -> 文档、证据、确认状态与 Agent Run 持久化和恢复
    -> 可解释匹配状态图

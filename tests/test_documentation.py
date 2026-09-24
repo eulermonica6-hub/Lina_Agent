@@ -35,6 +35,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/031-domestic-global-jd-expansion.md",
     "docs/iterations/032-deterministic-skill-evidence-plan.md",
     "docs/iterations/033-pytorch-inference-baseline.md",
+    "docs/iterations/034-pytorch-cpp-rmsnorm-extension.md",
 )
 
 

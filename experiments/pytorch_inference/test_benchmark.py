@@ -2,7 +2,8 @@ import json
 
 import pytest
 import torch
-from benchmark import BenchmarkConfig, benchmark_devices, main
+
+from .benchmark import BenchmarkConfig, benchmark_devices, main
 
 
 def _tiny_config() -> BenchmarkConfig:

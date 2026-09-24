@@ -17,11 +17,20 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --extra dev --extra inference --locked
-      - run: uv run --extra dev --extra inference --locked pytest experiments/pytorch_inference/test_benchmark.py
+        - run: >-
+          uv run --extra dev --extra inference --locked pytest
+          experiments/pytorch_inference experiments/pytorch_cpp_extension
       - run: >-
-          uv run --extra inference --locked python experiments/pytorch_inference/benchmark.py
+          uv run --extra inference --locked python -m experiments.pytorch_inference.benchmark
           --devices cpu --iterations 5 --warmup 2 --output pytorch-inference-cpu.json
       - uses: actions/upload-artifact@v4
         with:
           name: pytorch-inference-cpu
           path: pytorch-inference-cpu.json
+      - run: >-
+          uv run --extra inference --locked python -m experiments.pytorch_cpp_extension.benchmark
+          --iterations 10 --warmup 2 --output pytorch-cpp-rms-norm.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-cpp-rms-norm
+          path: pytorch-cpp-rms-norm.json
