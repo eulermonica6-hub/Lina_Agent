@@ -42,6 +42,7 @@
 | 034 | 2026-09-24 | PyTorch C++ RMSNorm 扩展 | 从 `0.38x` 负结果优化到 `1.60x`，保持误差 `1.91e-6` | [C++ RMSNorm 扩展](iterations/034-pytorch-cpp-rmsnorm-extension.md) |
 | 035 | 2026-09-24 | CUDA RMSNorm 实现与验证契约 | 在无 NVIDIA 环境下完成 kernel、探针、条件测试和 GPU workflow，不伪造性能结果 | [CUDA RMSNorm 契约](iterations/035-cuda-rmsnorm-contract.md) |
 | 036 | 2026-09-24 | CUDA Runner Preflight 与安全注册 | 将外部 GPU、工具链、labels 和 token 安全转化为机器可读门禁 | [CUDA Runner Preflight](iterations/036-cuda-runner-preflight.md) |
+| 037 | 2026-09-24 | SQLite 结构化状态持久化 | 让 Web 画像与岗位跨重启恢复，同时保留 Agent Run 的独立版本边界 | [SQLite 持久化](iterations/037-sqlite-structured-state-persistence.md) |
 
 ## 文档入口
 

@@ -57,6 +57,37 @@ async def test_create_profile_job_and_run_match(test_app_client: AsyncClient) ->
 
 
 @pytest.mark.asyncio
+async def test_profile_and_job_survive_app_restart(tmp_path: Path) -> None:
+    settings = Settings(environment="development", database_path=tmp_path / "lina.db")
+    first_app = create_app(settings)
+    async with AsyncClient(
+        transport=ASGITransport(app=first_app),
+        base_url="http://test",
+    ) as client:
+        profile_response = await client.post(
+            "/profiles",
+            json=load_fixture("candidate_profile.json"),
+        )
+        job_response = await client.post("/jobs", json=load_fixture("target_job.json"))
+
+    second_app = create_app(settings)
+    async with AsyncClient(
+        transport=ASGITransport(app=second_app),
+        base_url="http://test",
+    ) as client:
+        match_response = await client.post(
+            "/matches",
+            json={
+                "candidate_id": profile_response.json()["id"],
+                "job_id": job_response.json()["id"],
+            },
+        )
+
+    assert match_response.status_code == 200
+    assert match_response.json()["reasons"] == ["graduation_year"]
+
+
+@pytest.mark.asyncio
 async def test_match_returns_404_for_unknown_candidate(test_app_client: AsyncClient) -> None:
     async with test_app_client as client:
         job_response = await client.post("/jobs", json=load_fixture("target_job.json"))

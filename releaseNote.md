@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.19`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.20`，之后按可验收用户能力递增。
+
+## 0.2.20 - 2026-09-24
+
+- 新增 SQLite Repository adapter，结构化 Web 候选人画像和岗位可跨进程重启恢复。
+- development/production 默认使用 `data/lina.db`；test 或 `database_path=None` 保持内存隔离，路径可用 `LINA_DATABASE_PATH` 覆盖。
+- 使用 Pydantic JSON、UUID upsert、WAL、busy timeout、独立连接和 `asyncio.to_thread`；10 条并发写入验收通过。
+- 两个独立 repository 与两个独立 FastAPI app 的重启测试通过；Agent Run、证据、确认和计划仍未持久化。
+- CUDA GPU 验收延期为外部任务，不阻塞 Lina 持久化主线；下一步定义版本化 `AgentRunSnapshot`。
+- 174 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.19 - 2026-09-24
 

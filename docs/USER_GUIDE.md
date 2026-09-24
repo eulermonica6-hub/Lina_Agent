@@ -1,8 +1,8 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.19
+> 适用版本：0.2.20
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
-> 数据存储：进程内存，服务重启后清空
+> 数据存储：结构化画像与岗位默认保存到本地 SQLite；文件 Agent Run 仍不保存
 
 ## 1. 当前能力边界
 
@@ -24,7 +24,8 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | DOCX 简历解析 | 可用 | 支持正文、表格和文本框中的文字 |
 | PDF/OCR | 不可用 | 尚不处理 PDF、扫描件和图片内文字 |
 | 官方 JD 离线摄取 | 开发工具 | 人工运行脚本，输出仅保存到 Git 忽略的私有目录 |
-| 数据持久化 | 不可用 | 重启后画像和岗位会丢失 |
+| 结构化数据持久化 | 可用 | 画像和岗位默认保存到 `data/lina.db`，重启后可恢复 |
+| Agent Run 持久化 | 不可用 | 文件 Agent 的证据、Top-K、Trace 和计划仍由调用方保存 |
 
 ## 2. 启动 Lina
 
@@ -60,7 +61,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.19"
+  "version": "0.2.20"
 }
 ```
 
@@ -276,7 +277,8 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 ## 6. 数据与隐私
 
-- 数据只保存在 Uvicorn 进程内存中；停止或重启服务后清空。
+- 结构化画像和岗位默认写入 `data/lina.db`；该文件含个人求职信息，已被 Git 忽略且不应放入共享目录。
+- 文件 Agent 的原始文档、证据、Top-K、Trace 和行动计划仍不会写入数据库。
 - 当前没有登录和访问控制，只应在本机使用，不要直接暴露到公网。
 - 原始真实简历应放在 `data/private/`，该目录被 Git 忽略。
 - 提交代码前运行 `git status`，确认没有个人姓名、手机号、邮箱或完整简历进入版本控制。

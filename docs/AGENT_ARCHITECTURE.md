@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.19
+> 适用版本：0.2.20
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -8,10 +8,10 @@
 
 Lina 当前由两个并行内核组成：
 
-1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、内存保存和资格判断；
+1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
 2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核。
 
-两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人聚合、岗位聚合或持久化状态。因此当前最重要的工程任务不是增加 UI，而是统一数据契约并保存 Agent Run。
+两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或 Agent Run 持久化。因此当前最重要的工程任务不是增加 UI，而是定义版本化 Run 快照。
 
 ## 2. 系统边界总图
 
@@ -27,7 +27,7 @@ flowchart LR
 
     subgraph Legacy[结构化 Web 决策链]
         WEBAPI[/profiles · /jobs · /matches]
-        MEM[(进程内 Repository)]
+        MEM[(SQLite Repository)]
         HARD[硬条件规则]
     end
 
@@ -68,7 +68,7 @@ flowchart LR
 - 确定性节点消费带字符偏移的证据；
 - LLM 只接收规范化技能和岗位摘要，不接收原始简历文本；
 - 文件 Agent 的结果只返回调用方，当前不会写入 Repository；
-- Web Repository 只保存旧的 `CandidateProfile` 和 `JobPosting`，不会保存文件、证据、Top-K 或计划。
+- Web SQLite Repository 只保存旧的 `CandidateProfile` 和 `JobPosting`，不会保存文件、证据、Top-K 或计划。
 
 ## 3. 运行入口与外部契约
 
@@ -76,14 +76,14 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `GET /` | 无 | 渲染版本号并返回静态工作台 | HTML/CSS/JS | 无 |
 | `GET /health` | 无 | 读取应用设置与运行时版本 | `HealthResponse` | 无 |
-| `POST /profiles` | `CandidateProfile` JSON | Pydantic 校验并保存 | 201 + 同一画像 | 写进程内候选人 Repository |
+| `POST /profiles` | `CandidateProfile` JSON | Pydantic 校验并保存 | 201 + 同一画像 | 写本地 SQLite 候选人表 |
 | `POST /jobs/parse` | `{description}` | 确定性硬条件解析 | `JobConstraintExtraction` | 无，只预览 |
-| `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写进程内岗位 Repository |
+| `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写本地 SQLite 岗位表 |
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 当前无持久化；可选外部 LLM 调用 |
 | `lina-match` | 简历路径、JD 路径、CLI 参数 | 运行同一文件 Agent | Markdown 或 JSON stdout | 当前无持久化；可选外部 LLM 调用 |
 | `python -m lina_agent.evaluation.job_parser` | 标注数据集路径 | 运行 JD 解析评测 | JSON stdout | 无 |
-| `uvicorn lina_agent.main:app` | 环境配置 | 装配 FastAPI、Repository、路由和静态文件 | HTTP 服务 | 创建新的进程内 Repository |
+| `uvicorn lina_agent.main:app` | 环境配置 | 装配 FastAPI、Repository、路由和静态文件 | HTTP 服务 | development/production 连接本地 SQLite |
 
 ### 3.1 CLI 参数
 
@@ -127,7 +127,7 @@ src/lina_agent/
 ├── api/                 HTTP 输入校验、状态码和依赖读取
 ├── application/         用例编排、Repository/Planner Protocol、运行状态
 ├── domain/              纯领域模型、解析、匹配、缺口与复核规则
-├── infrastructure/      文件、LLM、内存 Repository 适配器
+├── infrastructure/      文件、LLM、内存与 SQLite Repository 适配器
 ├── cli/                 本地文件 Agent 命令行入口和报告格式化
 ├── evaluation/          固定数据集评测
 ├── web/                 旧结构化工作台静态页面
@@ -403,14 +403,14 @@ sequenceDiagram
 
 | 状态 | 位置 | 生命周期 | 可恢复性 |
 | --- | --- | --- | --- |
-| Web 候选人/岗位 | `app.state` 内存 Repository | Uvicorn 进程 | 不可恢复 |
+| Web 候选人/岗位 | `data/lina.db` SQLite Repository | 本地数据库文件 | 服务重启后可恢复 |
 | Agent 中间状态 | Python 局部变量 | 单次请求/CLI 进程 | 不可恢复 |
 | Agent Run | HTTP/stdout | 调用完成后由调用方负责 | 服务端不可恢复 |
 | 文档身份 | SHA-256 + UUIDv5 | 同一 bytes 稳定 | 可重新计算 |
 | LLM Key | `.env`、环境变量、私有 key 文件 | 本机配置 | 不进入响应或 Git |
 | Playwright Trace | `test-results/` | 测试失败 | CI artifact，可复现前端失败 |
 
-后续持久化至少需要 `DocumentRepository`、`CandidateAggregateRepository`、`JobAggregateRepository`、`AgentRunRepository` 和检查点表，不能只把最终 JSON 塞进一个字段。
+下一阶段仍需要 `DocumentRepository`、聚合版本、`AgentRunRepository` 和检查点表，不能只把最终 Run JSON 塞进现有实体表。
 
 ## 11. 工程脚本与自动化
 
