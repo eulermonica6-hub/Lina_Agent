@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.21`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.22`，之后按可验收用户能力递增。
+
+## 0.2.22 - 2026-09-24
+
+- 新增 metadata-only `DocumentReference`，分离内容 document ID 与 resume/JD 角色 reference ID，不保存正文或文件名。
+- 新增 `CandidateConfirmationVersion`：随机版本 ID 表示确认事件，稳定 facts hash 表示事实内容。
+- Snapshot 默认升级到 schema v2，关联两个文档引用和可选确认版本，同时兼容读取 v1。
+- 新增文档引用与确认版本 GET API；SQLite schema 升级到 v3，文档引用 insert-if-absent 保持不可变。
+- 下一步实现不加载原始正文的 Snapshot diff。
+- 185 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.21 - 2026-09-24
 

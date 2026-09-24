@@ -2,6 +2,10 @@ from typing import Protocol
 from uuid import UUID
 
 from lina_agent.application.agent_run_snapshot import AgentRunSnapshot
+from lina_agent.application.persistence_models import (
+    CandidateConfirmationVersion,
+    DocumentReference,
+)
 from lina_agent.domain.models import CandidateProfile, JobPosting
 
 
@@ -27,3 +31,15 @@ class AgentRunSnapshotRepository(Protocol):
     async def get(self, run_id: UUID) -> AgentRunSnapshot | None: ...
 
     async def list_recent(self, limit: int) -> list[AgentRunSnapshot]: ...
+
+
+class DocumentReferenceRepository(Protocol):
+    async def save(self, reference: DocumentReference) -> None: ...
+
+    async def get(self, reference_id: UUID) -> DocumentReference | None: ...
+
+
+class CandidateConfirmationVersionRepository(Protocol):
+    async def save(self, version: CandidateConfirmationVersion) -> None: ...
+
+    async def get(self, version_id: UUID) -> CandidateConfirmationVersion | None: ...

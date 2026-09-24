@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.21
+> 适用版本：0.2.22
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -83,6 +83,8 @@ flowchart LR
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |
 | `GET /agent/runs?limit=N` | 1..100 | 按创建时间查询最近历史 | `AgentRunSnapshot[]` | 无 |
+| `GET /agent/documents/{reference_id}` | Reference UUID | 加载 metadata-only 文档版本 | `DocumentReference` | 无 |
+| `GET /agent/confirmations/{version_id}` | Version UUID | 加载用户确认版本 | `CandidateConfirmationVersion` | 无 |
 | `lina-match` | 简历路径、JD 路径、CLI 参数 | 运行同一文件 Agent | Markdown 或 JSON stdout | 当前无持久化；可选外部 LLM 调用 |
 | `python -m lina_agent.evaluation.job_parser` | 标注数据集路径 | 运行 JD 解析评测 | JSON stdout | 无 |
 | `uvicorn lina_agent.main:app` | 环境配置 | 装配 FastAPI、Repository、路由和静态文件 | HTTP 服务 | development/production 连接本地 SQLite |

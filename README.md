@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.21** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.22** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 179 个测试通过 |
+| 自动化测试 | 185 个测试通过 |
 | 推理实验测试 | 本机 16 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
@@ -121,6 +121,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | CUDA 扩展状态 | Kernel、runner preflight 和 GPU workflow 已完成；真实 NVIDIA artifact 待运行 |
 | 结构化持久化 | Web 候选人画像与岗位使用本地 SQLite，跨服务重启可恢复 |
 | Agent Run 历史 | 脱敏 Snapshot 可跨重启查询；不保存原文、offset 或私密文件名 |
+| 输入版本关联 | Snapshot v2 关联 metadata-only 文档引用和候选确认版本 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -258,6 +259,8 @@ uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.b
 | `POST` | `/agent/runs` | 以 Base64 文件运行证据 Agent；`use_llm=true` 时显式启用计划与复核 |
 | `GET` | `/agent/runs/{run_id}` | 查询单条版本化脱敏 Agent Run Snapshot |
 | `GET` | `/agent/runs?limit=20` | 按创建时间倒序查询最近 Snapshot |
+| `GET` | `/agent/documents/{reference_id}` | 查询不含正文/文件名的文档 metadata 引用 |
+| `GET` | `/agent/confirmations/{version_id}` | 查询一次用户确认事实版本 |
 
 抽取示例：
 
@@ -341,6 +344,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [CUDA Runner Preflight](docs/iterations/036-cuda-runner-preflight.md) | 外部硬件门禁、阻塞事实和 token 安全边界 |
 | [SQLite 结构化状态持久化](docs/iterations/037-sqlite-structured-state-persistence.md) | Repository 替换、跨重启恢复、并发与隐私边界 |
 | [版本化 Agent Run Snapshot](docs/iterations/038-versioned-agent-run-snapshots.md) | 脱敏投影、schema v2、历史查询与恢复边界 |
+| [文档引用与候选确认版本](docs/iterations/039-document-and-confirmation-versions.md) | 内容/角色/事件 ID、facts hash 与 SQLite schema v3 |
 
 ## 欢迎讨论
 

@@ -12,10 +12,19 @@ from lina_agent.application.agent_run_snapshot import (
     AgentStepSnapshot,
 )
 from lina_agent.application.career_agent import AgentRole, AgentRunState, AgentStepStatus
+from lina_agent.application.persistence_models import (
+    DocumentKind,
+    create_confirmation_version,
+    create_document_reference,
+)
+from lina_agent.domain.career_matching import CandidateAvailabilityConfirmation
 from lina_agent.domain.models import CandidateProfile, EducationLevel, JobPosting
+from lina_agent.infrastructure.document_loader import LocalDocumentLoader
 from lina_agent.infrastructure.repositories.sqlite import (
     SQLiteAgentRunSnapshotRepository,
+    SQLiteCandidateConfirmationVersionRepository,
     SQLiteCandidateProfileRepository,
+    SQLiteDocumentReferenceRepository,
     SQLiteJobPostingRepository,
 )
 
@@ -74,7 +83,9 @@ async def test_concurrent_candidate_writes_are_persisted(tmp_path: Path) -> None
 
 
 @pytest.mark.asyncio
-async def test_version_one_database_migrates_to_snapshot_schema(tmp_path: Path) -> None:
+async def test_version_one_database_migrates_to_versioned_reference_schema(
+    tmp_path: Path,
+) -> None:
     database_path = tmp_path / "lina.db"
     with sqlite3.connect(database_path) as connection:
         connection.execute(
@@ -93,8 +104,14 @@ async def test_version_one_database_migrates_to_snapshot_schema(tmp_path: Path) 
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-    assert version == (2,)
-    assert {"candidate_profiles", "job_postings", "agent_run_snapshots"} <= tables
+    assert version == (3,)
+    assert {
+        "candidate_profiles",
+        "job_postings",
+        "agent_run_snapshots",
+        "document_references",
+        "candidate_confirmation_versions",
+    } <= tables
 
 
 @pytest.mark.asyncio
@@ -137,3 +154,41 @@ def _snapshot(created_at: datetime) -> AgentRunSnapshot:
         ),
         warning_count=0,
     )
+
+
+def test_agent_run_snapshot_version_one_remains_readable() -> None:
+    payload = _snapshot(datetime(2026, 9, 24, tzinfo=UTC)).model_dump(mode="json")
+    payload["schema_version"] = 1
+    payload.pop("candidate_document_reference_id")
+    payload.pop("job_catalog_document_reference_id")
+    payload.pop("candidate_confirmation_version_id")
+
+    restored = AgentRunSnapshot.model_validate(payload)
+
+    assert restored.schema_version == 1
+    assert restored.candidate_document_reference_id is None
+    assert restored.candidate_confirmation_version_id is None
+
+
+@pytest.mark.asyncio
+async def test_document_reference_is_immutable_and_confirmation_version_persists(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "lina.db"
+    document = LocalDocumentLoader().load_bytes("resume.txt", b"Python")
+    reference = create_document_reference(document, DocumentKind.CANDIDATE_RESUME, 6)
+    changed = reference.model_copy(update={"byte_size": 999})
+    document_repository = SQLiteDocumentReferenceRepository(database_path)
+
+    await document_repository.save(reference)
+    await document_repository.save(changed)
+
+    assert await document_repository.get(reference.reference_id) == reference
+    version = create_confirmation_version(
+        CandidateAvailabilityConfirmation(weekly_days=5),
+        None,
+    )
+    assert version is not None
+    confirmation_repository = SQLiteCandidateConfirmationVersionRepository(database_path)
+    await confirmation_repository.save(version)
+    assert await confirmation_repository.get(version.version_id) == version

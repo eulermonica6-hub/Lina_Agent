@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import json
 from pathlib import Path
 
@@ -83,10 +84,34 @@ async def test_agent_run_snapshot_survives_restart_without_raw_document_text(
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert payload["run_id"] == run_id
     assert payload["matches"][0]["matched_required_skills"] == ["Python"]
     assert payload["request"]["candidate_direction_preferences"]["agent_llm_application"] == 1
+    confirmation_version_id = payload["candidate_confirmation_version_id"]
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(settings)),
+        base_url="http://test",
+    ) as client:
+        resume_reference = await client.get(
+            f"/agent/documents/{payload['candidate_document_reference_id']}"
+        )
+        catalog_reference = await client.get(
+            f"/agent/documents/{payload['job_catalog_document_reference_id']}"
+        )
+        confirmation = await client.get(f"/agent/confirmations/{confirmation_version_id}")
+
+    assert resume_reference.status_code == 200
+    assert (
+        resume_reference.json()["content_hash"]
+        == hashlib.sha256(b"Python PRIVATE_RESUME_SENTINEL").hexdigest()
+    )
+    assert resume_reference.json()["kind"] == "candidate_resume"
+    assert resume_reference.json()["retention_policy"] == "metadata_only"
+    assert catalog_reference.status_code == 200
+    assert catalog_reference.json()["kind"] == "job_catalog"
+    assert confirmation.status_code == 200
+    assert confirmation.json()["direction_preferences"]["agent_llm_application"] == 1
     serialized = json.dumps(payload, ensure_ascii=False)
     assert "PRIVATE_RESUME_SENTINEL" not in serialized
     assert "PRIVATE_JOB_SENTINEL" not in serialized
@@ -94,6 +119,7 @@ async def test_agent_run_snapshot_survives_restart_without_raw_document_text(
     assert "private-company-jobs.md" not in serialized
     assert "start_offset" not in serialized
     assert "end_offset" not in serialized
+    assert "private-person-name.txt" not in json.dumps(resume_reference.json())
 
 
 @pytest.mark.asyncio
@@ -126,9 +152,19 @@ async def test_agent_run_snapshot_returns_404_for_unknown_id(
 ) -> None:
     async with agent_client as client:
         response = await client.get("/agent/runs/00000000-0000-0000-0000-000000000000")
+        document_response = await client.get(
+            "/agent/documents/00000000-0000-0000-0000-000000000000"
+        )
+        confirmation_response = await client.get(
+            "/agent/confirmations/00000000-0000-0000-0000-000000000000"
+        )
 
     assert response.status_code == 404
     assert response.json()["detail"] == "agent run not found"
+    assert document_response.status_code == 404
+    assert document_response.json()["detail"] == "document not found"
+    assert confirmation_response.status_code == 404
+    assert confirmation_response.json()["detail"] == "confirmation version not found"
 
 
 @pytest.mark.asyncio

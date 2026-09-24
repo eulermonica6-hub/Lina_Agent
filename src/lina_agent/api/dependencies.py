@@ -4,7 +4,9 @@ from fastapi import Request
 
 from lina_agent.application.repositories import (
     AgentRunSnapshotRepository,
+    CandidateConfirmationVersionRepository,
     CandidateProfileRepository,
+    DocumentReferenceRepository,
     JobPostingRepository,
 )
 
@@ -19,3 +21,16 @@ def get_job_repository(request: Request) -> JobPostingRepository:
 
 def get_agent_run_repository(request: Request) -> AgentRunSnapshotRepository:
     return cast(AgentRunSnapshotRepository, request.app.state.agent_run_repository)
+
+
+def get_document_reference_repository(request: Request) -> DocumentReferenceRepository:
+    return cast(DocumentReferenceRepository, request.app.state.document_reference_repository)
+
+
+def get_confirmation_version_repository(
+    request: Request,
+) -> CandidateConfirmationVersionRepository:
+    return cast(
+        CandidateConfirmationVersionRepository,
+        request.app.state.confirmation_version_repository,
+    )

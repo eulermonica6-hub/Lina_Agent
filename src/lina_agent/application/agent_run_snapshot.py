@@ -57,12 +57,15 @@ class AgentStepSnapshot(DomainModel):
 
 
 class AgentRunSnapshot(DomainModel):
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 2
     run_id: UUID
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     state: AgentRunState
     candidate_document_id: UUID
     job_catalog_document_id: UUID
+    candidate_document_reference_id: UUID | None = None
+    job_catalog_document_reference_id: UUID | None = None
+    candidate_confirmation_version_id: UUID | None = None
     total_jobs: int = Field(ge=0)
     considered_jobs: int = Field(ge=0)
     excluded_inactive_jobs: int = Field(ge=0)
@@ -78,12 +81,18 @@ class AgentRunSnapshot(DomainModel):
 def create_agent_run_snapshot(
     run: CareerAgentRun,
     request: AgentRunRequestSnapshot,
+    candidate_document_reference_id: UUID | None = None,
+    job_catalog_document_reference_id: UUID | None = None,
+    candidate_confirmation_version_id: UUID | None = None,
 ) -> AgentRunSnapshot:
     return AgentRunSnapshot(
         run_id=run.run_id,
         state=run.state,
         candidate_document_id=run.candidate.document_id,
         job_catalog_document_id=run.job_catalog_document_id,
+        candidate_document_reference_id=candidate_document_reference_id,
+        job_catalog_document_reference_id=job_catalog_document_reference_id,
+        candidate_confirmation_version_id=candidate_confirmation_version_id,
         total_jobs=run.total_jobs,
         considered_jobs=run.considered_jobs,
         excluded_inactive_jobs=run.excluded_inactive_jobs,

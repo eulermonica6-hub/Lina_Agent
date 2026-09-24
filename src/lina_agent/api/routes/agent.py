@@ -4,14 +4,29 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import Base64Bytes, BaseModel, Field, model_validator
 
-from lina_agent.api.dependencies import get_agent_run_repository
+from lina_agent.api.dependencies import (
+    get_agent_run_repository,
+    get_confirmation_version_repository,
+    get_document_reference_repository,
+)
 from lina_agent.application.agent_run_snapshot import (
     AgentRunRequestSnapshot,
     AgentRunSnapshot,
     create_agent_run_snapshot,
 )
 from lina_agent.application.career_agent import CareerAgentRun, CareerMatchAgent
-from lina_agent.application.repositories import AgentRunSnapshotRepository
+from lina_agent.application.persistence_models import (
+    CandidateConfirmationVersion,
+    DocumentKind,
+    DocumentReference,
+    create_confirmation_version,
+    create_document_reference,
+)
+from lina_agent.application.repositories import (
+    AgentRunSnapshotRepository,
+    CandidateConfirmationVersionRepository,
+    DocumentReferenceRepository,
+)
 from lina_agent.domain.career_matching import (
     CandidateAvailabilityConfirmation,
     CandidateDirectionPreferenceConfirmation,
@@ -50,7 +65,15 @@ class CareerAgentRequest(BaseModel):
 @router.post("/runs", response_model=CareerAgentRun)
 async def create_agent_run(
     request: CareerAgentRequest,
-    repository: Annotated[AgentRunSnapshotRepository, Depends(get_agent_run_repository)],
+    run_repository: Annotated[AgentRunSnapshotRepository, Depends(get_agent_run_repository)],
+    document_repository: Annotated[
+        DocumentReferenceRepository,
+        Depends(get_document_reference_repository),
+    ],
+    confirmation_repository: Annotated[
+        CandidateConfirmationVersionRepository,
+        Depends(get_confirmation_version_repository),
+    ],
 ) -> CareerAgentRun:
     loader = LocalDocumentLoader()
     try:
@@ -74,7 +97,35 @@ async def create_agent_run(
             candidate_direction_preferences=request.candidate_direction_preferences,
             use_llm=request.use_llm,
         )
-        await repository.save(create_agent_run_snapshot(run, snapshot_request))
+        resume_reference = create_document_reference(
+            resume,
+            DocumentKind.CANDIDATE_RESUME,
+            len(request.resume.content),
+        )
+        catalog_reference = create_document_reference(
+            catalog,
+            DocumentKind.JOB_CATALOG,
+            len(request.job_catalog.content),
+        )
+        confirmation_version = create_confirmation_version(
+            request.candidate_availability,
+            request.candidate_direction_preferences,
+        )
+        await document_repository.save(resume_reference)
+        await document_repository.save(catalog_reference)
+        if confirmation_version is not None:
+            await confirmation_repository.save(confirmation_version)
+        await run_repository.save(
+            create_agent_run_snapshot(
+                run,
+                snapshot_request,
+                candidate_document_reference_id=resume_reference.reference_id,
+                job_catalog_document_reference_id=catalog_reference.reference_id,
+                candidate_confirmation_version_id=(
+                    confirmation_version.version_id if confirmation_version is not None else None
+                ),
+            )
+        )
         return run
     except (DocumentLoadError, JobCatalogParseError) as error:
         raise HTTPException(
@@ -100,3 +151,37 @@ async def list_agent_runs(
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> list[AgentRunSnapshot]:
     return await repository.list_recent(limit)
+
+
+@router.get("/documents/{reference_id}", response_model=DocumentReference)
+async def get_document_reference(
+    reference_id: UUID,
+    repository: Annotated[
+        DocumentReferenceRepository,
+        Depends(get_document_reference_repository),
+    ],
+) -> DocumentReference:
+    reference = await repository.get(reference_id)
+    if reference is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
+    return reference
+
+
+@router.get(
+    "/confirmations/{version_id}",
+    response_model=CandidateConfirmationVersion,
+)
+async def get_confirmation_version(
+    version_id: UUID,
+    repository: Annotated[
+        CandidateConfirmationVersionRepository,
+        Depends(get_confirmation_version_repository),
+    ],
+) -> CandidateConfirmationVersion:
+    version = await repository.get(version_id)
+    if version is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="confirmation version not found",
+        )
+    return version

@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.21
+> 适用版本：0.2.22
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
@@ -61,7 +61,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.21"
+  "version": "0.2.22"
 }
 ```
 
@@ -274,6 +274,8 @@ curl -X POST http://127.0.0.1:8000/matches \
 `POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
 
 成功运行后，Lina 将脱敏 Snapshot 保存到 SQLite。`GET /agent/runs/{run_id}` 查询单条，`GET /agent/runs?limit=20` 查询最近记录。Snapshot 不包含 Base64 输入、原文 evidence、offset 或源文件名，因此不能替代调用方保存的完整即时响应。
+
+Snapshot v2 还关联 metadata-only 文档引用与候选确认版本。使用 `GET /agent/documents/{reference_id}` 查看 hash、格式和大小统计，使用 `GET /agent/confirmations/{version_id}` 查看一次确认事实。文档接口不返回原文或文件名。
 
 请求默认 `auto_decision_signals=false`、`use_llm=false`，完全本地运行。设置 `auto_decision_signals=true` 会启用本地确定性综合排序，并在 `decision_signal_extractions` 返回逐项证据；只有明确设置 `use_llm=true` 才会调用经济型 Provider。Provider 或 Schema 失败时 HTTP 请求仍返回确定性结果，`state` 为 `degraded`，失败节点的 `status` 为 `failed`。这表示模型增强失败，不表示 Top-K 和缺口分析失败。
 

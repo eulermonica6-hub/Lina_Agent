@@ -1,6 +1,6 @@
 # Lina Career Agent Coding Plan
 
-> 状态：Phase 3A.2 已完成版本化脱敏 Agent Run Snapshot、SQLite schema v2 与历史查询 API。下一步定义文档引用和候选确认版本。
+> 状态：Phase 3A.3 已完成 metadata-only DocumentReference、CandidateConfirmationVersion、Snapshot v2 与 SQLite schema v3。下一步实现 Snapshot diff。
 
 > 能力边界：当前 LLM 只用于显式 opt-in 的结构化行动计划，并由确定性 Reviewer 检查目标技能和任务结构；没有对话、在线岗位搜索、简历改写或执行恢复。结构化实体和脱敏 Run 历史已持久化，原始文档、确认版本和检查点仍未持久化。
 
@@ -32,8 +32,8 @@ TXT/Markdown/DOCX 统一证据摄取（已完成）
    -> 外部 NVIDIA runner online 并产出 GPU artifact（延期外部任务）
    -> 结构化 Web 画像/岗位 SQLite 持久化（已完成）
    -> 版本化 Agent Run Snapshot 与 Repository（已完成）
-   -> DocumentReference 与 CandidateConfirmationVersion（下一步）
-   -> Snapshot diff 与历史比较 API
+   -> DocumentReference 与 CandidateConfirmationVersion（已完成）
+   -> Snapshot diff 与历史比较 API（下一步）
    -> 执行检查点、重放与恢复
    -> 技能证据回写简历并复跑排序（CUDA artifact 后）
    -> LLM 结构化语义映射、引用验证与确定性评分

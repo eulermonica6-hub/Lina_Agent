@@ -41,6 +41,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/036-cuda-runner-preflight.md",
     "docs/iterations/037-sqlite-structured-state-persistence.md",
     "docs/iterations/038-versioned-agent-run-snapshots.md",
+    "docs/iterations/039-document-and-confirmation-versions.md",
 )
 
 
