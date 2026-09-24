@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.17`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.18`，之后按可验收用户能力递增。
+
+## 0.2.18 - 2026-09-24
+
+- 新增 CUDA RMSNorm kernel、PyTorch CUDA 注册、JIT loader、环境探针、条件测试和同步 benchmark。
+- 新增 self-hosted NVIDIA workflow，固定 GPU 型号/能力、误差、延迟、吞吐和显存报告契约。
+- 本机无 CUDA build、NVCC 和 NVIDIA runtime：本地 14 项实验通过、6 项 GPU 测试带原因跳过，不声明 CUDA 性能完成。
+- 修复 inference benchmark workflow 的测试步骤缩进，并用三实验组合测试验证模块收集。
+- 下一步是在真实 NVIDIA runner 执行 GPU artifact；通过后才回写技能证据并复跑排序。
+- 核心 167 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.17 - 2026-09-24
 

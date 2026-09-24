@@ -223,6 +223,21 @@
         "data/private/evaluation/pytorch_cpp_rms_norm_v2.json"
       ],
       "problemMatcher": []
+    },
+    {
+      "label": "Experiment: CUDA environment probe",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run",
+        "--extra",
+        "inference",
+        "--locked",
+        "python",
+        "-m",
+        "experiments.pytorch_cuda_extension.environment"
+      ],
+      "problemMatcher": []
     }
   ]
 }

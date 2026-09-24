@@ -17,7 +17,7 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --extra dev --extra inference --locked
-        - run: >-
+      - run: >-
           uv run --extra dev --extra inference --locked pytest
           experiments/pytorch_inference experiments/pytorch_cpp_extension
       - run: >-

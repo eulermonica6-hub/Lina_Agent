@@ -40,6 +40,7 @@
 | 032 | 2026-09-24 | 确定性技能证据计划 | 将 NVIDIA 排序逆序转化为 PyTorch/C++/CUDA 可验收项目 | [技能证据计划](iterations/032-deterministic-skill-evidence-plan.md) |
 | 033 | 2026-09-24 | PyTorch LLM 推理基线 | 用固定 causal decoder 量化 CPU/MPS 延迟、吞吐、内存和误差 | [PyTorch 推理基线](iterations/033-pytorch-inference-baseline.md) |
 | 034 | 2026-09-24 | PyTorch C++ RMSNorm 扩展 | 从 `0.38x` 负结果优化到 `1.60x`，保持误差 `1.91e-6` | [C++ RMSNorm 扩展](iterations/034-pytorch-cpp-rmsnorm-extension.md) |
+| 035 | 2026-09-24 | CUDA RMSNorm 实现与验证契约 | 在无 NVIDIA 环境下完成 kernel、探针、条件测试和 GPU workflow，不伪造性能结果 | [CUDA RMSNorm 契约](iterations/035-cuda-rmsnorm-contract.md) |
 
 ## 文档入口
 

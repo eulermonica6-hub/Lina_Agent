@@ -1,0 +1,28 @@
+name: CUDA Benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rms-norm:
+    runs-on: [self-hosted, linux, x64, gpu, cuda]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --extra dev --extra inference --locked
+      - run: uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.environment
+      - run: uv run --extra dev --extra inference --locked pytest experiments/pytorch_cuda_extension
+      - run: >-
+          uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.benchmark
+          --output pytorch-cuda-rms-norm.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-cuda-rms-norm
+          path: pytorch-cuda-rms-norm.json
