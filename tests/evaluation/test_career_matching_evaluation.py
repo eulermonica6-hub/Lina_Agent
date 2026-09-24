@@ -13,6 +13,7 @@ from lina_agent.evaluation.career_matching import (
     citation_is_valid,
     evaluate_ablations,
     evaluate_automatic_decision_signals,
+    evaluate_automatic_decision_suite,
     evaluate_career_matching,
     load_gold_dataset,
     main,
@@ -250,6 +251,94 @@ def test_automatic_signals_use_dataset_direction_preferences(tmp_path: Path) -> 
     breakdown = next(item for item in report.job_breakdown if item.catalog_number == 1)
     assert breakdown.direction_alignment == 0.9
     assert breakdown.gold_direction_alignment == 0.9
+
+
+def test_automatic_signal_suite_reports_macro_worst_case_and_direction_coverage(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "first").mkdir()
+    (tmp_path / "second").mkdir()
+    first_path = _write_dataset(tmp_path / "first")
+    second_path = _write_dataset(tmp_path / "second")
+    first_payload = json.loads(first_path.read_text(encoding="utf-8"))
+    first_payload["candidate_direction_preferences"] = {"agent_llm_application": 1.0}
+    first_payload["jobs"][0]["direction_alignment"] = 1.0
+    first_path.write_text(json.dumps(first_payload), encoding="utf-8")
+    second_payload = json.loads(second_path.read_text(encoding="utf-8"))
+    second_payload["gold_ranking"] = [2, 1]
+    second_payload["candidate_direction_preferences"] = {"machine_learning": 0.7}
+    second_payload["jobs"][0]["direction_alignment"] = 0.7
+    (second_path.parent / "jobs.md").write_text(
+        """### 1. Machine Learning 平台岗位 | [COMPANY_A]
+**岗位职责**
+- 机器学习模型开发
+**任职要求**
+- Python
+### 2. 算法岗位 | [COMPANY_B]
+**任职要求**
+- Python 与 LangGraph
+""",
+        encoding="utf-8",
+    )
+    second_path.write_text(json.dumps(second_payload), encoding="utf-8")
+    manifest_path = tmp_path / "suite.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "suite_version": "test-suite-v1",
+                "datasets": ["first/gold.json", "second/gold.json"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = evaluate_automatic_decision_suite(manifest_path)
+
+    assert report.dataset_count == 2
+    assert report.total_job_count == 4
+    assert report.covered_direction_families == (
+        "agent_llm_application",
+        "machine_learning",
+    )
+    assert report.direction_family_coverage == 0.4
+    assert report.macro_top_1_accuracy == 0.5
+    assert report.macro_pairwise_accuracy == 0.5
+    assert report.minimum_pairwise_accuracy == 0.0
+    assert [item.dataset_version for item in report.datasets] == ["test-v1", "test-v1"]
+
+
+def test_rejects_duplicate_datasets_in_automatic_signal_suite(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "suite.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "suite_version": "test-suite-v1",
+                "datasets": ["gold.json", "gold.json"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="must be unique"):
+        evaluate_automatic_decision_suite(manifest_path)
+
+
+def test_automatic_signal_suite_cli_outputs_stability_metrics(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_dataset(tmp_path)
+    manifest_path = tmp_path / "suite.json"
+    manifest_path.write_text(
+        json.dumps({"suite_version": "test-suite-v1", "datasets": ["gold.json"]}),
+        encoding="utf-8",
+    )
+
+    main([str(manifest_path), "--auto-signal-suite"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["dataset_count"] == 1
+    assert payload["minimum_pairwise_accuracy"] == 1
 
 
 def test_calibrates_weights_and_cli_outputs_json(

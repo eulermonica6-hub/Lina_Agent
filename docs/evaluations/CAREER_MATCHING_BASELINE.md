@@ -62,6 +62,12 @@
 
 预测排序更新为 `1 > 2 > 4 > 3 > 5`；岗位 3/4 为并列组，因此 Top-1 与 Pairwise Accuracy 均为 `1.0`，逆序对为 `0`。该结果仅证明当前 5 JD 的确认契约闭环，不代表泛化准确率；入口接线前默认行为不变。
 
+## 多 Gold 套件基线
+
+`0.2.12` 新增版本化 suite manifest，逐个运行独立冻结集并报告数据集/岗位规模、JD 实际方向族覆盖、direction MAE 宏平均与最大值、Top-1/Pairwise 宏平均和最差 Pairwise。
+
+首轮私有 suite 仍只有 `1` 个冻结集和 `5` 个岗位。五类方向覆盖率为 `1.0`，macro direction MAE 为 `0.0`，macro/minimum Pairwise 为 `1.0/1.0`。这证明指标管线可复跑，不证明跨数据集稳定；第二个 Gold 必须来自完整匿名官方 JD 与用户确认排序。
+
 ## 复现
 
 ```bash

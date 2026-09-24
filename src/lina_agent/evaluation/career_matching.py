@@ -8,6 +8,7 @@ from typing import Any, cast
 from pydantic import ConfigDict, Field, model_validator
 
 from lina_agent.domain.career_matching import (
+    DIRECTION_TAXONOMY,
     SKILL_TAXONOMY,
     CandidateAvailabilityConfirmation,
     CandidateDirectionPreferenceConfirmation,
@@ -182,9 +183,41 @@ class AutomaticDecisionSignalReport(DomainModel):
     pairwise_accuracy: float = Field(ge=0, le=1)
 
 
+class CareerMatchingGoldSuite(DomainModel):
+    model_config = ConfigDict(frozen=True)
+
+    suite_version: str = Field(min_length=1)
+    datasets: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_unique_datasets(self) -> "CareerMatchingGoldSuite":
+        if len(set(self.datasets)) != len(self.datasets):
+            raise ValueError("gold suite datasets must be unique")
+        return self
+
+
+class AutomaticDecisionSuiteReport(DomainModel):
+    suite_version: str
+    dataset_count: int = Field(ge=1)
+    total_job_count: int = Field(ge=1)
+    covered_direction_families: tuple[str, ...]
+    direction_family_coverage: float = Field(ge=0, le=1)
+    macro_direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
+    maximum_direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
+    macro_top_1_accuracy: float = Field(ge=0, le=1)
+    macro_pairwise_accuracy: float = Field(ge=0, le=1)
+    minimum_pairwise_accuracy: float = Field(ge=0, le=1)
+    datasets: tuple[AutomaticDecisionSignalReport, ...] = Field(min_length=1)
+
+
 def load_gold_dataset(path: Path) -> CareerMatchingGoldDataset:
     payload = cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
     return CareerMatchingGoldDataset.model_validate(payload)
+
+
+def load_gold_suite(path: Path) -> CareerMatchingGoldSuite:
+    payload = cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
+    return CareerMatchingGoldSuite.model_validate(payload)
 
 
 def evaluate_career_matching(
@@ -459,6 +492,46 @@ def evaluate_automatic_decision_signals(dataset_path: Path) -> AutomaticDecision
     )
 
 
+def evaluate_automatic_decision_suite(manifest_path: Path) -> AutomaticDecisionSuiteReport:
+    suite = load_gold_suite(manifest_path)
+    dataset_paths = tuple((manifest_path.parent / path).resolve() for path in suite.datasets)
+    reports = tuple(evaluate_automatic_decision_signals(path) for path in dataset_paths)
+    direction_names = tuple(term.name for term in DIRECTION_TAXONOMY)
+    covered_direction_families = tuple(
+        name
+        for name in direction_names
+        if any(
+            direction.name == name
+            for report in reports
+            for job in report.job_breakdown
+            for direction in job.directions
+        )
+    )
+    direction_maes = tuple(
+        report.direction_signal_mae for report in reports if report.direction_signal_mae is not None
+    )
+    return AutomaticDecisionSuiteReport(
+        suite_version=suite.suite_version,
+        dataset_count=len(reports),
+        total_job_count=sum(report.job_count for report in reports),
+        covered_direction_families=covered_direction_families,
+        direction_family_coverage=_ratio(
+            len(covered_direction_families),
+            len(direction_names),
+        ),
+        macro_direction_signal_mae=(
+            sum(direction_maes) / len(direction_maes) if direction_maes else None
+        ),
+        maximum_direction_signal_mae=max(direction_maes, default=None),
+        macro_top_1_accuracy=sum(report.top_1_accuracy for report in reports) / len(reports),
+        macro_pairwise_accuracy=(
+            sum(report.pairwise_accuracy for report in reports) / len(reports)
+        ),
+        minimum_pairwise_accuracy=min(report.pairwise_accuracy for report in reports),
+        datasets=reports,
+    )
+
+
 def calibrate_match_weights(dataset_path: Path) -> CareerMatchingCalibrationReport:
     baseline_weights = MatchWeights()
     baseline = evaluate_career_matching(dataset_path, baseline_weights)
@@ -671,18 +744,28 @@ def main(arguments: Sequence[str] | None = None) -> None:
     parser.add_argument("--calibrate", action="store_true")
     parser.add_argument("--ablate", action="store_true")
     parser.add_argument("--auto-signals", action="store_true")
+    parser.add_argument("--auto-signal-suite", action="store_true")
     parsed_arguments = parser.parse_args(arguments)
     selected_modes = sum(
-        (parsed_arguments.calibrate, parsed_arguments.ablate, parsed_arguments.auto_signals)
+        (
+            parsed_arguments.calibrate,
+            parsed_arguments.ablate,
+            parsed_arguments.auto_signals,
+            parsed_arguments.auto_signal_suite,
+        )
     )
     if selected_modes > 1:
-        parser.error("--calibrate, --ablate and --auto-signals are mutually exclusive")
+        parser.error(
+            "--calibrate, --ablate, --auto-signals and --auto-signal-suite are mutually exclusive"
+        )
     if parsed_arguments.calibrate:
         report = calibrate_match_weights(parsed_arguments.dataset)
     elif parsed_arguments.ablate:
         report = evaluate_ablations(parsed_arguments.dataset)
     elif parsed_arguments.auto_signals:
         report = evaluate_automatic_decision_signals(parsed_arguments.dataset)
+    elif parsed_arguments.auto_signal_suite:
+        report = evaluate_automatic_decision_suite(parsed_arguments.dataset)
     else:
         report = evaluate_career_matching(parsed_arguments.dataset)
     print(report.model_dump_json(indent=2))

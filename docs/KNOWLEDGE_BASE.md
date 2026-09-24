@@ -34,6 +34,7 @@
 | 026 | 2026-09-15 | 排序并列与逆序对分析 | 尊重同优先级偏好，并将排序误差定位到具体分量 | [并列与逆序分析](iterations/026-ranking-ties-and-inversion-analysis.md) |
 | 027 | 2026-09-21 | 候选人方向偏好确认契约 | 用带来源的方向强度消除离散重叠率歧义 | [方向偏好确认](iterations/027-direction-preference-confirmation-contract.md) |
 | 028 | 2026-09-24 | 方向偏好入口接线 | 在 Agent、API、CLI 使用同一确认契约并防止静默丢参 | [方向偏好入口](iterations/028-direction-preference-entry-wiring.md) |
+| 029 | 2026-09-24 | 多冻结 Gold 套件基线 | 分离方向族覆盖、样本规模、宏平均和最差集稳定性 | [多 Gold 套件](iterations/029-multi-gold-suite-baseline.md) |
 
 ## 文档入口
 

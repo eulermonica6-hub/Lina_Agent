@@ -1,6 +1,14 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.11`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.12`，之后按可验收用户能力递增。
+
+## 0.2.12 - 2026-09-24
+
+- 新增版本化多 Gold manifest 与 `--auto-signal-suite` 评测入口。
+- 汇总数据集数、岗位数、JD 实际方向族覆盖、direction MAE 宏平均/最大值，以及 Top-1/Pairwise 宏平均和最差 Pairwise。
+- 私有 suite 首轮仍为 1 个冻结集、5 个岗位；五类方向覆盖率 `1.0`，macro direction MAE `0.0`，macro/minimum Pairwise `1.0/1.0`。
+- 建立 5 项私有扩展标注 backlog；缺完整 JD 或用户排序的候选不会提前进入 Gold。
+- 156 项测试通过，语句与分支覆盖率均为 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.11 - 2026-09-24
 
