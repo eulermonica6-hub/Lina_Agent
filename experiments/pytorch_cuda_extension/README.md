@@ -5,7 +5,7 @@ This experiment implements a float32 RMSNorm CUDA kernel with one block per row 
 ## Probe
 
 ```bash
-uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.environment
+uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.runner_preflight
 ```
 
 The probe reports the PyTorch CUDA build, runtime availability, device count, CUDA home, NVCC, `nvidia-smi`, and actionable reasons when the environment is not ready.

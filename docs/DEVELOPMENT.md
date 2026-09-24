@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.18`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.19`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、技能证据计划、PyTorch CPU/MPS、C++ RMSNorm 和 CUDA 验证契约已完成。下一步在 NVIDIA runner 产出 GPU artifact。
+Repository、统一文档摄取、双 Gold 套件、技能证据计划、PyTorch CPU/MPS、C++ RMSNorm、CUDA 验证与 runner preflight 已完成。下一步在外部 NVIDIA runner 产出 GPU artifact。
 
 ### 目标
 

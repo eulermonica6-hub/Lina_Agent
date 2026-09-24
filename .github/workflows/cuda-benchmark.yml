@@ -17,7 +17,9 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --extra dev --extra inference --locked
-      - run: uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.environment
+      - run: >-
+          uv run --extra inference --locked python
+          -m experiments.pytorch_cuda_extension.runner_preflight --require-ready
       - run: uv run --extra dev --extra inference --locked pytest experiments/pytorch_cuda_extension
       - run: >-
           uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.benchmark

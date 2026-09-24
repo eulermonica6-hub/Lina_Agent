@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.18** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.19** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -104,7 +104,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 信号 | 当前结果 |
 | --- | --- |
 | 自动化测试 | 167 个测试通过 |
-| 推理实验测试 | 本机 14 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
+| 推理实验测试 | 本机 16 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -118,7 +118,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 多 Gold 稳定性 | 2 个冻结集、11 个岗位；扩展集 Pairwise 0.933，保留 1 个技能缺口逆序 |
 | PyTorch 推理证据 | MPS `94.5k tokens/s`、相对 CPU `3.28x`，最大绝对误差 `1.19e-6` |
 | C++ 扩展证据 | RMSNorm C++ `0.136ms`、相对 Python `1.60x`，最大误差 `1.91e-6` |
-| CUDA 扩展状态 | Kernel、探针和 GPU workflow 已完成；真实 NVIDIA artifact 待运行 |
+| CUDA 扩展状态 | Kernel、runner preflight 和 GPU workflow 已完成；真实 NVIDIA artifact 待运行 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 8 个 Playwright 竞态测试覆盖候选人保存、岗位保存、抽取、匹配的过期成功与失败响应；桌面端与移动端布局仍为手工验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -235,10 +235,10 @@ uv run --extra inference --locked python -m experiments.pytorch_cpp_extension.be
   --output data/private/evaluation/pytorch_cpp_rms_norm_v3.json
 ```
 
-检查 CUDA 环境；GPU 机器上再运行 kernel 测试与 benchmark：
+检查 CUDA runner；GPU 机器上再运行 kernel 测试与 benchmark：
 
 ```bash
-uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.environment
+uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.runner_preflight
 uv run --extra dev --extra inference --locked pytest experiments/pytorch_cuda_extension
 uv run --extra inference --locked python -m experiments.pytorch_cuda_extension.benchmark \
   --output data/private/evaluation/pytorch_cuda_rms_norm_v1.json
@@ -333,6 +333,8 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [PyTorch LLM 推理基线](docs/iterations/033-pytorch-inference-baseline.md) | CPU/MPS 延迟、吞吐、内存、误差与可复现环境 |
 | [PyTorch C++ RMSNorm 扩展](docs/iterations/034-pytorch-cpp-rmsnorm-extension.md) | ATen custom op、负结果、优化与误差基准 |
 | [CUDA RMSNorm 实现与验证契约](docs/iterations/035-cuda-rmsnorm-contract.md) | CUDA kernel、环境探针、条件测试与 GPU workflow |
+| [CUDA Runner 设置](docs/CUDA_RUNNER_SETUP.md) | NVIDIA 主机要求、安全注册、labels、preflight 与 artifact 验收 |
+| [CUDA Runner Preflight](docs/iterations/036-cuda-runner-preflight.md) | 外部硬件门禁、阻塞事实和 token 安全边界 |
 
 ## 欢迎讨论
 

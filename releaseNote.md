@@ -1,6 +1,16 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.18`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.19`，之后按可验收用户能力递增。
+
+## 0.2.19 - 2026-09-24
+
+- 新增 CUDA runner preflight，检查 Linux/x64、磁盘、Git/C++/Ninja、CUDA PyTorch、GPU、NVCC 与 nvidia-smi。
+- self-hosted workflow 在编译前使用 `--require-ready` fail-fast，并保留结构化阻塞原因。
+- 新增安全注册、labels、触发、artifact 验收和清理手册；临时 runner token 不进入仓库、聊天或报告。
+- 当前 Mac 探针按事实返回 `ready=false`；模拟 NVIDIA Linux runner 的 ready 路径测试通过。
+- 下一步仅剩外部操作：注册 NVIDIA runner 并触发 `CUDA Benchmark`，通过 artifact 后才能回写技能证据。
+- 本地推理/C++/CUDA 契约组合测试 16 项通过，6 项 GPU 测试因环境缺失明确跳过。
+- 核心 167 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.18 - 2026-09-24
 

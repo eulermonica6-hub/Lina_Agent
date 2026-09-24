@@ -1,6 +1,6 @@
 # Lina Career Agent Coding Plan
 
-> 状态：Phase 2B.14 已完成 CUDA RMSNorm 源码、探针、条件测试和 self-hosted workflow；本机无 NVIDIA 环境，GPU artifact 待运行，不默认启用综合排序。
+> 状态：Phase 2B.15 已完成 CUDA runner preflight 与安全注册契约；等待外部 NVIDIA Linux runner online 后产出 GPU artifact，不默认启用综合排序。
 
 > 能力边界：当前 LLM 只用于显式 opt-in 的结构化行动计划，并由确定性 Reviewer 检查目标技能和任务结构；没有对话、联网搜索、公司查询、简历改写、持久化或恢复。技能覆盖已完成 5 条人工 Gold 首轮校准，但缺口优先级和最终排序尚未接入硬条件与方向特征。目标架构和后续功能均为路线图，不代表已经实现。
 
@@ -28,7 +28,8 @@ TXT/Markdown/DOCX 统一证据摄取（已完成）
    -> 执行 PyTorch 推理基线项目（已完成）
    -> 实现 C++ PyTorch 扩展与误差基准（已完成）
    -> CUDA Kernel 源码与验证契约（已完成）
-   -> NVIDIA runner 编译、误差与性能 artifact（下一步）
+   -> CUDA runner preflight 与安全注册契约（已完成）
+   -> 外部 NVIDIA runner online 并产出 GPU artifact（外部下一步）
    -> 技能证据回写简历并复跑排序
    -> 候选事实、JD、Agent Run 和 benchmark 持久化
    -> 可解释状态图、岗位监控、简历优化与学习闭环

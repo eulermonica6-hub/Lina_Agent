@@ -16,6 +16,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/DOCUMENTATION_GOVERNANCE.md",
     "docs/DATA_ANNOTATION.md",
     "docs/DECISION_SIGNAL_RULES.md",
+    "docs/CUDA_RUNNER_SETUP.md",
     "docs/evaluations/JD_PARSER_BASELINE.md",
     "docs/evaluations/CAREER_MATCHING_BASELINE.md",
     "docs/iterations/017-public-jd-ingestion.md",
@@ -37,6 +38,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/033-pytorch-inference-baseline.md",
     "docs/iterations/034-pytorch-cpp-rmsnorm-extension.md",
     "docs/iterations/035-cuda-rmsnorm-contract.md",
+    "docs/iterations/036-cuda-runner-preflight.md",
 )
 
 

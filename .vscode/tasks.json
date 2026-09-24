@@ -225,7 +225,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Experiment: CUDA environment probe",
+      "label": "Experiment: CUDA runner preflight",
       "type": "process",
       "command": "uv",
       "args": [
@@ -235,7 +235,7 @@
         "--locked",
         "python",
         "-m",
-        "experiments.pytorch_cuda_extension.environment"
+        "experiments.pytorch_cuda_extension.runner_preflight"
       ],
       "problemMatcher": []
     }

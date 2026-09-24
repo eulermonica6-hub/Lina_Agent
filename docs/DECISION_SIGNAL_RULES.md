@@ -37,6 +37,7 @@
 16. 性能技能证据必须冻结环境、输入、warmup、同步和迭代口径，并同时报告延迟、吞吐、内存与跨设备误差。
 17. C++/CUDA 优化必须保留 Python reference 与误差阈值；首轮负结果不得隐藏，只做有明确瓶颈假设的有限优化。
 18. 无 NVIDIA runtime/NVCC 时不得宣称 CUDA 已验收；条件 skip 必须说明原因，并由真实 GPU artifact 关闭验证缺口。
+19. 外部 runner 必须先通过机器可读 preflight；注册 token 只在目标主机终端使用，不进入仓库、对话或 artifact。
 
 ## 发布
 
