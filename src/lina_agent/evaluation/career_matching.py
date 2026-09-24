@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from pydantic import ConfigDict, Field, model_validator
 
+from lina_agent.domain.career_gap import build_skill_evidence_plan
 from lina_agent.domain.career_matching import (
     DIRECTION_TAXONOMY,
     SKILL_TAXONOMY,
@@ -24,6 +25,7 @@ from lina_agent.domain.career_matching import (
     extract_job_skill_profile,
     score_job_match,
 )
+from lina_agent.domain.career_planning import CareerActionPlan
 from lina_agent.domain.documents import IngestedDocument
 from lina_agent.domain.job_catalog import parse_job_catalog
 from lina_agent.domain.models import DomainModel, SourceEvidence
@@ -540,6 +542,38 @@ def evaluate_automatic_decision_suite(manifest_path: Path) -> AutomaticDecisionS
     )
 
 
+def build_dataset_skill_evidence_plan(
+    dataset_path: Path,
+    target_catalog_number: int,
+) -> CareerActionPlan:
+    dataset = load_gold_dataset(dataset_path)
+    loader = LocalDocumentLoader()
+    resume = loader.load((dataset_path.parent / dataset.resume).resolve())
+    catalog = loader.load((dataset_path.parent / dataset.job_catalog).resolve())
+    candidate = extract_candidate_profile(resume)
+    jobs = parse_job_catalog(catalog)
+    target_job = next(
+        (job for job in jobs if job.catalog_number == target_catalog_number),
+        None,
+    )
+    if target_job is None:
+        raise ValueError(f"catalog job {target_catalog_number} does not exist")
+    extraction = extract_decision_signals(
+        resume,
+        target_job,
+        availability=dataset.candidate_availability,
+        direction_preferences=dataset.candidate_direction_preferences,
+    )
+    target_match = score_job_match(
+        candidate,
+        target_job,
+        extract_job_skill_profile(target_job),
+        decision_signals=extraction.signals,
+        decision_weights=DecisionWeights(),
+    )
+    return build_skill_evidence_plan(target_match)
+
+
 def calibrate_match_weights(dataset_path: Path) -> CareerMatchingCalibrationReport:
     baseline_weights = MatchWeights()
     baseline = evaluate_career_matching(dataset_path, baseline_weights)
@@ -753,6 +787,7 @@ def main(arguments: Sequence[str] | None = None) -> None:
     parser.add_argument("--ablate", action="store_true")
     parser.add_argument("--auto-signals", action="store_true")
     parser.add_argument("--auto-signal-suite", action="store_true")
+    parser.add_argument("--evidence-plan-for", type=int)
     parsed_arguments = parser.parse_args(arguments)
     selected_modes = sum(
         (
@@ -760,11 +795,13 @@ def main(arguments: Sequence[str] | None = None) -> None:
             parsed_arguments.ablate,
             parsed_arguments.auto_signals,
             parsed_arguments.auto_signal_suite,
+            parsed_arguments.evidence_plan_for is not None,
         )
     )
     if selected_modes > 1:
         parser.error(
-            "--calibrate, --ablate, --auto-signals and --auto-signal-suite are mutually exclusive"
+            "--calibrate, --ablate, --auto-signals, --auto-signal-suite and "
+            "--evidence-plan-for are mutually exclusive"
         )
     if parsed_arguments.calibrate:
         report = calibrate_match_weights(parsed_arguments.dataset)
@@ -774,6 +811,11 @@ def main(arguments: Sequence[str] | None = None) -> None:
         report = evaluate_automatic_decision_signals(parsed_arguments.dataset)
     elif parsed_arguments.auto_signal_suite:
         report = evaluate_automatic_decision_suite(parsed_arguments.dataset)
+    elif parsed_arguments.evidence_plan_for is not None:
+        report = build_dataset_skill_evidence_plan(
+            parsed_arguments.dataset,
+            parsed_arguments.evidence_plan_for,
+        )
     else:
         report = evaluate_career_matching(parsed_arguments.dataset)
     print(report.model_dump_json(indent=2))

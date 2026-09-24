@@ -1,6 +1,14 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.14`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.15`，之后按可验收用户能力递增。
+
+## 0.2.15 - 2026-09-24
+
+- 新增确定性技能证据计划，从目标岗位 required 缺口生成带产出物、验收标准和时间预算的行动。
+- 评测 CLI 新增 `--evidence-plan-for`，可从冻结 Gold 重建目标岗位并输出计划 JSON。
+- CUDA 进入技能 taxonomy；NVIDIA 岗生成 PyTorch、C++、CUDA 共 60 小时的证据计划，并通过现有 Reviewer。
+- 两个技能 Gold 的 Precision、Recall、Exact Match 和引用支持率均保持 `1.0`；唯一排序逆序不通过调权重消除。
+- 167 项测试通过，语句与分支覆盖率均为 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.14 - 2026-09-24
 

@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.14** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.15** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 163 个测试通过 |
+| 自动化测试 | 167 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -206,6 +206,13 @@ uv run --locked python -m lina_agent.evaluation.career_matching \
   data/private/evaluation/career_matching_gold_suite_v1.json --auto-signal-suite
 ```
 
+从冻结 Gold 为指定岗位生成确定性技能证据计划：
+
+```bash
+uv run --locked python -m lina_agent.evaluation.career_matching \
+  data/private/evaluation/career_matching_gold_v3.json --evidence-plan-for 6
+```
+
 ## API 接口
 
 | 方法 | 路径 | 用途 |
@@ -253,7 +260,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已贯通 Agent/API/CLI，国内外 11 岗进入双 Gold 套件；综合排序继续保持显式 opt-in，下一步把唯一逆序转化为技能证据计划。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已贯通 Agent/API/CLI，国内外 11 岗进入双 Gold 套件；唯一逆序已转化为确定性技能证据计划，综合排序继续保持显式 opt-in。
 
 ## 参考文档
 
@@ -291,6 +298,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [多冻结 Gold 套件基线](docs/iterations/029-multi-gold-suite-baseline.md) | 方向族覆盖、宏平均、最差集与扩展边界 |
 | [第二个冻结 Gold 与官方 JD 回归](docs/iterations/030-second-gold-official-jd.md) | 官方正文、coverage 缺口和真实措辞回归 |
 | [国内外大厂 JD 扩展](docs/iterations/031-domestic-global-jd-expansion.md) | 多城市、范围、方向、hard veto 与保留逆序 |
+| [确定性技能证据计划](docs/iterations/032-deterministic-skill-evidence-plan.md) | PyTorch/C++/CUDA 产出物、验收与 Reviewer |
 
 ## 欢迎讨论
 

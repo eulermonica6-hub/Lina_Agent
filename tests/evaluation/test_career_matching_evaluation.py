@@ -9,6 +9,7 @@ from lina_agent.domain.career_matching import DecisionWeights, MatchWeights
 from lina_agent.domain.models import SourceEvidence
 from lina_agent.evaluation.career_matching import (
     MatchingAblation,
+    build_dataset_skill_evidence_plan,
     calibrate_match_weights,
     citation_is_valid,
     evaluate_ablations,
@@ -341,6 +342,26 @@ def test_automatic_signal_suite_cli_outputs_stability_metrics(
 
     assert payload["dataset_count"] == 1
     assert payload["minimum_pairwise_accuracy"] == 1
+
+
+def test_builds_and_outputs_dataset_skill_evidence_plan(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = _write_dataset(tmp_path)
+
+    plan = build_dataset_skill_evidence_plan(dataset_path, 2)
+    main([str(dataset_path), "--evidence-plan-for", "2"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert plan.priority_actions[0].target_skills == ("LangGraph",)
+    assert payload["priority_actions"][0]["target_skills"] == ["LangGraph"]
+    assert payload["provider"] == "deterministic"
+
+
+def test_rejects_skill_evidence_plan_for_unknown_catalog_job(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="does not exist"):
+        build_dataset_skill_evidence_plan(_write_dataset(tmp_path), 99)
 
 
 def test_calibrates_weights_and_cli_outputs_json(

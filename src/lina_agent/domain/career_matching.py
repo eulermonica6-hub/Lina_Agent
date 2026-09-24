@@ -55,6 +55,7 @@ SKILL_TAXONOMY = (
     SkillTerm("Deep Learning", ("Deep Learning", "深度学习")),
     SkillTerm("Java", ("Java",)),
     SkillTerm("C++", ("C++",)),
+    SkillTerm("CUDA", ("CUDA",)),
     SkillTerm("Redis", ("Redis",)),
     SkillTerm("MongoDB", ("MongoDB",)),
     SkillTerm("Elasticsearch", ("Elasticsearch",)),

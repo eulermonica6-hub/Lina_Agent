@@ -76,6 +76,12 @@
 
 明确 hard `unmet` 改为排序 veto 后，仅北京岗位造成的 4 个逆序消失。扩展集 hard/direction coverage 均为 `1.0`、MAE 均为 `0.0`，hard item 与证据指标均为 `1.0`。预测排序为 `3 > 5 > 6 > 4 > 1 > 2`，人工排序为 `3 > 6 > 5 > 4 > 1 > 2`，Pairwise 为 `0.933`。唯一逆序来自 NVIDIA 岗位的 PyTorch、C++、CUDA 技能证据缺口，不继续调权重。
 
+## 技能证据计划
+
+`0.2.15` 将 CUDA 纳入技能 taxonomy，并从目标岗位 `missing_required` 确定性生成行动计划。NVIDIA 岗位计划依次覆盖 PyTorch 推理基线、C++ Python 扩展和 CUDA Kernel，总预算 `60h`；每项都要求仓库、测试与 benchmark，并通过现有 Reviewer 的 gap 白名单。
+
+CUDA 进入 taxonomy 后岗位 6 skill score 从 `40.0` 调整为 `33.3`，唯一逆序仍保留。这说明计划在描述真实能力差异，而不是通过评分调整制造指标改善。
+
 ## 复现
 
 ```bash

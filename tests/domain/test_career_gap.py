@@ -1,9 +1,12 @@
 from uuid import uuid4
 
+import pytest
+
 from lina_agent.domain.career_gap import (
     GapPriority,
     PlanReviewStatus,
     analyze_career_gaps,
+    build_skill_evidence_plan,
     review_action_plan,
 )
 from lina_agent.domain.career_matching import (
@@ -155,3 +158,40 @@ def test_review_rejects_priority_duplicate_and_unknown_skill() -> None:
     assert review.status is PlanReviewStatus.REJECTED
     assert len(review.issues) == 3
     assert review.verified_target_skills == ("LangGraph",)
+
+
+def test_builds_deterministic_evidence_plan_for_nvidia_skill_gap() -> None:
+    target = _match(
+        6,
+        missing_required=(
+            _mention("PyTorch", 0),
+            _mention("C++", 20),
+            _mention("CUDA", 40),
+            _mention("Deep Learning", 60),
+        ),
+    )
+
+    plan = build_skill_evidence_plan(target)
+
+    assert [action.priority for action in plan.priority_actions] == [1, 2, 3]
+    assert [action.target_skills for action in plan.priority_actions] == [
+        ("PyTorch",),
+        ("C++",),
+        ("CUDA",),
+    ]
+    assert "推理" in plan.priority_actions[0].deliverable
+    assert "基准" in plan.priority_actions[2].acceptance_criteria
+    assert plan.provider == "deterministic"
+    assert plan.total_tokens == 0
+    review = review_action_plan(
+        plan,
+        CandidateDocumentProfile(document_id=DOCUMENT_ID, source_name="resume.txt"),
+        analyze_career_gaps((target,)),
+    )
+    assert review.status is PlanReviewStatus.VERIFIED
+    assert review.verified_target_skills == ("PyTorch", "C++", "CUDA")
+
+
+def test_rejects_skill_evidence_plan_when_target_has_no_required_gap() -> None:
+    with pytest.raises(ValueError, match="没有待补齐"):
+        build_skill_evidence_plan(_match(1))

@@ -4,7 +4,7 @@ from enum import StrEnum
 from pydantic import Field
 
 from lina_agent.domain.career_matching import CandidateDocumentProfile, RankedJobMatch
-from lina_agent.domain.career_planning import CareerActionPlan
+from lina_agent.domain.career_planning import CareerActionPlan, CareerPlanAction
 from lina_agent.domain.models import DomainModel, SourceEvidence
 
 
@@ -61,6 +61,40 @@ class _GapRecord:
 class _StrengthRecord:
     evidence: SourceEvidence
     jobs: set[int] = field(default_factory=lambda: set[int]())
+
+
+@dataclass(frozen=True)
+class _SkillEvidenceRecipe:
+    rank: int
+    action: str
+    deliverable: str
+    acceptance_criteria: str
+    time_budget_hours: int
+
+
+_SKILL_EVIDENCE_RECIPES = {
+    "PyTorch": _SkillEvidenceRecipe(
+        rank=1,
+        action="实现并分析一个 PyTorch LLM 推理基线",
+        deliverable="可复现的 PyTorch 推理仓库与性能报告",
+        acceptance_criteria="固定输入下测试通过，并记录吞吐、延迟、显存和优化前后对比",
+        time_budget_hours=16,
+    ),
+    "C++": _SkillEvidenceRecipe(
+        rank=2,
+        action="实现 C++ 推理算子并接入 Python 基线",
+        deliverable="带 Python 绑定、单元测试和构建脚本的 C++ 扩展",
+        acceptance_criteria="一条命令完成构建和测试，输出与 PyTorch 参考实现误差在阈值内",
+        time_budget_hours=20,
+    ),
+    "CUDA": _SkillEvidenceRecipe(
+        rank=3,
+        action="实现并优化一个 CUDA 推理内核",
+        deliverable="CUDA Kernel、正确性测试和可复现实验记录",
+        acceptance_criteria="与参考实现结果一致，并用基准报告说明优化前后性能和瓶颈",
+        time_budget_hours=24,
+    ),
+}
 
 
 def analyze_career_gaps(matches: tuple[RankedJobMatch, ...]) -> CareerGapAnalysis:
@@ -146,6 +180,60 @@ def analyze_career_gaps(matches: tuple[RankedJobMatch, ...]) -> CareerGapAnalysi
             )
         ),
         strengths=tuple(sorted(strengths, key=lambda item: (-item.covered_jobs, item.skill))),
+    )
+
+
+def build_skill_evidence_plan(target_match: RankedJobMatch) -> CareerActionPlan:
+    missing_skills = tuple(dict.fromkeys(item.skill for item in target_match.missing_required))
+    selected_skills = tuple(
+        sorted(
+            missing_skills,
+            key=lambda skill: (
+                _SKILL_EVIDENCE_RECIPES.get(
+                    skill,
+                    _SkillEvidenceRecipe(99, "", "", "", 8),
+                ).rank,
+                skill,
+            ),
+        )[:3]
+    )
+    actions = tuple(
+        _skill_evidence_action(priority, skill)
+        for priority, skill in enumerate(selected_skills, start=1)
+    )
+    if not actions:
+        raise ValueError("目标岗位没有待补齐的 required 技能证据")
+    return CareerActionPlan(
+        summary=f"为 {target_match.title} 补齐可复现的 required 技能证据。",
+        priority_actions=actions,
+        interview_focus=tuple(
+            f"说明 {skill} 的实现取舍、测量方法和失败复盘" for skill in selected_skills
+        ),
+        provider="deterministic",
+        model="skill-evidence-v1",
+        total_tokens=0,
+    )
+
+
+def _skill_evidence_action(priority: int, skill: str) -> CareerPlanAction:
+    recipe = _SKILL_EVIDENCE_RECIPES.get(
+        skill,
+        _SkillEvidenceRecipe(
+            rank=99,
+            action=f"完成一个可运行的 {skill} 最小项目",
+            deliverable=f"包含测试、README 和运行示例的 {skill} 仓库",
+            acceptance_criteria="一条命令运行测试与示例，并记录关键设计选择和失败案例",
+            time_budget_hours=8,
+        ),
+    )
+    return CareerPlanAction(
+        priority=priority,
+        target_skills=(skill,),
+        action=recipe.action,
+        reason=f"目标岗位将 {skill} 列为 required，但当前简历没有直接证据。",
+        deliverable=recipe.deliverable,
+        acceptance_criteria=recipe.acceptance_criteria,
+        time_budget_hours=recipe.time_budget_hours,
     )
 
 

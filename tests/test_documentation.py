@@ -33,6 +33,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/029-multi-gold-suite-baseline.md",
     "docs/iterations/030-second-gold-official-jd.md",
     "docs/iterations/031-domestic-global-jd-expansion.md",
+    "docs/iterations/032-deterministic-skill-evidence-plan.md",
 )
 
 
