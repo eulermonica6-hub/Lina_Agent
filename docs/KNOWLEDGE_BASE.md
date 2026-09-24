@@ -45,6 +45,7 @@
 | 037 | 2026-09-24 | SQLite 结构化状态持久化 | 让 Web 画像与岗位跨重启恢复，同时保留 Agent Run 的独立版本边界 | [SQLite 持久化](iterations/037-sqlite-structured-state-persistence.md) |
 | 038 | 2026-09-24 | 版本化 Agent Run Snapshot | 用脱敏投影保存 Run 历史，不复制原文 evidence 与私密文件名 | [Agent Run Snapshot](iterations/038-versioned-agent-run-snapshots.md) |
 | 039 | 2026-09-24 | 文档引用与候选确认版本 | 分离内容、角色与确认事件 ID，用 metadata/facts hash 支持历史关联 | [输入版本关联](iterations/039-document-and-confirmation-versions.md) |
+| 040 | 2026-09-24 | Agent Run Snapshot Diff | 不加载正文比较输入、确认、排名、分数、gap 与计划变化 | [Run Snapshot Diff](iterations/040-agent-run-snapshot-diff.md) |
 
 ## 文档入口
 

@@ -1,6 +1,15 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.22`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.23`，之后按可验收用户能力递增。
+
+## 0.2.23 - 2026-09-24
+
+- 新增 `AgentRunDiff` 与 GET diff API，不加载原始正文即可比较两个历史 Run。
+- 比较文档 content hash、确认 facts hash、状态/计划、排名位置、分数组件和 gap 新增/解决。
+- 同 catalog number 但 title/company 不同的岗位标记为 replacement，不计算伪 score delta。
+- 兼容 v1 Snapshot fallback；position delta 负数表示上升、正数表示下降。
+- 下一步在工作台增加只读 Run 历史与 Diff 视图。
+- 189 项测试通过，语句/分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.22 - 2026-09-24
 

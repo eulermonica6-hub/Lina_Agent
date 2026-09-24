@@ -9,6 +9,7 @@ from lina_agent.api.dependencies import (
     get_confirmation_version_repository,
     get_document_reference_repository,
 )
+from lina_agent.application.agent_run_diff import AgentRunDiff, create_agent_run_diff
 from lina_agent.application.agent_run_snapshot import (
     AgentRunRequestSnapshot,
     AgentRunSnapshot,
@@ -153,6 +154,57 @@ async def list_agent_runs(
     return await repository.list_recent(limit)
 
 
+@router.get(
+    "/runs/{base_run_id}/diff/{target_run_id}",
+    response_model=AgentRunDiff,
+)
+async def diff_agent_runs(
+    base_run_id: UUID,
+    target_run_id: UUID,
+    run_repository: Annotated[AgentRunSnapshotRepository, Depends(get_agent_run_repository)],
+    document_repository: Annotated[
+        DocumentReferenceRepository,
+        Depends(get_document_reference_repository),
+    ],
+    confirmation_repository: Annotated[
+        CandidateConfirmationVersionRepository,
+        Depends(get_confirmation_version_repository),
+    ],
+) -> AgentRunDiff:
+    base = await run_repository.get(base_run_id)
+    target = await run_repository.get(target_run_id)
+    if base is None or target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent run not found")
+    return create_agent_run_diff(
+        base,
+        target,
+        base_candidate_document=await _get_document_reference(
+            document_repository,
+            base.candidate_document_reference_id,
+        ),
+        target_candidate_document=await _get_document_reference(
+            document_repository,
+            target.candidate_document_reference_id,
+        ),
+        base_job_catalog=await _get_document_reference(
+            document_repository,
+            base.job_catalog_document_reference_id,
+        ),
+        target_job_catalog=await _get_document_reference(
+            document_repository,
+            target.job_catalog_document_reference_id,
+        ),
+        base_confirmation=await _get_confirmation_version(
+            confirmation_repository,
+            base.candidate_confirmation_version_id,
+        ),
+        target_confirmation=await _get_confirmation_version(
+            confirmation_repository,
+            target.candidate_confirmation_version_id,
+        ),
+    )
+
+
 @router.get("/documents/{reference_id}", response_model=DocumentReference)
 async def get_document_reference(
     reference_id: UUID,
@@ -185,3 +237,17 @@ async def get_confirmation_version(
             detail="confirmation version not found",
         )
     return version
+
+
+async def _get_document_reference(
+    repository: DocumentReferenceRepository,
+    reference_id: UUID | None,
+) -> DocumentReference | None:
+    return await repository.get(reference_id) if reference_id is not None else None
+
+
+async def _get_confirmation_version(
+    repository: CandidateConfirmationVersionRepository,
+    version_id: UUID | None,
+) -> CandidateConfirmationVersion | None:
+    return await repository.get(version_id) if version_id is not None else None

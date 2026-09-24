@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.22`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.23`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、性能证据、结构化 SQLite、Snapshot 和输入版本关联已完成。下一步实现 Snapshot diff。
+Repository、统一文档摄取、双 Gold 套件、性能证据、SQLite、Snapshot、输入版本与历史 Diff 已完成。下一步实现工作台只读历史视图。
 
 ### 目标
 

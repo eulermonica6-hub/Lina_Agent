@@ -147,6 +147,38 @@ async def test_agent_run_snapshot_list_is_recent_first_and_bounded(
 
 
 @pytest.mark.asyncio
+async def test_agent_run_diff_compares_versions_without_raw_text(
+    agent_client: AsyncClient,
+) -> None:
+    base_request = {
+        "resume": _encoded("private.txt", "Python DIFF_PRIVATE_SENTINEL"),
+        "job_catalog": _encoded(
+            "jobs.md",
+            "### 1. Agent | 甲公司\n**基本信息**\n- 每周 4 天\n**任职要求**\n- Python",
+        ),
+        "auto_decision_signals": True,
+        "candidate_availability": {"weekly_days": 5},
+    }
+    target_request = {
+        **base_request,
+        "candidate_availability": {"weekly_days": 4},
+    }
+    async with agent_client as client:
+        base = await client.post("/agent/runs", json=base_request)
+        target = await client.post("/agent/runs", json=target_request)
+        response = await client.get(
+            f"/agent/runs/{base.json()['run_id']}/diff/{target.json()['run_id']}"
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["candidate_document_changed"] is False
+    assert payload["job_catalog_document_changed"] is False
+    assert payload["confirmation_changed"] is True
+    assert "DIFF_PRIVATE_SENTINEL" not in json.dumps(payload)
+
+
+@pytest.mark.asyncio
 async def test_agent_run_snapshot_returns_404_for_unknown_id(
     agent_client: AsyncClient,
 ) -> None:
@@ -158,6 +190,10 @@ async def test_agent_run_snapshot_returns_404_for_unknown_id(
         confirmation_response = await client.get(
             "/agent/confirmations/00000000-0000-0000-0000-000000000000"
         )
+        diff_response = await client.get(
+            "/agent/runs/00000000-0000-0000-0000-000000000000/diff/"
+            "00000000-0000-0000-0000-000000000001"
+        )
 
     assert response.status_code == 404
     assert response.json()["detail"] == "agent run not found"
@@ -165,6 +201,8 @@ async def test_agent_run_snapshot_returns_404_for_unknown_id(
     assert document_response.json()["detail"] == "document not found"
     assert confirmation_response.status_code == 404
     assert confirmation_response.json()["detail"] == "confirmation version not found"
+    assert diff_response.status_code == 404
+    assert diff_response.json()["detail"] == "agent run not found"
 
 
 @pytest.mark.asyncio

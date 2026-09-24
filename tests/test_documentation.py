@@ -42,6 +42,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/037-sqlite-structured-state-persistence.md",
     "docs/iterations/038-versioned-agent-run-snapshots.md",
     "docs/iterations/039-document-and-confirmation-versions.md",
+    "docs/iterations/040-agent-run-snapshot-diff.md",
 )
 
 
