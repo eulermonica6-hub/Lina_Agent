@@ -301,6 +301,8 @@ def test_automatic_signal_suite_reports_macro_worst_case_and_direction_coverage(
         "machine_learning",
     )
     assert report.direction_family_coverage == 0.4
+    assert report.macro_direction_signal_coverage == 0.5
+    assert report.minimum_direction_signal_coverage == 0.5
     assert report.macro_top_1_accuracy == 0.5
     assert report.macro_pairwise_accuracy == 0.5
     assert report.minimum_pairwise_accuracy == 0.0

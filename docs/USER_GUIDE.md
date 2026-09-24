@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.12
+> 适用版本：0.2.13
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -60,7 +60,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.12"
+  "version": "0.2.13"
 }
 ```
 

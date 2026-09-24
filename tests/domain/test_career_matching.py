@@ -324,3 +324,24 @@ def test_applies_confirmed_direction_preferences_without_fabricating_evidence() 
     assert confirmation.score == 0
     assert confirmation.source == "user_confirmation"
     assert testing_items["fullstack_ai_testing"].candidate_evidence == ()
+
+
+def test_recognizes_test_automation_as_fullstack_ai_testing_direction() -> None:
+    loader = LocalDocumentLoader()
+    resume = loader.load_bytes("resume.txt", b"Python")
+    job = _job_from(
+        """### 1. Software Engineering Intern - AI Tools | 甲公司
+**岗位职责**
+- 为硬件工程开发测试自动化工具和前后端功能
+"""
+    )
+
+    extraction = extract_decision_signals(
+        resume,
+        job,
+        direction_preferences=CandidateDirectionPreferenceConfirmation(fullstack_ai_testing=0.0),
+    )
+
+    assert extraction.signals.direction_alignment == 0
+    assert extraction.directions[0].name == "fullstack_ai_testing"
+    assert extraction.directions[0].status == "unmet"

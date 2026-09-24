@@ -89,7 +89,15 @@ DIRECTION_TAXONOMY = (
     DirectionTerm("machine_learning", ("机器学习", "Machine Learning", "深度学习")),
     DirectionTerm(
         "fullstack_ai_testing",
-        ("Full Stack", "full-stack", "CUDA", "AI 测试", "AI 应用自动化测试"),
+        (
+            "Full Stack",
+            "full-stack",
+            "CUDA",
+            "AI 测试",
+            "AI 应用自动化测试",
+            "测试自动化",
+            "test automation",
+        ),
     ),
     DirectionTerm("risk_modeling", ("风控", "风险建模", "支付算法")),
 )

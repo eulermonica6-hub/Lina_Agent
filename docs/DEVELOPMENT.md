@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.12`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.13`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、技能证据排序、有界 Supervisor、自动决策信号、方向偏好入口和多 Gold 套件已完成。下一步获取完整官方 JD，标注并冻结第二个独立 Gold 数据集。
+Repository、统一文档摄取、技能证据排序、有界 Supervisor、自动决策信号、方向偏好入口和双 Gold 套件已完成。下一步扩展第二集并确认内部排序或 ties。
 
 ### 目标
 

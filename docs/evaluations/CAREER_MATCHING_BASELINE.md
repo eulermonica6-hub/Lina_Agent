@@ -66,7 +66,9 @@
 
 `0.2.12` 新增版本化 suite manifest，逐个运行独立冻结集并报告数据集/岗位规模、JD 实际方向族覆盖、direction MAE 宏平均与最大值、Top-1/Pairwise 宏平均和最差 Pairwise。
 
-首轮私有 suite 仍只有 `1` 个冻结集和 `5` 个岗位。五类方向覆盖率为 `1.0`，macro direction MAE 为 `0.0`，macro/minimum Pairwise 为 `1.0/1.0`。这证明指标管线可复跑，不证明跨数据集稳定；第二个 Gold 必须来自完整匿名官方 JD 与用户确认排序。
+首轮私有 suite 只有 `1` 个冻结集和 `5` 个岗位。第二个单岗位 Gold 来自完整匿名官方 JD；首次复跑方向 coverage 为 `0.0`，暴露“测试自动化”别名缺口。补充直接证据别名后，suite 达到 `2` 集 `6` 岗，macro/minimum direction coverage 为 `1.0/1.0`，macro/maximum direction MAE 为 `0.0/0.0`。
+
+第二集只有一个岗位，Pairwise 没有实际比较对，因此不能据此宣称跨岗位排序稳定。下一步至少再加入两条完整官方 JD，并由用户确认集合内排序或 ties。
 
 ## 复现
 

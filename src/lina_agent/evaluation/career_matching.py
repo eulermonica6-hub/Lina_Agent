@@ -202,6 +202,8 @@ class AutomaticDecisionSuiteReport(DomainModel):
     total_job_count: int = Field(ge=1)
     covered_direction_families: tuple[str, ...]
     direction_family_coverage: float = Field(ge=0, le=1)
+    macro_direction_signal_coverage: float = Field(ge=0, le=1)
+    minimum_direction_signal_coverage: float = Field(ge=0, le=1)
     macro_direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
     maximum_direction_signal_mae: float | None = Field(default=None, ge=0, le=1)
     macro_top_1_accuracy: float = Field(ge=0, le=1)
@@ -518,6 +520,12 @@ def evaluate_automatic_decision_suite(manifest_path: Path) -> AutomaticDecisionS
         direction_family_coverage=_ratio(
             len(covered_direction_families),
             len(direction_names),
+        ),
+        macro_direction_signal_coverage=(
+            sum(report.direction_signal_coverage for report in reports) / len(reports)
+        ),
+        minimum_direction_signal_coverage=min(
+            report.direction_signal_coverage for report in reports
         ),
         macro_direction_signal_mae=(
             sum(direction_maes) / len(direction_maes) if direction_maes else None

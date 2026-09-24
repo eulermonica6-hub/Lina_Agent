@@ -35,6 +35,7 @@
 | 027 | 2026-09-21 | 候选人方向偏好确认契约 | 用带来源的方向强度消除离散重叠率歧义 | [方向偏好确认](iterations/027-direction-preference-confirmation-contract.md) |
 | 028 | 2026-09-24 | 方向偏好入口接线 | 在 Agent、API、CLI 使用同一确认契约并防止静默丢参 | [方向偏好入口](iterations/028-direction-preference-entry-wiring.md) |
 | 029 | 2026-09-24 | 多冻结 Gold 套件基线 | 分离方向族覆盖、样本规模、宏平均和最差集稳定性 | [多 Gold 套件](iterations/029-multi-gold-suite-baseline.md) |
+| 030 | 2026-09-24 | 第二个冻结 Gold 与官方 JD 回归 | 用真实测试自动化措辞发现方向召回缺口并补 coverage 指标 | [第二 Gold 回归](iterations/030-second-gold-official-jd.md) |
 
 ## 文档入口
 
