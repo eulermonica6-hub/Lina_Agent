@@ -87,6 +87,64 @@ async def test_agent_api_rejects_availability_without_automatic_signals(
 
 
 @pytest.mark.asyncio
+async def test_agent_api_accepts_candidate_direction_preferences(
+    agent_client: AsyncClient,
+) -> None:
+    request = {
+        "resume": _encoded("resume.txt", "Python"),
+        "job_catalog": _encoded(
+            "jobs.md",
+            "### 1. AI Infra 实习岗位 | 甲公司\n**岗位职责**\n- 建设智能运维平台",
+        ),
+        "auto_decision_signals": True,
+        "candidate_direction_preferences": {"ai_infrastructure": 0.8},
+    }
+
+    async with agent_client as client:
+        response = await client.post("/agent/runs", json=request)
+
+    assert response.status_code == 200
+    direction = response.json()["decision_signal_extractions"][0]["directions"][0]
+    assert direction["candidate_confirmation"] == {
+        "score": 0.8,
+        "source": "user_confirmation",
+    }
+
+
+@pytest.mark.asyncio
+async def test_agent_api_rejects_direction_preferences_without_automatic_signals(
+    agent_client: AsyncClient,
+) -> None:
+    request = {
+        "resume": _encoded("resume.txt", "Python"),
+        "job_catalog": _encoded("jobs.md", "### 1. 实习岗位 | 甲公司"),
+        "candidate_direction_preferences": {"ai_infrastructure": 0.8},
+    }
+
+    async with agent_client as client:
+        response = await client.post("/agent/runs", json=request)
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_agent_api_rejects_direction_preference_outside_unit_interval(
+    agent_client: AsyncClient,
+) -> None:
+    request = {
+        "resume": _encoded("resume.txt", "Python"),
+        "job_catalog": _encoded("jobs.md", "### 1. 实习岗位 | 甲公司"),
+        "auto_decision_signals": True,
+        "candidate_direction_preferences": {"ai_infrastructure": 1.1},
+    }
+
+    async with agent_client as client:
+        response = await client.post("/agent/runs", json=request)
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_agent_api_returns_actionable_document_error(
     agent_client: AsyncClient,
 ) -> None:

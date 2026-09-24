@@ -11,6 +11,7 @@ from lina_agent.application.career_planner import CareerPlannerError
 from lina_agent.domain.career_gap import CareerGapAnalysis, PlanReviewStatus
 from lina_agent.domain.career_matching import (
     CandidateAvailabilityConfirmation,
+    CandidateDirectionPreferenceConfirmation,
     CandidateDocumentProfile,
     DecisionSignals,
     DecisionWeights,
@@ -214,6 +215,39 @@ def test_rejects_candidate_availability_without_automatic_signals() -> None:
             loader.load_bytes("resume.txt", b"Python"),
             loader.load_bytes("jobs.md", "### 1. 岗位 | 公司".encode()),
             candidate_availability=CandidateAvailabilityConfirmation(weekly_days=5),
+        )
+
+
+def test_forwards_candidate_direction_preferences_to_automatic_signals() -> None:
+    loader = LocalDocumentLoader()
+    run = CareerMatchAgent.execute_documents(
+        loader.load_bytes("resume.txt", b"Python"),
+        loader.load_bytes(
+            "jobs.md",
+            "### 1. AI Infra 实习岗位 | 甲公司\n**岗位职责**\n- 建设智能运维平台".encode(),
+        ),
+        auto_decision_signals=True,
+        candidate_direction_preferences=CandidateDirectionPreferenceConfirmation(
+            ai_infrastructure=0.8
+        ),
+    )
+
+    direction = run.decision_signal_extractions[0].directions[0]
+    assert run.matches[0].direction_alignment == 0.8
+    assert direction.candidate_confirmation is not None
+    assert direction.candidate_confirmation.source == "user_confirmation"
+
+
+def test_rejects_candidate_direction_preferences_without_automatic_signals() -> None:
+    loader = LocalDocumentLoader()
+
+    with pytest.raises(ValueError, match="只能在自动决策信号开启时"):
+        CareerMatchAgent.execute_documents(
+            loader.load_bytes("resume.txt", b"Python"),
+            loader.load_bytes("jobs.md", "### 1. 岗位 | 公司".encode()),
+            candidate_direction_preferences=CandidateDirectionPreferenceConfirmation(
+                ai_infrastructure=0.8
+            ),
         )
 
 

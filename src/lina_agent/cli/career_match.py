@@ -4,8 +4,26 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from lina_agent.application.career_agent import CareerAgentRun, CareerMatchAgent
-from lina_agent.domain.career_matching import CandidateAvailabilityConfirmation
+from lina_agent.domain.career_matching import (
+    CandidateAvailabilityConfirmation,
+    CandidateDirectionPreferenceConfirmation,
+)
 from lina_agent.infrastructure.llm_career_planner import LLMCareerPlanner
+
+DIRECTION_ARGUMENTS = (
+    ("agent-llm-application", "agent_llm_application", "Agent/LLM 应用"),
+    ("ai-infrastructure", "ai_infrastructure", "AI 平台/Infra"),
+    ("machine-learning", "machine_learning", "通用机器学习"),
+    ("fullstack-ai-testing", "fullstack_ai_testing", "全栈 AI 测试"),
+    ("risk-modeling", "risk_modeling", "风险建模"),
+)
+
+
+def _direction_preference_score(value: str) -> float:
+    score = float(value)
+    if not 0 <= score <= 1:
+        raise argparse.ArgumentTypeError("direction preference must be between 0 and 1")
+    return score
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -36,6 +54,13 @@ def main(argv: Sequence[str] | None = None) -> None:
         type=int,
         help="人工确认可连续实习月数，需同时启用自动决策信号",
     )
+    for option, field_name, label in DIRECTION_ARGUMENTS:
+        parser.add_argument(
+            f"--direction-{option}",
+            dest=f"direction_{field_name}",
+            type=_direction_preference_score,
+            help=f"人工确认{label}偏好分 (0-1)，需同时启用自动决策信号",
+        )
     parser.add_argument(
         "--use-llm",
         action="store_true",
@@ -56,12 +81,24 @@ def main(argv: Sequence[str] | None = None) -> None:
         parser.error("candidate availability requires --auto-decision-signals")
     if arguments.candidate_duration_months is not None and arguments.candidate_duration_months < 1:
         parser.error("--candidate-duration-months must be at least 1")
+    direction_values = {
+        field_name: getattr(arguments, f"direction_{field_name}")
+        for _, field_name, _ in DIRECTION_ARGUMENTS
+    }
+    has_direction_preferences = any(value is not None for value in direction_values.values())
+    if has_direction_preferences and not arguments.auto_decision_signals:
+        parser.error("direction preferences require --auto-decision-signals")
     candidate_availability = (
         CandidateAvailabilityConfirmation(
             weekly_days=arguments.candidate_weekly_days,
             duration_months=arguments.candidate_duration_months,
         )
         if has_availability
+        else None
+    )
+    candidate_direction_preferences = (
+        CandidateDirectionPreferenceConfirmation(**direction_values)
+        if has_direction_preferences
         else None
     )
     planner = LLMCareerPlanner() if arguments.use_llm else None
@@ -72,6 +109,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         include_inactive=arguments.include_inactive,
         auto_decision_signals=arguments.auto_decision_signals,
         candidate_availability=candidate_availability,
+        candidate_direction_preferences=candidate_direction_preferences,
     )
     if arguments.format == "json":
         print(json.dumps(run.model_dump(mode="json"), ensure_ascii=False, indent=2))

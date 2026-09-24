@@ -1,6 +1,14 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.10`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.11`，之后按可验收用户能力递增。
+
+## 0.2.11 - 2026-09-24
+
+- 将五类候选人方向偏好贯通 `CareerMatchAgent` 的路径与文档入口、HTTP API 和本地 CLI。
+- API 新增 `candidate_direction_preferences`；CLI 新增五个 `--direction-*` 参数，分数范围均为 `0..1`。
+- 未开启自动决策信号时拒绝方向偏好输入，确认来源继续独立记录为 `user_confirmation`。
+- 自动综合排序继续显式 opt-in；下一步扩充冻结 Gold，验证跨岗位族稳定性。
+- 153 项测试通过，语句与分支覆盖率均为 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.10 - 2026-09-21
 

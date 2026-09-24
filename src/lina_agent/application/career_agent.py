@@ -15,6 +15,7 @@ from lina_agent.domain.career_gap import (
 )
 from lina_agent.domain.career_matching import (
     CandidateAvailabilityConfirmation,
+    CandidateDirectionPreferenceConfirmation,
     CandidateDocumentProfile,
     DecisionSignalExtraction,
     DecisionSignals,
@@ -99,6 +100,7 @@ class CareerMatchAgent:
         decision_weights: DecisionWeights | None = None,
         auto_decision_signals: bool = False,
         candidate_availability: CandidateAvailabilityConfirmation | None = None,
+        candidate_direction_preferences: CandidateDirectionPreferenceConfirmation | None = None,
     ) -> CareerAgentRun:
         resume = self._loader.load(resume_path)
         job_catalog = self._loader.load(job_catalog_path)
@@ -111,6 +113,7 @@ class CareerMatchAgent:
             decision_weights=decision_weights,
             auto_decision_signals=auto_decision_signals,
             candidate_availability=candidate_availability,
+            candidate_direction_preferences=candidate_direction_preferences,
             planner=self._planner,
         )
 
@@ -125,6 +128,7 @@ class CareerMatchAgent:
         decision_weights: DecisionWeights | None = None,
         auto_decision_signals: bool = False,
         candidate_availability: CandidateAvailabilityConfirmation | None = None,
+        candidate_direction_preferences: CandidateDirectionPreferenceConfirmation | None = None,
         planner: CareerPlanner | None = None,
     ) -> CareerAgentRun:
         return CareerMatchAgent._execute_documents(
@@ -136,6 +140,7 @@ class CareerMatchAgent:
             decision_weights=decision_weights,
             auto_decision_signals=auto_decision_signals,
             candidate_availability=candidate_availability,
+            candidate_direction_preferences=candidate_direction_preferences,
             planner=planner,
         )
 
@@ -150,6 +155,7 @@ class CareerMatchAgent:
         decision_weights: DecisionWeights | None,
         auto_decision_signals: bool,
         candidate_availability: CandidateAvailabilityConfirmation | None,
+        candidate_direction_preferences: CandidateDirectionPreferenceConfirmation | None,
         planner: CareerPlanner | None,
     ) -> CareerAgentRun:
         if top_k < 1:
@@ -158,6 +164,8 @@ class CareerMatchAgent:
             raise ValueError("自动决策信号与人工确认信号不能同时提供")
         if candidate_availability is not None and not auto_decision_signals:
             raise ValueError("候选人投入确认只能在自动决策信号开启时提供")
+        if candidate_direction_preferences is not None and not auto_decision_signals:
+            raise ValueError("候选人方向偏好只能在自动决策信号开启时提供")
 
         candidate = extract_candidate_profile(resume)
         jobs = parse_job_catalog(job_catalog)
@@ -165,7 +173,12 @@ class CareerMatchAgent:
         excluded_count = len(jobs) - len(considered)
         extractions = (
             tuple(
-                extract_decision_signals(resume, job, availability=candidate_availability)
+                extract_decision_signals(
+                    resume,
+                    job,
+                    availability=candidate_availability,
+                    direction_preferences=candidate_direction_preferences,
+                )
                 for job in considered
             )
             if auto_decision_signals

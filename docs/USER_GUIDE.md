@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.10
+> 适用版本：0.2.11
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：进程内存，服务重启后清空
 
@@ -60,7 +60,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.10"
+  "version": "0.2.11"
 }
 ```
 
@@ -155,10 +155,36 @@ uv run --locked lina-match \
   --jobs "data/private/AI_Agent_JD.md" \
   --auto-decision-signals \
   --candidate-weekly-days 5 \
-  --candidate-duration-months 3
+  --candidate-duration-months 12 \
+  --direction-agent-llm-application 1.0 \
+  --direction-ai-infrastructure 0.8 \
+  --direction-machine-learning 0.7 \
+  --direction-fullstack-ai-testing 0.0 \
+  --direction-risk-modeling 0.0
 ```
 
-该模式会抽取毕业届次、学历、地点、每周到岗天数、持续月份和岗位方向，返回逐项双侧证据。两个候选人投入参数可单独提供，取值分别为 `1-7` 天和至少 `1` 个月，且必须与 `--auto-decision-signals` 同时使用。API 使用等价的 `candidate_availability` 对象。人工确认以 `user_confirmation` 单独记录，不生成简历原文 offset。
+该模式会抽取毕业届次、学历、地点、每周到岗天数、持续月份和岗位方向，返回逐项双侧证据。两个候选人投入参数可单独提供，取值分别为 `1-7` 天和至少 `1` 个月。五个方向参数均可单独提供，取值为 `0..1`，其中 `0.0` 是有效偏好值而不是未知。所有确认参数都必须与 `--auto-decision-signals` 同时使用。
+
+API 使用等价的 `candidate_availability` 与 `candidate_direction_preferences` 对象：
+
+```json
+{
+  "auto_decision_signals": true,
+  "candidate_availability": {
+    "weekly_days": 5,
+    "duration_months": 12
+  },
+  "candidate_direction_preferences": {
+    "agent_llm_application": 1.0,
+    "ai_infrastructure": 0.8,
+    "machine_learning": 0.7,
+    "fullstack_ai_testing": 0.0,
+    "risk_modeling": 0.0
+  }
+}
+```
+
+人工确认以 `user_confirmation` 单独记录，不生成简历原文 offset。当前工作台尚无对应控件。
 
 缺少候选人证据或人工确认的硬条件保持 `unknown` 并进入警告，不会被默认为兼容。当前 5 JD 基线上硬条件覆盖率为 `0.6`，因此默认仍使用 skill-only。
 

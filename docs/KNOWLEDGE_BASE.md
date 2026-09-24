@@ -33,6 +33,7 @@
 | 025 | 2026-09-15 | 候选人投入确认 Gold 复跑 | 消除投入事实未知值，并定位剩余排序误差 | [确认后 Gold 复跑](iterations/025-confirmed-availability-gold-rerun.md) |
 | 026 | 2026-09-15 | 排序并列与逆序对分析 | 尊重同优先级偏好，并将排序误差定位到具体分量 | [并列与逆序分析](iterations/026-ranking-ties-and-inversion-analysis.md) |
 | 027 | 2026-09-21 | 候选人方向偏好确认契约 | 用带来源的方向强度消除离散重叠率歧义 | [方向偏好确认](iterations/027-direction-preference-confirmation-contract.md) |
+| 028 | 2026-09-24 | 方向偏好入口接线 | 在 Agent、API、CLI 使用同一确认契约并防止静默丢参 | [方向偏好入口](iterations/028-direction-preference-entry-wiring.md) |
 
 ## 文档入口
 

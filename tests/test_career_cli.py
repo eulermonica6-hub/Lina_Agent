@@ -163,6 +163,76 @@ def test_cli_rejects_non_positive_candidate_duration(tmp_path: Path) -> None:
         )
 
 
+def test_cli_forwards_candidate_direction_preferences(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(
+        "### 1. AI Infra 实习岗位 | 公司\n**岗位职责**\n- 建设智能运维平台",
+        encoding="utf-8",
+    )
+
+    main(
+        (
+            "--resume",
+            str(resume),
+            "--jobs",
+            str(jobs),
+            "--auto-decision-signals",
+            "--direction-ai-infrastructure",
+            "0.8",
+            "--format",
+            "json",
+        )
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    direction = payload["decision_signal_extractions"][0]["directions"][0]
+    assert direction["candidate_confirmation"]["score"] == 0.8
+
+
+def test_cli_rejects_direction_preferences_without_automatic_signals(tmp_path: Path) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(JOBS, encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        main(
+            (
+                "--resume",
+                str(resume),
+                "--jobs",
+                str(jobs),
+                "--direction-ai-infrastructure",
+                "0.8",
+            )
+        )
+
+
+def test_cli_rejects_direction_preference_outside_unit_interval(tmp_path: Path) -> None:
+    resume = tmp_path / "resume.txt"
+    jobs = tmp_path / "jobs.md"
+    resume.write_text("Python", encoding="utf-8")
+    jobs.write_text(JOBS, encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        main(
+            (
+                "--resume",
+                str(resume),
+                "--jobs",
+                str(jobs),
+                "--auto-decision-signals",
+                "--direction-ai-infrastructure",
+                "-0.1",
+            )
+        )
+
+
 def test_markdown_formatter_explains_empty_result() -> None:
     loader = LocalDocumentLoader()
     resume = loader.load_bytes("resume.txt", "沟通能力".encode())

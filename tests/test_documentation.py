@@ -29,6 +29,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/025-confirmed-availability-gold-rerun.md",
     "docs/iterations/026-ranking-ties-and-inversion-analysis.md",
     "docs/iterations/027-direction-preference-confirmation-contract.md",
+    "docs/iterations/028-direction-preference-entry-wiring.md",
 )
 
 

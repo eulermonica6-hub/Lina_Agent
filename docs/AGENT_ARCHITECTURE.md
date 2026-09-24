@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.10
+> 适用版本：0.2.11
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -93,6 +93,9 @@ flowchart LR
 | `--jobs` | 必填 `Path` | `LocalDocumentLoader.load(job_catalog_path)` |
 | `--top` | 整数，默认 5 | `top_k` |
 | `--include-inactive` | 默认 false | 是否保留已下线岗位 |
+| `--auto-decision-signals` | 默认 false | 启用证据化硬条件与方向综合分 |
+| `--candidate-weekly-days` / `--candidate-duration-months` | 可选确认值 | `CandidateAvailabilityConfirmation` |
+| 五个 `--direction-*` | 可选 `0..1` | `CandidateDirectionPreferenceConfirmation` |
 | `--use-llm` | 默认 false | 是否构造 `LLMCareerPlanner` |
 | `--format` | `markdown` / `json` | stdout 序列化方式 |
 
@@ -109,6 +112,9 @@ job_catalog.filename     -> 必须带受支持扩展名
 job_catalog.content      -> Base64Bytes 解码为 bytes
 top_k                    -> 1..50，默认 5
 include_inactive         -> 默认 false
+auto_decision_signals    -> 默认 false
+candidate_availability   -> 可选投入确认；依赖 auto_decision_signals=true
+candidate_direction_preferences -> 可选五类方向确认；依赖 auto_decision_signals=true
 use_llm                  -> 默认 false
 ```
 

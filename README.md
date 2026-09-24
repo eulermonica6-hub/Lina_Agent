@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.10** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.11** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -103,7 +103,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 145 个测试通过 |
+| 自动化测试 | 153 个测试通过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
 | Lint 与格式化 | Ruff + pre-commit |
@@ -169,7 +169,7 @@ uv run --locked lina-match \
   --top 5
 ```
 
-实验性综合排序需显式增加 `--auto-decision-signals`。可同时用 `--candidate-weekly-days` 和 `--candidate-duration-months` 提供人工确认的投入条件；确认来源独立记录，不伪造成简历证据。未知硬条件进入警告而不会被默认为兼容。
+实验性综合排序需显式增加 `--auto-decision-signals`。可同时用 `--candidate-weekly-days`、`--candidate-duration-months` 和五个 `--direction-*` 参数提供人工确认的投入条件与方向偏好；确认来源独立记录，不伪造成简历证据。未知硬条件进入警告而不会被默认为兼容。
 
 加入 `--use-llm` 才会联网生成智能计划。默认 `auto` 依次使用多个 Groq 凭据、Agnes 和 NVIDIA；DeepSeek 需要显式选择或允许付费回退。密钥文件、环境变量和实际发送字段见 [使用手册](docs/USER_GUIDE.md)。
 
@@ -245,7 +245,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 - 尚不支持产品内在线岗位采集、持续监控或公司调研；当前只有人工触发的离线摄取与官网核验；
 - 尚未接入持久化数据库，也没有公开部署。
 
-当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已在领域与私有 Gold 评测中验证，尚未贯通 Agent/API/CLI；综合排序继续保持显式 opt-in。
+当前可以称为有界多节点工作流 Agent：一个 Supervisor 编排可独立测试的文档、画像、岗位、匹配、缺口、计划和复核角色。它不是多个自主 Agent 群聊，也还没有持久化恢复、动态工具规划或自然语言会话。类型化方向偏好已贯通 Agent/API/CLI；综合排序继续保持显式 opt-in，下一步扩充冻结 Gold。
 
 ## 参考文档
 
@@ -279,6 +279,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [候选人投入确认 Gold 复跑](docs/iterations/025-confirmed-availability-gold-rerun.md) | 真实确认后的逐项、证据与排序指标 |
 | [排序并列与逆序对分析](docs/iterations/026-ranking-ties-and-inversion-analysis.md) | 并列 Gold、逐岗分量和真实排序误差 |
 | [方向偏好确认契约](docs/iterations/027-direction-preference-confirmation-contract.md) | 类型化方向强度、来源分离和私有 Gold 验证 |
+| [方向偏好入口接线](docs/iterations/028-direction-preference-entry-wiring.md) | Agent、API、CLI 透传与入口校验 |
 
 ## 欢迎讨论
 
