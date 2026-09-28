@@ -10,6 +10,7 @@ from lina_agent.domain.job_discovery import (
     JobSourceStatus,
     JobVerificationStatus,
 )
+from lina_agent.domain.weekly_monitoring import CompanyPool
 
 _CAPTURED_AT = datetime(2026, 9, 14, tzinfo=UTC)
 
@@ -27,6 +28,7 @@ def _lead(
     lead_id: str,
     company: str = "MiniMax",
     deduplication_key: str | None = None,
+    pool: CompanyPool = CompanyPool.ANCHOR,
 ) -> JobLead:
     return JobLead(
         lead_id=lead_id,
@@ -41,6 +43,7 @@ def _lead(
         captured_at=_CAPTURED_AT,
         verification_status=JobVerificationStatus.NEEDS_REVERIFICATION,
         highlights=("Agent", "Python"),
+        company_pool=pool,
     )
 
 
@@ -86,3 +89,27 @@ def test_discovery_applies_global_limit_after_deduplication() -> None:
     result = asyncio.run(service.search(JobSearchRequest(max_results=1)))
 
     assert [lead.lead_id for lead in result.leads] == ["one"]
+
+
+def test_discovery_interleaves_anchor_and_focused_ai_leads() -> None:
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=(
+            _lead("anchor-one"),
+            _lead("anchor-two"),
+            _lead("focused-one", pool=CompanyPool.FOCUSED_AI),
+            _lead("focused-two", pool=CompanyPool.FOCUSED_AI),
+        ),
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    result = asyncio.run(service.search(JobSearchRequest(max_results=4)))
+
+    assert [lead.lead_id for lead in result.leads] == [
+        "anchor-one",
+        "focused-one",
+        "anchor-two",
+        "focused-two",
+    ]

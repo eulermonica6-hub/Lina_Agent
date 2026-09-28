@@ -82,11 +82,14 @@ def test_monitoring_sources_expose_companies_urls_and_keywords() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert len(payload) == 7
+    assert len(payload) == 21
     assert payload[0] == {
         "source_id": "tencent-careers",
         "company": "腾讯",
         "url": "https://careers.tencent.com/",
         "keywords": ["Agent Memory", "RAG", "知识图谱", "评测", "向量检索"],
+        "pool": "anchor",
+        "regions": ["中国"],
+        "why_watch": "业务场景广，覆盖 Agent、内容、搜索与基础平台。",
     }
-    assert payload[-1]["company"] == "Meltwater"
+    assert payload[-1]["company"] == "Together AI"

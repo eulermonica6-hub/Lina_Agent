@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from lina_agent.domain.job_discovery import JobLead, JobSourceResult
+from lina_agent.domain.job_discovery import CompanyPool, JobLead, JobSourceResult
 from lina_agent.domain.models import DomainModel
 
 
@@ -19,6 +19,9 @@ class MonitoredJobSource(DomainModel):
     company: str = Field(min_length=1)
     url: str = Field(pattern=r"^https://")
     keywords: tuple[str, ...] = Field(min_length=1)
+    pool: CompanyPool = CompanyPool.ANCHOR
+    regions: tuple[str, ...] = ()
+    why_watch: str = ""
 
 
 class WeeklyMonitoringRun(DomainModel):

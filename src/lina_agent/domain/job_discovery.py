@@ -15,6 +15,11 @@ class JobSourceStatus(StrEnum):
     FAILED = "failed"
 
 
+class CompanyPool(StrEnum):
+    ANCHOR = "anchor"
+    FOCUSED_AI = "focused_ai"
+
+
 class JobVerificationStatus(StrEnum):
     LIVE = "live"
     NEEDS_REVERIFICATION = "needs_reverification"
@@ -28,6 +33,7 @@ class JobLead(DomainModel):
     source_id: str = Field(min_length=1)
     external_id: str = Field(min_length=1)
     company: str = Field(min_length=1)
+    company_pool: CompanyPool = CompanyPool.ANCHOR
     title: str = Field(min_length=1)
     locations: tuple[str, ...]
     direction: str = Field(min_length=1)

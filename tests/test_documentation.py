@@ -50,6 +50,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/044-opportunity-feed-chat-preview.md",
     "docs/iterations/045-job-discovery-contract.md",
     "docs/iterations/046-weekly-source-monitoring.md",
+    "docs/iterations/047-balanced-company-universe.md",
 )
 
 

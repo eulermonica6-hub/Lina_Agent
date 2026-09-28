@@ -55,6 +55,8 @@ const elements = {
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
     monitoringSources: document.querySelector("#monitoring-sources"),
+    anchorCompanyList: document.querySelector("#anchor-company-list"),
+    focusedCompanyList: document.querySelector("#focused-company-list"),
     agentUseFeed: document.querySelector("#agent-use-feed"),
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
@@ -317,9 +319,48 @@ async function loadOpportunities() {
 async function loadMonitoringSources() {
     try {
         const sources = await getJson("/monitoring/sources");
-        elements.monitoringSources.textContent = `${sources.length} 个来源 · ${sources.map((source) => source.company).join(" · ")}`;
+        const anchorCount = sources.filter((source) => source.pool === "anchor").length;
+        const focusedCount = sources.filter((source) => source.pool === "focused_ai").length;
+        elements.monitoringSources.textContent = `${sources.length} 个来源 · ${anchorCount} 家主池 · ${focusedCount} 家探索池`;
     } catch (error) {
         elements.monitoringSources.textContent = `监控清单加载失败：${error.message}`;
+    }
+}
+
+function appendCompany(list, company) {
+    const item = document.createElement("li");
+    const heading = document.createElement("div");
+    const link = document.createElement("a");
+    link.href = company.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = company.company;
+    const regions = document.createElement("span");
+    regions.textContent = company.regions.join(" · ");
+    heading.append(link, regions);
+    const reason = document.createElement("p");
+    reason.textContent = company.why_watch;
+    const themes = document.createElement("small");
+    themes.textContent = company.keywords.join(" · ");
+    item.append(heading, reason, themes);
+    list.append(item);
+}
+
+async function loadCompanies() {
+    try {
+        const companies = await getJson("/companies");
+        elements.anchorCompanyList.replaceChildren();
+        elements.focusedCompanyList.replaceChildren();
+        companies.forEach((company) => {
+            appendCompany(
+                company.pool === "focused_ai"
+                    ? elements.focusedCompanyList
+                    : elements.anchorCompanyList,
+                company,
+            );
+        });
+    } catch (error) {
+        appendTextItem(elements.anchorCompanyList, `公司清单加载失败：${error.message}`);
     }
 }
 
@@ -921,3 +962,4 @@ elements.jobForm.addEventListener("input", (event) => {
 updateFeedMatchMode();
 loadOpportunities();
 loadMonitoringSources();
+loadCompanies();

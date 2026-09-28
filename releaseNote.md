@@ -1,6 +1,6 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.28`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.29`，之后按可验收用户能力递增。
 
 ## Unreleased
 
@@ -8,6 +8,15 @@
 - 0.2.25 现有文档摄取、证据、硬条件、匹配、gap、Reviewer、SQLite、Snapshot/Diff 和评测继续作为可信决策内核，不推倒重写。
 - 近期唯一实现目标改为 `JobLead`、统一来源适配器和一个真实官方来源的手动搜索 API；Run 详情与恢复降为跨周期工作流的支撑能力。
 - 明确自治等级：公开信息检索可自动执行，通知需渠道授权，外部提交需逐次预览和确认；绕过验证码、伪造经历与无人值守海投属于禁止能力。
+
+## 0.2.29 - 2026-09-28
+
+- 建立 21 家公司双池目录：10 家平台型主池与 11 家专注型 AI 探索池，每家公司记录官方 Careers、地区、方向标签和关注理由。
+- 探索池包含 MiniMax、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain 和 Together AI。
+- `JobLead` 新增公司池，发现服务按 anchor/focused_ai 交替混排，避免大厂岗位数量淹没探索机会。
+- 新增 `GET /companies?pool=` 与网页公司雷达；每周监控统一扩展到 21 个入口，不维护第二份名单。
+- 21 源真实探针中 20 个入口可访问但解析器待实现，小红书本次为 network_error；失败未中断周报或伪装成零岗位。
+- 226 项测试通过，其中 22 项 Playwright；核心语句和分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.28 - 2026-09-28
 

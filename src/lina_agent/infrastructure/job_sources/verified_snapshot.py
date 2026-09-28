@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from lina_agent.domain.job_discovery import (
+    CompanyPool,
     JobLead,
     JobSearchRequest,
     JobSourceResult,
@@ -55,6 +56,7 @@ def _lead(
     direction: str,
     source_url: str,
     highlights: tuple[str, ...],
+    company_pool: CompanyPool = CompanyPool.ANCHOR,
 ) -> JobLead:
     return JobLead(
         lead_id=f"{_SOURCE_ID}:{external_id}",
@@ -62,6 +64,7 @@ def _lead(
         source_id=_SOURCE_ID,
         external_id=external_id,
         company=company,
+        company_pool=company_pool,
         title=title,
         locations=("上海",),
         direction=direction,
@@ -80,6 +83,7 @@ _LEADS = (
         "Agent / LLM 应用",
         "https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7674929052376942886/detail",
         ("Python", "Agent", "MCP", "每周 3 天以上"),
+        CompanyPool.FOCUSED_AI,
     ),
     _lead(
         "minimax-agent-ai-infra-intern",
@@ -88,6 +92,7 @@ _LEADS = (
         "AI Infra",
         "https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7685277183518427419/detail",
         ("Python", "Agent", "RAG/MCP", "每周 4 天以上"),
+        CompanyPool.FOCUSED_AI,
     ),
     _lead(
         "xiaohongshu-agent-development-intern",

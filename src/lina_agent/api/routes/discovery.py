@@ -1,11 +1,12 @@
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.domain.job_discovery import (
+    CompanyPool,
     JobDiscoveryResult,
     JobLead,
     JobSearchRequest,
@@ -83,6 +84,15 @@ async def search_opportunities(request: JobSearchRequest) -> JobDiscoveryResult:
 @router.get("/monitoring/sources", response_model=tuple[MonitoredJobSource, ...])
 async def list_monitoring_sources() -> tuple[MonitoredJobSource, ...]:
     return MONITORED_JOB_SOURCES
+
+
+@router.get("/companies", response_model=tuple[MonitoredJobSource, ...])
+async def list_companies(
+    pool: Annotated[CompanyPool | None, Query()] = None,
+) -> tuple[MonitoredJobSource, ...]:
+    if pool is None:
+        return MONITORED_JOB_SOURCES
+    return tuple(source for source in MONITORED_JOB_SOURCES if source.pool is pool)
 
 
 @router.post("/assistant/messages", response_model=AssistantMessageResponse)

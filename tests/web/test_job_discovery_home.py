@@ -48,9 +48,9 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-14")
     expect(page.locator("#opportunity-freshness")).to_contain_text("历史核验快照")
-    expect(page.locator("#monitoring-sources")).to_contain_text("7 个来源")
-    expect(page.locator("#monitoring-sources")).to_contain_text("腾讯")
-    expect(page.locator("#monitoring-sources")).to_contain_text("Meltwater")
+    expect(page.locator("#monitoring-sources")).to_contain_text("21 个来源")
+    expect(page.locator("#monitoring-sources")).to_contain_text("10 家主池")
+    expect(page.locator("#monitoring-sources")).to_contain_text("11 家探索池")
 
     page.locator("#chat-toggle").click()
     expect(page.locator("#chat-panel")).to_be_visible()
@@ -169,3 +169,40 @@ def test_manual_search_filters_feed_and_reports_source_health(
     expect(page.locator("#opportunity-list article")).to_have_count(1)
     expect(page.locator("#opportunity-list")).to_contain_text("Agent 研发实习生-AI Infra")
     expect(page.locator("#opportunity-freshness")).to_contain_text("1 个来源正常")
+
+
+def test_company_radar_displays_anchor_and_focused_ai_pools(
+    page: Page,
+    live_server_url: str,
+) -> None:
+    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/companies",
+        lambda route: route.fulfill(
+            json=[
+                {
+                    "source_id": "tencent-careers",
+                    "company": "腾讯",
+                    "url": "https://careers.tencent.com/",
+                    "keywords": ["RAG"],
+                    "pool": "anchor",
+                    "regions": ["中国"],
+                    "why_watch": "平台型 AI 岗位覆盖广。",
+                },
+                {
+                    "source_id": "llamaindex-careers",
+                    "company": "LlamaIndex",
+                    "url": "https://www.llamaindex.ai/careers",
+                    "keywords": ["Agent", "RAG"],
+                    "pool": "focused_ai",
+                    "regions": ["美国", "远程"],
+                    "why_watch": "Agent 与知识工作自动化方向高度集中。",
+                },
+            ]
+        ),
+    )
+    page.goto(live_server_url)
+
+    expect(page.locator("#anchor-company-list")).to_contain_text("腾讯")
+    expect(page.locator("#focused-company-list")).to_contain_text("LlamaIndex")
+    expect(page.locator("#focused-company-list")).to_contain_text("Agent 与知识工作自动化")

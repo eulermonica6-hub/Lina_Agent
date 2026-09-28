@@ -269,6 +269,90 @@ h1 {
     text-align: right;
 }
 
+.company-radar {
+    margin-bottom: 24px;
+    padding: 24px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.company-radar-heading h3 {
+    margin: 0;
+    font-family: Georgia, "Songti SC", serif;
+    font-size: 22px;
+}
+
+.company-pools {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+}
+
+.company-pools>section {
+    min-width: 0;
+    padding-right: 24px;
+}
+
+.company-pools>section+section {
+    padding: 0 0 0 24px;
+    border-left: 1px solid var(--line);
+}
+
+.company-pools h4 {
+    margin: 0 0 10px;
+    color: var(--green);
+    font-size: 12px;
+}
+
+.company-pools ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.company-pools li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.company-pools li>div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.company-pools a {
+    color: var(--ink);
+    font-family: Georgia, "Songti SC", serif;
+    font-size: 16px;
+    font-weight: 700;
+    text-underline-offset: 4px;
+}
+
+.company-pools li span,
+.company-pools li small {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.company-pools li span {
+    text-align: right;
+}
+
+.company-pools li p {
+    margin: 7px 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.company-pools li small {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
 .opportunity-search {
     margin: 0 0 24px;
     padding: 18px;
@@ -1143,6 +1227,20 @@ footer {
 
     .opportunity-search {
         grid-template-columns: 1fr;
+    }
+
+    .company-pools {
+        grid-template-columns: 1fr;
+    }
+
+    .company-pools>section {
+        padding-right: 0;
+    }
+
+    .company-pools>section+section {
+        padding: 24px 0 0;
+        border-top: 1px solid var(--line);
+        border-left: 0;
     }
 
     .opportunity-card {
