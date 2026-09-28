@@ -48,6 +48,9 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-14")
     expect(page.locator("#opportunity-freshness")).to_contain_text("历史核验快照")
+    expect(page.locator("#monitoring-sources")).to_contain_text("7 个来源")
+    expect(page.locator("#monitoring-sources")).to_contain_text("腾讯")
+    expect(page.locator("#monitoring-sources")).to_contain_text("Meltwater")
 
     page.locator("#chat-toggle").click()
     expect(page.locator("#chat-panel")).to_be_visible()

@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.27
+> 适用版本：0.2.28
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -102,6 +102,8 @@ flowchart LR
 | `GET /opportunities` | 无 | 返回带核验日期的历史官方岗位快照 | `OpportunityFeed` | 无；不访问公网 |
 | `POST /opportunities/search` | 关键词、公司、地点、limit | 调用所有来源并跨来源去重 | `JobDiscoveryResult` | 无；当前仅快照适配器 |
 | `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
+| `GET /monitoring/sources` | 无 | 返回 Lina 的 7 个官方监控来源与关键词 | `MonitoredJobSource[]` | 无 |
+| `lina-monitor` | 可选周一日期、输出路径 | 并行检查官方入口并汇总来源健康 | `WeeklyMonitoringRun` JSON | 写指定报告文件或 stdout |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |
 | `GET /agent/runs?limit=N` | 1..100 | 按创建时间查询最近历史 | `AgentRunSnapshot[]` | 无 |
 | `GET /agent/documents/{reference_id}` | Reference UUID | 加载 metadata-only 文档版本 | `DocumentReference` | 无 |

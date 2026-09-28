@@ -238,6 +238,37 @@ h1 {
     line-height: 1.6;
 }
 
+.monitoring-banner {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border-left: 4px solid var(--green-bright);
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.monitoring-banner .section-index {
+    color: var(--green-bright);
+}
+
+.monitoring-banner h3 {
+    margin: 0;
+    color: white;
+    font-family: Georgia, "Songti SC", serif;
+    font-size: 18px;
+}
+
+.monitoring-banner>p {
+    max-width: 620px;
+    margin: 0;
+    color: #cddbd3;
+    font-size: 11px;
+    line-height: 1.6;
+    text-align: right;
+}
+
 .opportunity-search {
     margin: 0 0 24px;
     padding: 18px;
@@ -1096,9 +1127,14 @@ footer {
     }
 
     .feed-heading,
-    .legacy-actions {
+    .legacy-actions,
+    .monitoring-banner {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .monitoring-banner>p {
+        text-align: left;
     }
 
     .opportunity-list {

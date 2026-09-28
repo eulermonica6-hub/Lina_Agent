@@ -10,6 +10,8 @@ from lina_agent.domain.job_discovery import (
     JobLead,
     JobSearchRequest,
 )
+from lina_agent.domain.weekly_monitoring import MonitoredJobSource
+from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
 from lina_agent.infrastructure.job_sources.verified_snapshot import (
     VerifiedSnapshotJobSource,
 )
@@ -76,6 +78,11 @@ async def list_opportunities() -> OpportunityFeed:
 @router.post("/opportunities/search", response_model=JobDiscoveryResult)
 async def search_opportunities(request: JobSearchRequest) -> JobDiscoveryResult:
     return await _discovery_service.search(request)
+
+
+@router.get("/monitoring/sources", response_model=tuple[MonitoredJobSource, ...])
+async def list_monitoring_sources() -> tuple[MonitoredJobSource, ...]:
+    return MONITORED_JOB_SOURCES
 
 
 @router.post("/assistant/messages", response_model=AssistantMessageResponse)

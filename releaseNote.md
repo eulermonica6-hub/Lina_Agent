@@ -1,6 +1,6 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.27`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.28`，之后按可验收用户能力递增。
 
 ## Unreleased
 
@@ -8,6 +8,15 @@
 - 0.2.25 现有文档摄取、证据、硬条件、匹配、gap、Reviewer、SQLite、Snapshot/Diff 和评测继续作为可信决策内核，不推倒重写。
 - 近期唯一实现目标改为 `JobLead`、统一来源适配器和一个真实官方来源的手动搜索 API；Run 详情与恢复降为跨周期工作流的支撑能力。
 - 明确自治等级：公开信息检索可自动执行，通知需渠道授权，外部提交需逐次预览和确认；绕过验证码、伪造经历与无人值守海投属于禁止能力。
+
+## 0.2.28 - 2026-09-28
+
+- Lina 新增每周监控运行模型，使用 `lina-weekly:YYYY-MM-DD` 周一幂等 ID，并区分 complete、partial 和 failed。
+- 注册腾讯、字节、阿里、蚂蚁、Microsoft、Amazon 上海和 Meltwater 7 个官方入口及关注关键词。
+- 新增 HTTP 健康探针，分类成功正文、空页、阻断、限流、服务错误和网络异常；HTTP 200 但无解析器时明确为 `partial/listing_parser_pending`。
+- 新增 `lina-monitor` CLI 和每周一 01:00 UTC 的 GitHub Actions schedule，报告以 JSON artifact 保存且不读取私人简历或账号秘密。
+- 首次真实运行 7/7 入口可读取正文，但 7/7 岗位列表解析器待实现；没有伪报实时岗位或零岗位。
+- 222 项测试通过，其中 21 项 Playwright；核心语句和分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.27 - 2026-09-28
 

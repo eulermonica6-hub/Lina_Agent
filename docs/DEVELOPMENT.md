@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.27`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.28`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、性能证据、SQLite、Snapshot、Diff、历史视图和浏览器文件 Agent 已完成。下一步实现 `JobLead`、来源适配器和手动官方岗位搜索 API。
+Repository、统一文档摄取、双 Gold 套件、SQLite、Snapshot/Diff、`JobLead`、快照搜索和每周 7 源健康监控已完成。下一步实现首个真实岗位列表解析器。
 
 ### 目标
 

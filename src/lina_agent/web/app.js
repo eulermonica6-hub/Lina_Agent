@@ -54,6 +54,7 @@ const elements = {
     opportunityQuery: document.querySelector("#opportunity-query"),
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
+    monitoringSources: document.querySelector("#monitoring-sources"),
     agentUseFeed: document.querySelector("#agent-use-feed"),
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
@@ -310,6 +311,15 @@ async function loadOpportunities() {
     } finally {
         elements.refreshOpportunities.disabled = false;
         elements.refreshOpportunities.textContent = "刷新";
+    }
+}
+
+async function loadMonitoringSources() {
+    try {
+        const sources = await getJson("/monitoring/sources");
+        elements.monitoringSources.textContent = `${sources.length} 个来源 · ${sources.map((source) => source.company).join(" · ")}`;
+    } catch (error) {
+        elements.monitoringSources.textContent = `监控清单加载失败：${error.message}`;
     }
 }
 
@@ -910,3 +920,4 @@ elements.jobForm.addEventListener("input", (event) => {
 
 updateFeedMatchMode();
 loadOpportunities();
+loadMonitoringSources();

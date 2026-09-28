@@ -75,3 +75,18 @@ def test_manual_opportunity_search_returns_leads_and_source_health() -> None:
     ]
     assert len(payload["leads"]) == 2
     assert {lead["company"] for lead in payload["leads"]} == {"MiniMax"}
+
+
+def test_monitoring_sources_expose_companies_urls_and_keywords() -> None:
+    response = _request("GET", "/monitoring/sources")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 7
+    assert payload[0] == {
+        "source_id": "tencent-careers",
+        "company": "腾讯",
+        "url": "https://careers.tencent.com/",
+        "keywords": ["Agent Memory", "RAG", "知识图谱", "评测", "向量检索"],
+    }
+    assert payload[-1]["company"] == "Meltwater"
