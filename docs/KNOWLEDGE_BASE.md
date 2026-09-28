@@ -47,6 +47,7 @@
 | 039 | 2026-09-24 | 文档引用与候选确认版本 | 分离内容、角色与确认事件 ID，用 metadata/facts hash 支持历史关联 | [输入版本关联](iterations/039-document-and-confirmation-versions.md) |
 | 040 | 2026-09-24 | Agent Run Snapshot Diff | 不加载正文比较输入、确认、排名、分数、gap 与计划变化 | [Run Snapshot Diff](iterations/040-agent-run-snapshot-diff.md) |
 | 041 | 2026-09-28 | Run 历史与 Diff 工作台 | 用只读响应式界面浏览历史和结构化版本变化 | [历史工作台](iterations/041-run-history-workbench.md) |
+| 042 | 2026-09-28 | 浏览器文件 Agent | 用文件上传、显式开关和自动历史刷新完成浏览器运行闭环 | [浏览器文件 Agent](iterations/042-browser-file-agent.md) |
 
 ## 文档入口
 

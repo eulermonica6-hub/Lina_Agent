@@ -1,8 +1,8 @@
 # Lina Career Agent Coding Plan
 
-> 状态：Phase 3A.5 已完成工作台只读 Run 历史与 Diff 视图。下一步接入浏览器文件 Agent 运行入口。
+> 状态：Phase 3A.6 已完成浏览器文件 Agent 与历史自动刷新。下一步增加脱敏 Run 详情视图。
 
-> 能力边界：当前 LLM 只用于显式 opt-in 的结构化行动计划，并由确定性 Reviewer 检查目标技能和任务结构；没有对话、在线岗位搜索、简历改写或执行恢复。结构化实体和脱敏 Run 历史已持久化，原始文档、确认版本和检查点仍未持久化。
+> 能力边界：当前 LLM 只用于显式 opt-in 的结构化行动计划，并由确定性 Reviewer 检查目标技能和任务结构；没有对话、在线岗位搜索、简历改写或执行恢复。结构化实体、脱敏 Run 历史、文档引用与确认版本已持久化，原始文档和检查点仍未持久化。
 
 当前执行顺序以依赖关系为准：
 
@@ -35,7 +35,8 @@ TXT/Markdown/DOCX 统一证据摄取（已完成）
    -> DocumentReference 与 CandidateConfirmationVersion（已完成）
    -> Snapshot diff 与历史比较 API（已完成）
    -> 工作台 Run 历史与 Diff 只读视图（已完成）
-   -> 浏览器文件 Agent 运行入口与历史自动刷新（下一步）
+   -> 浏览器文件 Agent 运行入口与历史自动刷新（已完成）
+   -> 脱敏 Run 详情与步骤/Review 展示（下一步）
    -> 执行检查点、重放与恢复
    -> 技能证据回写简历并复跑排序（CUDA artifact 后）
    -> LLM 结构化语义映射、引用验证与确定性评分

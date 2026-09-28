@@ -44,6 +44,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/039-document-and-confirmation-versions.md",
     "docs/iterations/040-agent-run-snapshot-diff.md",
     "docs/iterations/041-run-history-workbench.md",
+    "docs/iterations/042-browser-file-agent.md",
 )
 
 

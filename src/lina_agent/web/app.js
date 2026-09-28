@@ -5,6 +5,7 @@ const state = {
     extractionApplied: false,
     historyRevision: 0,
     diffRevision: 0,
+    agentRevision: 0,
     historyRuns: [],
 };
 
@@ -35,6 +36,15 @@ const elements = {
     rankingChanges: document.querySelector("#ranking-changes"),
     scoreChanges: document.querySelector("#score-changes"),
     gapChanges: document.querySelector("#gap-changes"),
+    fileAgentForm: document.querySelector("#file-agent-form"),
+    agentAutoSignals: document.querySelector("#agent-auto-signals"),
+    agentConfirmations: document.querySelector("#agent-confirmations"),
+    agentRunStatus: document.querySelector("#agent-run-status"),
+    agentResult: document.querySelector("#agent-result"),
+    agentResultTitle: document.querySelector("#agent-result-title"),
+    agentMatchList: document.querySelector("#agent-match-list"),
+    agentGapList: document.querySelector("#agent-gap-list"),
+    agentWarning: document.querySelector("#agent-warning"),
 };
 
 const reasonLabels = {
@@ -50,6 +60,15 @@ function commaValues(value) {
 
 function optionalNumber(value) {
     return value === "" ? null : Number(value);
+}
+
+async function fileToBase64(file) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    return btoa(binary);
 }
 
 function setRunState(message, kind = "") {
@@ -311,6 +330,32 @@ function renderDiff(diff) {
     elements.diffPanel.hidden = false;
 }
 
+function renderAgentRun(run) {
+    elements.agentRunStatus.textContent = run.state;
+    elements.agentRunStatus.classList.toggle("saved", run.state === "complete");
+    elements.agentResultTitle.textContent = run.state === "complete" ? "运行完成" : "运行已结束";
+    elements.agentMatchList.replaceChildren();
+    elements.agentGapList.replaceChildren();
+
+    run.matches.forEach((match) => {
+        appendTextItem(
+            elements.agentMatchList,
+            `${match.title} · ${match.company} · ${match.score.toFixed(1)}`,
+        );
+    });
+    if (!run.matches.length) appendTextItem(elements.agentMatchList, "没有可展示的匹配", "muted-item");
+
+    run.gap_analysis.gaps.forEach((gap) => {
+        appendTextItem(
+            elements.agentGapList,
+            `${gap.skill} · ${gap.priority} · 影响 ${gap.affected_catalog_numbers.length} 个岗位`,
+        );
+    });
+    if (!run.gap_analysis.gaps.length) appendTextItem(elements.agentGapList, "没有聚合技能缺口", "muted-item");
+    elements.agentWarning.textContent = run.warnings.join(" ");
+    elements.agentResult.hidden = false;
+}
+
 function setSaving(form, saving) {
     const button = form.querySelector("button[type='submit']");
     button.disabled = saving;
@@ -468,7 +513,7 @@ elements.runMatch.addEventListener("click", async () => {
     }
 });
 
-elements.refreshHistory.addEventListener("click", async () => {
+async function loadHistory() {
     const revision = ++state.historyRevision;
     state.diffRevision += 1;
     elements.refreshHistory.disabled = true;
@@ -492,6 +537,94 @@ elements.refreshHistory.addEventListener("click", async () => {
             elements.refreshHistory.disabled = false;
             elements.refreshHistory.textContent = "刷新历史";
         }
+    }
+}
+
+elements.refreshHistory.addEventListener("click", loadHistory);
+
+elements.fileAgentForm.addEventListener("input", () => {
+    state.agentRevision += 1;
+    elements.agentResult.hidden = true;
+    elements.agentRunStatus.textContent = "有修改";
+    elements.agentRunStatus.classList.remove("saved");
+});
+
+elements.agentAutoSignals.addEventListener("change", () => {
+    elements.agentConfirmations.disabled = !elements.agentAutoSignals.checked;
+    elements.agentConfirmations.closest("details").open = elements.agentAutoSignals.checked;
+    if (!elements.agentAutoSignals.checked) {
+        elements.agentConfirmations.querySelectorAll("input").forEach((input) => {
+            input.value = "";
+        });
+    }
+});
+
+elements.fileAgentForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const revision = ++state.agentRevision;
+    const form = event.currentTarget;
+    const button = form.querySelector("button[type='submit']");
+    const resume = document.querySelector("#agent-resume").files[0];
+    const jobCatalog = document.querySelector("#agent-jobs").files[0];
+    if (!resume || !jobCatalog) return;
+
+    button.disabled = true;
+    button.textContent = "正在运行...";
+    elements.agentRunStatus.textContent = "运行中";
+    elements.agentRunStatus.classList.remove("saved");
+    elements.agentResult.hidden = true;
+    setRunState("正在运行文件 Agent");
+    try {
+        const payload = {
+            resume: { filename: resume.name, content: await fileToBase64(resume) },
+            job_catalog: { filename: jobCatalog.name, content: await fileToBase64(jobCatalog) },
+            top_k: Number(document.querySelector("#agent-top-k").value),
+            include_inactive: false,
+            auto_decision_signals: elements.agentAutoSignals.checked,
+            use_llm: document.querySelector("#agent-use-llm").checked,
+        };
+        if (payload.auto_decision_signals) {
+            const weeklyDays = optionalNumber(document.querySelector("#agent-weekly-days").value);
+            const durationMonths = optionalNumber(document.querySelector("#agent-duration-months").value);
+            if (weeklyDays !== null || durationMonths !== null) {
+                payload.candidate_availability = {};
+                if (weeklyDays !== null) payload.candidate_availability.weekly_days = weeklyDays;
+                if (durationMonths !== null) payload.candidate_availability.duration_months = durationMonths;
+            }
+
+            const directionFields = {
+                agent_llm_application: "#direction-agent",
+                ai_infrastructure: "#direction-infra",
+                machine_learning: "#direction-ml",
+                ai_product: "#direction-product",
+                fullstack_ai_testing: "#direction-testing",
+                risk_modeling: "#direction-risk",
+            };
+            const directions = {};
+            Object.entries(directionFields).forEach(([name, selector]) => {
+                const value = optionalNumber(document.querySelector(selector).value);
+                if (value !== null) directions[name] = value;
+            });
+            if (Object.keys(directions).length) payload.candidate_direction_preferences = directions;
+        }
+
+        const run = await postJson("/agent/runs", payload);
+        if (state.agentRevision !== revision) return;
+        renderAgentRun(run);
+        setRunState("文件 Agent 运行完成", "ready");
+        await loadHistory();
+    } catch (error) {
+        if (state.agentRevision !== revision) return;
+        elements.agentRunStatus.textContent = "运行失败";
+        elements.agentResultTitle.textContent = "运行失败";
+        elements.agentMatchList.replaceChildren();
+        elements.agentGapList.replaceChildren();
+        elements.agentWarning.textContent = error.message;
+        elements.agentResult.hidden = false;
+        setRunState(error.message, "error");
+    } finally {
+        button.disabled = false;
+        button.textContent = "运行文件 Agent";
     }
 });
 

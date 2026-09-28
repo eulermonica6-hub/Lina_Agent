@@ -8,7 +8,7 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.24** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.25** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -40,6 +40,8 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 4. 排除不可投递岗位，生成 Top-K 覆盖排序与逐岗位证据缺口；
 5. 由 Gap Analyst 聚合多个岗位的高频缺口、影响范围与已有证据优势；
 6. 仅在 `--use-llm` 时，由 Planner 生成带产出物和验收标准的计划，再由确定性 Reviewer 复核后接纳。
+
+同一流程也可在浏览器“文件 Agent”区域运行：上传简历与 Markdown JD 目录，显式开启自动信号或 LLM，完成后查看 Top 匹配、gap 并自动刷新脱敏历史。
 
 ![来源证据与匹配摘要](docs/assets/lina-evidence-result.png)
 
@@ -103,7 +105,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 193 个测试通过 |
+| 自动化测试 | 198 个测试通过 |
 | 推理实验测试 | 本机 16 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
@@ -125,7 +127,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | Run 历史比较 | 不加载正文即可比较输入、确认、排名、分数、gap 和计划变化 |
 | 历史工作台 | 最近 Run、基线/目标选择和结构化 Diff，桌面/移动端可用 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
-| 浏览器验收 | 12 个 Playwright 测试覆盖表单竞态、历史成功/空状态/失败恢复；桌面与移动布局已截图验收 |
+| 浏览器验收 | 17 个 Playwright 测试覆盖表单竞态、文件 Agent、历史与失败恢复；桌面与移动布局已截图验收 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
 | 官方岗位核验 | 覆盖国内外 30 余家公司，5 条上海 AI 实习进入优先投递池 |
 | Provider | Groq、Agnes、DeepSeek 无隐私真实探针通过；NVIDIA 为免费降级；DeepSeek 默认不自动付费 |
@@ -350,6 +352,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [文档引用与候选确认版本](docs/iterations/039-document-and-confirmation-versions.md) | 内容/角色/事件 ID、facts hash 与 SQLite schema v3 |
 | [Agent Run Snapshot Diff](docs/iterations/040-agent-run-snapshot-diff.md) | 输入 hash、排名位移、分数、gap 与计划变化 |
 | [Run 历史与 Diff 工作台](docs/iterations/041-run-history-workbench.md) | 只读历史、异步状态、隐私与响应式验收 |
+| [浏览器文件 Agent](docs/iterations/042-browser-file-agent.md) | 文件上传、显式自动信号/LLM、结果渲染与历史自动刷新 |
 
 ## 欢迎讨论
 

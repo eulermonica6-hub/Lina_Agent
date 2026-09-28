@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.24
+> 适用版本：0.2.25
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
@@ -16,6 +16,7 @@ Lina 当前是求职 Agent 的确定性产品基线，还不是可以自由对�
 | 硬条件匹配 | 可用 | 判断毕业年份、学历、经验和地点 |
 | 匿名示例 | 可用 | 用于快速体验和验证 |
 | 本地简历/JD Agent | 可用 | 读取 TXT、Markdown、DOCX，输出证据 Top-K 和 Trace |
+| 浏览器文件 Agent | 可用 | 上传简历与 Markdown JD 目录，运行后展示结果并刷新脱敏历史 |
 | 智能行动计划 | 可选 | CLI `--use-llm` 或 API `use_llm=true` 显式启用 |
 | 多岗位能力缺口 | 可用 | 聚合 Top-K 的硬性/优先缺口、影响岗位与证据优势 |
 | 计划复核与降级 | 可用 | 无证据技能被拒绝；模型失败时保留确定性分析 |
@@ -61,7 +62,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.24"
+  "version": "0.2.25"
 }
 ```
 
@@ -78,6 +79,15 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 9. 需要测试其他岗位时，点击“开始新一轮”，无需刷新页面。
 
 原因是匿名候选人的毕业年份是 2028，而示例岗位只接受 2027 届。
+
+### 3.1 浏览器运行文件 Agent
+
+1. 在“文件 Agent”选择 TXT、Markdown 或 DOCX 简历，以及 Markdown 岗位目录。
+2. 设置 Top-K。自动决策信号与 LLM 行动计划默认关闭，需要时显式开启。
+3. 开启自动信号后，可填写到岗天数、实习月数和六类方向偏好；空字段不会提交，`0.0` 会保留。
+4. 点击“运行文件 Agent”。完成后页面展示 Top 匹配、优先 gap 和 warning，并自动刷新运行历史。
+
+文件字节会发送到本机 Lina API，但脱敏 Snapshot 不保存 Base64、正文、offset 或私密文件名。
 
 ## 4. 使用自己的数据
 
