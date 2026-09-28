@@ -54,14 +54,15 @@ Lina 已经不是一个空目录或单 Prompt Demo。它包含两条可执行链
 
 ### 2.3 当前最重要的架构债务
 
-仓库里存在两条尚未统一的业务链：
+仓库里存在三条需要继续收敛的业务链：
 
 | 链路 | 输入 | 核心判断 | 输出 | 当前入口 |
 | --- | --- | --- | --- | --- |
 | Web 硬条件链 | `CandidateProfile`、`JobPosting` | 毕业年、学历、经验、地点规则 | `HardConstraintResult` | 工作台与 `/matches` |
 | 文件证据 Agent 链 | `IngestedDocument`、`CatalogJob` | 词表技能覆盖与缺口聚合 | `CareerAgentRun` | `lina-match` 与 `/agent/runs` |
+| 岗位发现与监控链 | 内部公司目录、`JobLead`、来源状态 | live 过滤、去重、推荐和来源健康 | Top 9、搜索结果、周报 | 首页、`/opportunities/*` 与 `lina-monitor` |
 
-文件 Agent 还没有使用 Web 链的硬条件，Web 链也没有使用文件证据、Top-K 和 Gap Analyst。后续开发的目标不是继续复制第三条链，而是让两条链收敛到统一的候选人、岗位、证据与 Agent Run 契约。
+文件 Agent 还没有使用 Web 链的全部硬条件，岗位发现也尚未保存完整 JD 并直接调用同一匹配聚合。后续开发应让三条链收敛到统一的候选人、岗位、证据与 Agent Run 契约，不再新增平行模型。
 
 ## 3. 仓库框架
 

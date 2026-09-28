@@ -10,8 +10,8 @@ from lina_agent.domain.job_discovery import (
     JobVerificationStatus,
 )
 
-_CAPTURED_AT = datetime(2026, 9, 14, tzinfo=UTC)
-_SOURCE_ID = "verified-snapshot-2026-09-14"
+_CAPTURED_AT = datetime(2026, 9, 28, tzinfo=UTC)
+_SOURCE_ID = "verified-snapshot-2026-09-28"
 
 
 class VerifiedSnapshotJobSource:
@@ -60,6 +60,9 @@ def _lead(
     source_url: str,
     highlights: tuple[str, ...],
     company_pool: CompanyPool = CompanyPool.ANCHOR,
+    verification_status: JobVerificationStatus = JobVerificationStatus.NEEDS_REVERIFICATION,
+    job_type: JobType = JobType.INTERNSHIP,
+    locations: tuple[str, ...] = ("上海",),
 ) -> JobLead:
     return JobLead(
         lead_id=f"{_SOURCE_ID}:{external_id}",
@@ -69,12 +72,12 @@ def _lead(
         company=company,
         company_pool=company_pool,
         title=title,
-        job_type=JobType.INTERNSHIP,
-        locations=("上海",),
+        job_type=job_type,
+        locations=locations,
         direction=direction,
         source_url=source_url,
         captured_at=_CAPTURED_AT,
-        verification_status=JobVerificationStatus.NEEDS_REVERIFICATION,
+        verification_status=verification_status,
         highlights=highlights,
     )
 
@@ -88,6 +91,7 @@ _LEADS = (
         "https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7674929052376942886/detail",
         ("Python", "Agent", "MCP", "每周 3 天以上"),
         CompanyPool.FOCUSED_AI,
+        JobVerificationStatus.CLOSED,
     ),
     _lead(
         "minimax-agent-ai-infra-intern",
@@ -97,6 +101,7 @@ _LEADS = (
         "https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7685277183518427419/detail",
         ("Python", "Agent", "RAG/MCP", "每周 4 天以上"),
         CompanyPool.FOCUSED_AI,
+        JobVerificationStatus.LIVE,
     ),
     _lead(
         "xiaohongshu-agent-development-intern",
@@ -121,6 +126,7 @@ _LEADS = (
         "机器学习 / 风险建模",
         "https://jobs.bytedance.com/campus/position/7683144915764726069/detail",
         ("机器学习", "LLM", "图模型", "每周 4 天"),
+        verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
         "apple-ml-engineer-intern-shanghai",
@@ -129,6 +135,7 @@ _LEADS = (
         "机器学习 / LLM",
         "https://jobs.apple.com/en-us/details/200609538-3715/machine-learning-engineer-intern-shanghai?team=STDNT",
         ("Python", "ML", "LLM", "全职 3-6 个月"),
+        verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
         "nvidia-cuda-ai-test-intern",
@@ -137,6 +144,7 @@ _LEADS = (
         "AI Infra / 测试",
         "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/China-Shanghai/CUDA-Full-Stack---AI-Test-Dev-Intern---2027_JR2023666-1",
         ("LLM", "AI Agent", "测试评测", "至少 1 年"),
+        verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
         "xiaohongshu-ai-community-product-trainee",
@@ -145,6 +153,7 @@ _LEADS = (
         "AI 产品",
         "https://job.xiaohongshu.com/campus/intern/position/20413",
         ("AI 产品", "社区", "2027 届及以后"),
+        verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
         "apple-ai-tools-hardware-engineering",
@@ -153,6 +162,7 @@ _LEADS = (
         "AI 工具 / 软件工程",
         "https://jobs.apple.com/en-us/details/200676912-3715/software-engineering-intern-ai-tools-for-hardware-engineering?team=STDNT",
         ("AI Tools", "TypeScript", "硕士在读", "全职至少 4 个月"),
+        verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
         "minimax-foundation-model-evaluation-intern",
@@ -162,5 +172,36 @@ _LEADS = (
         "https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7655253685333936403/detail",
         ("大模型评测", "PyTorch", "每周 4 天以上", "至少 4 个月"),
         CompanyPool.FOCUSED_AI,
+        JobVerificationStatus.LIVE,
+    ),
+    _lead(
+        "bytedance-ai-search-intern",
+        "字节跳动",
+        "AI 搜索算法实习生-国际电商",
+        "搜索 / 检索算法",
+        "https://jobs.bytedance.com/campus/position/7615453398335588613/detail",
+        ("机器学习", "大规模检索", "C++/Python", "2027 届"),
+        verification_status=JobVerificationStatus.LIVE,
+    ),
+    _lead(
+        "nvidia-cuda-test-development-intern",
+        "NVIDIA",
+        "Software Engineering Intern, CUDA Test Development - 2027",
+        "CUDA / AI 测试",
+        "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/China-Shanghai/Software-Engineering-Intern--CUDA-Test-Development---2027_JR2023645",
+        ("C/C++", "Python", "AI Agent", "CUDA"),
+        verification_status=JobVerificationStatus.LIVE,
+    ),
+    _lead(
+        "unstructured-remote-software-engineer",
+        "Unstructured",
+        "Software Engineer - Public Sector",
+        "Document AI / RAG",
+        "https://jobs.ashbyhq.com/unstructured/8db76ba9-7c3a-451c-8e6d-c3447e6cbe75",
+        ("Document AI", "Data Pipelines", "Remote", "Software Engineering"),
+        company_pool=CompanyPool.FOCUSED_AI,
+        verification_status=JobVerificationStatus.LIVE,
+        job_type=JobType.FULL_TIME,
+        locations=("远程",),
     ),
 )

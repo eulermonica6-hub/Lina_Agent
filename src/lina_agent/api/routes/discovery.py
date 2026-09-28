@@ -1,19 +1,16 @@
 from datetime import date
-from typing import Annotated, Literal
+from typing import Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.domain.job_discovery import (
-    CompanyPool,
     JobDiscoveryResult,
     JobLead,
     JobRecommendationRequest,
     JobSearchRequest,
 )
-from lina_agent.domain.weekly_monitoring import MonitoredJobSource
-from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
 from lina_agent.infrastructure.job_sources.verified_snapshot import (
     VerifiedSnapshotJobSource,
 )
@@ -25,19 +22,18 @@ _discovery_service = JobDiscoveryService((VerifiedSnapshotJobSource(),))
 class OpportunitySnapshot(BaseModel):
     opportunity_id: str = Field(min_length=1)
     company: str = Field(min_length=1)
-    company_pool: CompanyPool
     title: str = Field(min_length=1)
     location: str = Field(min_length=1)
     direction: str = Field(min_length=1)
     source_url: str = Field(pattern=r"^https://")
     last_verified_at: date
-    verification_status: Literal["needs_reverification"]
+    verification_status: Literal["live"]
     highlights: tuple[str, ...]
 
 
 class OpportunityFeed(BaseModel):
     data_as_of: date
-    freshness: Literal["historical_snapshot"]
+    freshness: Literal["verified_recommendations"]
     source_note: str
     opportunities: tuple[OpportunitySnapshot, ...]
 
@@ -56,13 +52,12 @@ def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
     return OpportunitySnapshot(
         opportunity_id=lead.external_id,
         company=lead.company,
-        company_pool=lead.company_pool,
         title=lead.title,
         location="、".join(lead.locations),
         direction=lead.direction,
         source_url=lead.source_url,
         last_verified_at=lead.captured_at.date(),
-        verification_status="needs_reverification",
+        verification_status="live",
         highlights=lead.highlights,
     )
 
@@ -73,8 +68,8 @@ async def list_opportunities() -> OpportunityFeed:
     data_as_of = max(lead.captured_at.date() for lead in result.leads)
     return OpportunityFeed(
         data_as_of=data_as_of,
-        freshness="historical_snapshot",
-        source_note="官方页面人工核验快照，不代表当前仍在招聘；申请前请打开官网重新确认。",
+        freshness="verified_recommendations",
+        source_note="2026-09-28 已复核官方详情与投递入口；申请前仍应再次确认。",
         opportunities=tuple(_to_opportunity(lead) for lead in result.leads),
     )
 
@@ -89,20 +84,6 @@ async def recommend_opportunities(
     request: JobRecommendationRequest,
 ) -> JobDiscoveryResult:
     return await _discovery_service.recommend(request)
-
-
-@router.get("/monitoring/sources", response_model=tuple[MonitoredJobSource, ...])
-async def list_monitoring_sources() -> tuple[MonitoredJobSource, ...]:
-    return MONITORED_JOB_SOURCES
-
-
-@router.get("/companies", response_model=tuple[MonitoredJobSource, ...])
-async def list_companies(
-    pool: Annotated[CompanyPool | None, Query()] = None,
-) -> tuple[MonitoredJobSource, ...]:
-    if pool is None:
-        return MONITORED_JOB_SOURCES
-    return tuple(source for source in MONITORED_JOB_SOURCES if source.pool is pool)
 
 
 @router.post("/assistant/messages", response_model=AssistantMessageResponse)
@@ -120,7 +101,10 @@ async def create_assistant_message(
         )
     if any(keyword in normalized for keyword in ("岗位", "实习", "工作", "job", "agent")):
         return AssistantMessageResponse(
-            answer="我已加载官方页面人工核验快照。它们不是实时岗位，请先打开官网确认仍在招聘，再上传简历进行匹配。",
+            answer=(
+                "我已加载 2026-09-28 复核过详情和投递入口的岗位。"
+                "申请前仍建议再次打开官网确认，也可以上传简历进行匹配。"
+            ),
             suggested_action="view_opportunities",
         )
     return AssistantMessageResponse(

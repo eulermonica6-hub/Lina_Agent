@@ -54,6 +54,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/047-balanced-company-universe.md",
     "docs/iterations/048-personalized-top-nine.md",
     "docs/iterations/049-home-discovery-and-company-criteria.md",
+    "docs/iterations/050-live-recommendation-boundary.md",
 )
 
 

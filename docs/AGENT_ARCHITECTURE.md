@@ -1,17 +1,18 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.31
+> 适用版本：0.2.32
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
 ## 1. 一句话结论
 
-Lina 的目标架构是“对话编排 + 岗位发现与监控 + 可信决策内核 + 受控执行”。当前代码只实现了其中的可信决策内核，由两个并行流程组成：
+Lina 的目标架构是“对话编排 + 岗位发现与监控 + 可信决策内核 + 受控执行”。当前代码实现了三条协作流程：
 
 1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
-2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核。
+2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核；
+3. **岗位发现与监控链**：内部公司目录、来源健康、岗位去重、live-only Top 9、手动搜索和每周调度。
 
-两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或执行检查点。结构化实体、脱敏 Agent Run Snapshot、metadata-only 文档引用与确认版本已持久化；浏览器可直接创建文件 Agent Run。
+三条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或执行检查点。结构化实体、脱敏 Agent Run Snapshot、metadata-only 文档引用与确认版本已持久化；浏览器可直接创建文件 Agent Run。岗位发现已建立 32 个内部来源，但大部分实时岗位解析器尚未实现。
 
 ### 1.1 方向调整后的目标边界
 
@@ -87,6 +88,7 @@ flowchart LR
 - LLM 只接收规范化技能和岗位摘要，不接收原始简历文本；
 - 文件 Agent 的完整结果返回调用方；服务端只保存不含原文 evidence 的版本化 Snapshot；
 - Web SQLite Repository 只保存旧的 `CandidateProfile` 和 `JobPosting`，不会保存文件、证据、Top-K 或计划。
+- `company_pool` 与 `deduplication_key` 是内部发现字段，通过 Pydantic exclude 从公共响应中移除；公司目录和监控注册表没有公共 HTTP 路由。
 
 ## 3. 运行入口与外部契约
 
@@ -99,12 +101,10 @@ flowchart LR
 | `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写本地 SQLite 岗位表 |
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
-| `GET /opportunities` | 无 | 返回带核验日期的历史官方岗位快照 | `OpportunityFeed` | 无；不访问公网 |
+| `GET /opportunities` | 无 | 返回 9 条已复核推荐岗位 | `OpportunityFeed` | 无；不访问公网 |
 | `POST /opportunities/search` | 关键词、公司、地点、limit | 调用所有来源并跨来源去重 | `JobDiscoveryResult` | 无；当前仅快照适配器 |
 | `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
-| `GET /monitoring/sources` | 无 | 返回 Lina 的 32 个双池监控来源、地区、关键词和关注理由 | `MonitoredJobSource[]` | 无 |
-| `GET /companies?pool=` | 可选 anchor/focused_ai | 查询主池或专注型 AI 公司目录 | `MonitoredJobSource[]` | 无 |
-| `POST /opportunities/recommended` | 公司/方向/近期偏好、周次 | 每池加权、周轮换并执行 6+3 配额 | `JobDiscoveryResult` | 无；浏览器偏好仅保存在 localStorage |
+| `POST /opportunities/recommended` | 公司/方向/地点/类型/近期偏好、周次 | 过滤 live 岗位并执行内部多样性配额 | `JobDiscoveryResult` | 无；内部池字段不序列化 |
 | `GET /workbench` | 无 | 渲染结构化画像、单 JD 决策和历史审计工具 | HTML/CSS/JS | 无 |
 | `lina-monitor` | 可选周一日期、输出路径 | 并行检查官方入口并汇总来源健康 | `WeeklyMonitoringRun` JSON | 写指定报告文件或 stdout |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |

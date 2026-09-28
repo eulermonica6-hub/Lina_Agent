@@ -10,32 +10,30 @@ pytestmark = [
 ]
 
 _FEED: dict[str, Any] = {
-    "data_as_of": "2026-09-14",
-    "freshness": "historical_snapshot",
-    "source_note": "官方页面人工核验快照，不代表当前仍在招聘。",
+    "data_as_of": "2026-09-28",
+    "freshness": "verified_recommendations",
+    "source_note": "已复核详情和投递入口。",
     "opportunities": [
         {
             "opportunity_id": "minimax-agent",
             "company": "MiniMax",
-            "company_pool": "focused_ai",
             "title": "Agent 研发实习生-AI Infra",
             "location": "上海",
             "direction": "AI Infra",
             "source_url": "https://example.com/minimax",
-            "last_verified_at": "2026-09-14",
-            "verification_status": "needs_reverification",
+            "last_verified_at": "2026-09-28",
+            "verification_status": "live",
             "highlights": ["Python", "Agent", "RAG/MCP"],
         },
         {
             "opportunity_id": "bytedance-risk",
             "company": "字节跳动",
-            "company_pool": "anchor",
             "title": "国际支付风控算法实习生",
             "location": "上海",
             "direction": "机器学习",
             "source_url": "https://example.com/bytedance",
-            "last_verified_at": "2026-09-14",
-            "verification_status": "needs_reverification",
+            "last_verified_at": "2026-09-28",
+            "verification_status": "live",
             "highlights": ["ML", "LLM", "图模型"],
         },
     ],
@@ -45,16 +43,14 @@ _RECOMMENDATION_RESPONSE: dict[str, Any] = {
     "leads": [
         {
             "lead_id": f"snapshot:{item['opportunity_id']}",
-            "deduplication_key": item["opportunity_id"],
-            "source_id": "verified-snapshot-2026-09-14",
+            "source_id": "verified-snapshot-2026-09-28",
             "external_id": item["opportunity_id"],
             "company": item["company"],
-            "company_pool": item["company_pool"],
             "title": item["title"],
             "locations": [item["location"]],
             "direction": item["direction"],
             "source_url": item["source_url"],
-            "captured_at": "2026-09-14T00:00:00Z",
+            "captured_at": "2026-09-28T00:00:00Z",
             "verification_status": item["verification_status"],
             "highlights": item["highlights"],
         }
@@ -72,16 +68,15 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
 
     expect(page.locator("#opportunity-list article")).to_have_count(2)
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
-    expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-14")
-    expect(page.locator("#opportunity-freshness")).to_contain_text("历史核验快照")
+    expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-28")
+    expect(page.locator("#opportunity-freshness")).to_contain_text("已复核推荐")
     expect(page.locator("#opportunity-location")).to_have_value("上海")
     expect(page.locator("#opportunity-job-type")).to_have_value("early_career")
     expect(page.locator("#profile-form")).to_be_hidden()
     expect(page.locator("#run-history")).to_be_hidden()
     expect(page.locator("a[href='/workbench']")).to_be_visible()
-    expect(page.locator("#monitoring-sources")).to_contain_text("32 个来源")
-    expect(page.locator("#monitoring-sources")).to_contain_text("10 家主池")
-    expect(page.locator("#monitoring-sources")).to_contain_text("22 家探索池")
+    expect(page.get_by_text("COMPANY RADAR")).to_have_count(0)
+    expect(page.locator(".opportunity-pool")).to_have_count(0)
 
     page.locator("#chat-toggle").click()
     expect(page.locator("#chat-panel")).to_be_visible()
@@ -174,7 +169,7 @@ def test_manual_search_filters_feed_and_reports_source_health(
         response: dict[str, Any] = {
             "sources": [
                 {
-                    "source_id": "verified-snapshot-2026-09-14",
+                    "source_id": "verified-snapshot-2026-09-28",
                     "status": "success",
                     "fetched_at": "2026-09-14T00:00:00Z",
                     "leads": [],
@@ -184,8 +179,7 @@ def test_manual_search_filters_feed_and_reports_source_health(
             "leads": [
                 {
                     "lead_id": "snapshot:minimax-infra",
-                    "deduplication_key": "minimax:infra:上海",
-                    "source_id": "verified-snapshot-2026-09-14",
+                    "source_id": "verified-snapshot-2026-09-28",
                     "external_id": "minimax-infra",
                     "company": "MiniMax",
                     "title": "Agent 研发实习生-AI Infra",
@@ -212,7 +206,7 @@ def test_manual_search_filters_feed_and_reports_source_health(
     expect(page.locator("#opportunity-freshness")).to_contain_text("1 个来源正常")
 
 
-def test_company_radar_displays_anchor_and_focused_ai_pools(
+def test_home_does_not_expose_internal_company_pools(
     page: Page,
     live_server_url: str,
 ) -> None:
@@ -220,36 +214,11 @@ def test_company_radar_displays_anchor_and_focused_ai_pools(
         "**/opportunities/recommended",
         lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
     )
-    page.route(
-        "**/companies",
-        lambda route: route.fulfill(
-            json=[
-                {
-                    "source_id": "tencent-careers",
-                    "company": "腾讯",
-                    "url": "https://careers.tencent.com/",
-                    "keywords": ["RAG"],
-                    "pool": "anchor",
-                    "regions": ["中国"],
-                    "why_watch": "平台型 AI 岗位覆盖广。",
-                },
-                {
-                    "source_id": "llamaindex-careers",
-                    "company": "LlamaIndex",
-                    "url": "https://www.llamaindex.ai/careers",
-                    "keywords": ["Agent", "RAG"],
-                    "pool": "focused_ai",
-                    "regions": ["美国", "远程"],
-                    "why_watch": "Agent 与知识工作自动化方向高度集中。",
-                },
-            ]
-        ),
-    )
     page.goto(live_server_url)
 
-    expect(page.locator("#anchor-company-list")).to_contain_text("腾讯")
-    expect(page.locator("#focused-company-list")).to_contain_text("LlamaIndex")
-    expect(page.locator("#focused-company-list")).to_contain_text("Agent 与知识工作自动化")
+    expect(page.get_by_text("COMPANY RADAR")).to_have_count(0)
+    expect(page.get_by_text("主池 · 平台与大厂")).to_have_count(0)
+    expect(page.get_by_text("探索池 · 小而美 / 专注型 AI")).to_have_count(0)
 
 
 def test_homepage_recommendations_use_habits_and_six_three_layout(
@@ -259,15 +228,12 @@ def test_homepage_recommendations_use_habits_and_six_three_layout(
     requests: list[dict[str, Any]] = []
     leads: list[dict[str, Any]] = []
     for index in range(9):
-        pool = "anchor" if index < 6 else "focused_ai"
         leads.append(
             {
                 "lead_id": f"lead-{index}",
-                "deduplication_key": f"key-{index}",
                 "source_id": "test",
                 "external_id": f"external-{index}",
                 "company": f"Company {index}",
-                "company_pool": pool,
                 "title": f"Agent Role {index}",
                 "locations": ["上海"],
                 "direction": "Agent",
@@ -296,8 +262,7 @@ def test_homepage_recommendations_use_habits_and_six_three_layout(
 
     cards = page.locator("#opportunity-list article")
     expect(cards).to_have_count(9)
-    expect(cards.locator(".opportunity-pool.anchor")).to_have_count(6)
-    expect(cards.locator(".opportunity-pool.focused")).to_have_count(3)
+    expect(cards.locator(".opportunity-pool")).to_have_count(0)
     assert requests == [
         {
             "preferred_companies": ["Apple"],

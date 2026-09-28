@@ -36,11 +36,11 @@ class JobVerificationStatus(StrEnum):
 
 class JobLead(DomainModel):
     lead_id: str = Field(min_length=1)
-    deduplication_key: str = Field(min_length=1)
+    deduplication_key: str = Field(min_length=1, exclude=True)
     source_id: str = Field(min_length=1)
     external_id: str = Field(min_length=1)
     company: str = Field(min_length=1)
-    company_pool: CompanyPool = CompanyPool.ANCHOR
+    company_pool: CompanyPool = Field(default=CompanyPool.ANCHOR, exclude=True)
     title: str = Field(min_length=1)
     job_type: JobType = JobType.UNKNOWN
     locations: tuple[str, ...]

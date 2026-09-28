@@ -33,6 +33,7 @@ def _lead(
     pool: CompanyPool = CompanyPool.ANCHOR,
     locations: tuple[str, ...] = ("上海",),
     job_type: JobType = JobType.UNKNOWN,
+    verification_status: JobVerificationStatus = JobVerificationStatus.LIVE,
 ) -> JobLead:
     return JobLead(
         lead_id=lead_id,
@@ -45,7 +46,7 @@ def _lead(
         direction="Agent / LLM 应用",
         source_url=f"https://example.com/{lead_id}",
         captured_at=_CAPTURED_AT,
-        verification_status=JobVerificationStatus.NEEDS_REVERIFICATION,
+        verification_status=verification_status,
         highlights=("Agent", "Python"),
         company_pool=pool,
         job_type=job_type,
@@ -224,3 +225,24 @@ def test_homepage_recommendations_prioritize_location_and_early_career() -> None
     assert result.leads[0].lead_id == "shanghai-intern"
     assert result.leads[1].lead_id == "beijing-full-time"
     assert result.leads[2].lead_id == "remote-campus"
+
+
+def test_homepage_recommendations_exclude_non_live_jobs() -> None:
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=(
+            _lead("live"),
+            _lead("closed", verification_status=JobVerificationStatus.CLOSED),
+            _lead(
+                "unknown",
+                verification_status=JobVerificationStatus.NEEDS_REVERIFICATION,
+            ),
+        ),
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    result = asyncio.run(service.recommend(JobRecommendationRequest()))
+
+    assert [lead.lead_id for lead in result.leads] == ["live"]

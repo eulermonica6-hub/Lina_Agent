@@ -55,9 +55,6 @@ const elements = {
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
     opportunityJobType: document.querySelector("#opportunity-job-type"),
-    monitoringSources: document.querySelector("#monitoring-sources"),
-    anchorCompanyList: document.querySelector("#anchor-company-list"),
-    focusedCompanyList: document.querySelector("#focused-company-list"),
     agentUseFeed: document.querySelector("#agent-use-feed"),
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
@@ -247,7 +244,7 @@ function renderOpportunities(feed) {
     state.opportunities = feed.opportunities;
     elements.opportunityList.replaceChildren();
     elements.opportunityCount.textContent = `${feed.opportunities.length} 个岗位`;
-    elements.opportunityFreshness.textContent = `历史核验快照 · ${feed.data_as_of} · ${feed.source_note}`;
+    elements.opportunityFreshness.textContent = `已复核推荐 · ${feed.data_as_of} · ${feed.source_note}`;
 
     feed.opportunities.forEach((opportunity) => {
         const card = document.createElement("article");
@@ -257,14 +254,10 @@ function renderOpportunities(feed) {
         const company = document.createElement("span");
         company.className = "opportunity-company";
         company.textContent = opportunity.company;
-        const pool = document.createElement("span");
-        const isFocused = opportunity.company_pool === "focused_ai";
-        pool.className = `opportunity-pool ${isFocused ? "focused" : "anchor"}`;
-        pool.textContent = isFocused ? "探索池" : "主池";
         const direction = document.createElement("span");
         direction.className = "opportunity-direction";
         direction.textContent = opportunity.direction;
-        heading.append(company, pool, direction);
+        heading.append(company, direction);
 
         const title = document.createElement("h3");
         title.textContent = opportunity.title;
@@ -295,7 +288,6 @@ function renderOpportunitySearch(result) {
         opportunities: result.leads.map((lead) => ({
             opportunity_id: lead.external_id,
             company: lead.company,
-            company_pool: lead.company_pool,
             title: lead.title,
             location: lead.locations.join("、"),
             direction: lead.direction,
@@ -337,11 +329,10 @@ async function loadOpportunities() {
         const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
         renderOpportunities({
             data_as_of: capturedDates.sort().at(-1),
-            source_note: "每周轮换推荐 · 前 6 主池 + 后 3 探索池 · 申请前请打开官网复核",
+            source_note: "每周更新 · 已验证详情和投递入口 · 申请前请再次确认",
             opportunities: result.leads.map((lead) => ({
                 opportunity_id: lead.external_id,
                 company: lead.company,
-                company_pool: lead.company_pool,
                 title: lead.title,
                 location: lead.locations.join("、"),
                 direction: lead.direction,
@@ -359,54 +350,6 @@ async function loadOpportunities() {
     } finally {
         elements.refreshOpportunities.disabled = false;
         elements.refreshOpportunities.textContent = "刷新";
-    }
-}
-
-async function loadMonitoringSources() {
-    try {
-        const sources = await getJson("/monitoring/sources");
-        const anchorCount = sources.filter((source) => source.pool === "anchor").length;
-        const focusedCount = sources.filter((source) => source.pool === "focused_ai").length;
-        elements.monitoringSources.textContent = `${sources.length} 个来源 · ${anchorCount} 家主池 · ${focusedCount} 家探索池`;
-    } catch (error) {
-        elements.monitoringSources.textContent = `监控清单加载失败：${error.message}`;
-    }
-}
-
-function appendCompany(list, company) {
-    const item = document.createElement("li");
-    const heading = document.createElement("div");
-    const link = document.createElement("a");
-    link.href = company.url;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    link.textContent = company.company;
-    const regions = document.createElement("span");
-    regions.textContent = company.regions.join(" · ");
-    heading.append(link, regions);
-    const reason = document.createElement("p");
-    reason.textContent = company.why_watch;
-    const themes = document.createElement("small");
-    themes.textContent = company.keywords.join(" · ");
-    item.append(heading, reason, themes);
-    list.append(item);
-}
-
-async function loadCompanies() {
-    try {
-        const companies = await getJson("/companies");
-        elements.anchorCompanyList.replaceChildren();
-        elements.focusedCompanyList.replaceChildren();
-        companies.forEach((company) => {
-            appendCompany(
-                company.pool === "focused_ai"
-                    ? elements.focusedCompanyList
-                    : elements.anchorCompanyList,
-                company,
-            );
-        });
-    } catch (error) {
-        appendTextItem(elements.anchorCompanyList, `公司清单加载失败：${error.message}`);
     }
 }
 
@@ -1013,5 +956,3 @@ elements.jobForm.addEventListener("input", (event) => {
 
 updateFeedMatchMode();
 loadOpportunities();
-loadMonitoringSources();
-loadCompanies();

@@ -287,121 +287,6 @@ h1 {
     line-height: 1.6;
 }
 
-.monitoring-banner {
-    margin-bottom: 20px;
-    padding: 18px 20px;
-    border-left: 4px solid var(--green-bright);
-    background: var(--green);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-}
-
-.monitoring-banner .section-index {
-    color: var(--green-bright);
-}
-
-.monitoring-banner h3 {
-    margin: 0;
-    color: white;
-    font-family: Georgia, "Songti SC", serif;
-    font-size: 18px;
-}
-
-.monitoring-banner>p {
-    max-width: 620px;
-    margin: 0;
-    color: #cddbd3;
-    font-size: 11px;
-    line-height: 1.6;
-    text-align: right;
-}
-
-.company-radar {
-    margin-bottom: 24px;
-    padding: 24px 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-}
-
-.company-radar-heading h3 {
-    margin: 0;
-    font-family: Georgia, "Songti SC", serif;
-    font-size: 22px;
-}
-
-.company-pools {
-    margin-top: 22px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0;
-}
-
-.company-pools>section {
-    min-width: 0;
-    padding-right: 24px;
-}
-
-.company-pools>section+section {
-    padding: 0 0 0 24px;
-    border-left: 1px solid var(--line);
-}
-
-.company-pools h4 {
-    margin: 0 0 10px;
-    color: var(--green);
-    font-size: 12px;
-}
-
-.company-pools ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.company-pools li {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--line);
-}
-
-.company-pools li>div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.company-pools a {
-    color: var(--ink);
-    font-family: Georgia, "Songti SC", serif;
-    font-size: 16px;
-    font-weight: 700;
-    text-underline-offset: 4px;
-}
-
-.company-pools li span,
-.company-pools li small {
-    color: var(--muted);
-    font-size: 10px;
-}
-
-.company-pools li span {
-    text-align: right;
-}
-
-.company-pools li p {
-    margin: 7px 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.55;
-}
-
-.company-pools li small {
-    display: block;
-    overflow-wrap: anywhere;
-}
-
 .opportunity-search {
     margin: 0 0 24px;
     padding: 18px;
@@ -443,22 +328,6 @@ h1 {
     color: var(--green);
     font-size: 12px;
     font-weight: 800;
-}
-
-.opportunity-pool {
-    padding: 3px 5px;
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.opportunity-pool.anchor {
-    color: var(--green);
-    border: 1px solid #b8c7bb;
-}
-
-.opportunity-pool.focused {
-    color: var(--ink);
-    background: var(--green-bright);
 }
 
 .opportunity-direction {
@@ -1276,14 +1145,9 @@ footer {
     }
 
     .feed-heading,
-    .legacy-actions,
-    .monitoring-banner {
+    .legacy-actions {
         align-items: flex-start;
         flex-direction: column;
-    }
-
-    .monitoring-banner>p {
-        text-align: left;
     }
 
     .opportunity-list {
@@ -1292,20 +1156,6 @@ footer {
 
     .opportunity-search {
         grid-template-columns: 1fr;
-    }
-
-    .company-pools {
-        grid-template-columns: 1fr;
-    }
-
-    .company-pools>section {
-        padding-right: 0;
-    }
-
-    .company-pools>section+section {
-        padding: 24px 0 0;
-        border-top: 1px solid var(--line);
-        border-left: 0;
     }
 
     .opportunity-card {

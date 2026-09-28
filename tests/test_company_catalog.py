@@ -55,15 +55,9 @@ def test_company_catalog_balances_anchor_and_focused_ai_pools() -> None:
     assert all(source.why_watch for source in MONITORED_JOB_SOURCES)
 
 
-def test_company_api_filters_focused_ai_pool() -> None:
+def test_internal_company_catalog_is_not_exposed_publicly() -> None:
     response = _request("/companies?pool=focused_ai")
+    monitoring = _request("/monitoring/sources")
 
-    assert response.status_code == 200
-    payload = response.json()
-    assert len(payload) == 22
-    assert all(company["pool"] == "focused_ai" for company in payload)
-    assert {company["company"] for company in payload} >= {
-        "Baseten",
-        "LlamaIndex",
-        "Weaviate",
-    }
+    assert response.status_code == 404
+    assert monitoring.status_code == 404

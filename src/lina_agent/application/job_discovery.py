@@ -9,6 +9,7 @@ from lina_agent.domain.job_discovery import (
     JobRecommendationRequest,
     JobSearchRequest,
     JobSourceResult,
+    JobVerificationStatus,
 )
 
 
@@ -52,6 +53,11 @@ class JobDiscoveryService:
 
     async def recommend(self, request: JobRecommendationRequest) -> JobDiscoveryResult:
         discovery = await self.search(JobSearchRequest(max_results=100))
+        eligible_leads = tuple(
+            lead
+            for lead in discovery.leads
+            if lead.verification_status is JobVerificationStatus.LIVE
+        )
         week_start = request.week_start or (date.today() - timedelta(days=date.today().weekday()))
         preferred_companies = {value.casefold() for value in request.preferred_companies}
         recent_companies = {value.casefold() for value in request.recent_companies}
@@ -77,17 +83,17 @@ class JobDiscoveryService:
             return -score, rotation
 
         anchor = sorted(
-            (lead for lead in discovery.leads if lead.company_pool is CompanyPool.ANCHOR),
+            (lead for lead in eligible_leads if lead.company_pool is CompanyPool.ANCHOR),
             key=ranking_key,
         )
         focused = sorted(
-            (lead for lead in discovery.leads if lead.company_pool is CompanyPool.FOCUSED_AI),
+            (lead for lead in eligible_leads if lead.company_pool is CompanyPool.FOCUSED_AI),
             key=ranking_key,
         )
         selected = [*anchor[:6], *focused[:3]]
         selected_ids = {lead.lead_id for lead in selected}
         remaining = sorted(
-            (lead for lead in discovery.leads if lead.lead_id not in selected_ids),
+            (lead for lead in eligible_leads if lead.lead_id not in selected_ids),
             key=ranking_key,
         )
         selected.extend(remaining[: max(0, request.limit - len(selected))])

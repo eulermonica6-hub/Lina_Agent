@@ -39,4 +39,4 @@ def test_snapshot_source_matches_highlights_case_insensitively() -> None:
 
     result = asyncio.run(source.search(JobSearchRequest(query="CUDA")))
 
-    assert [lead.company for lead in result.leads] == ["NVIDIA"]
+    assert [lead.company for lead in result.leads] == ["NVIDIA", "NVIDIA"]
