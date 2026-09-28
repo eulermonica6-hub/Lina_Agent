@@ -1,4 +1,12 @@
-const state = { candidateId: null, jobId: null, revision: 0, extractionApplied: false };
+const state = {
+    candidateId: null,
+    jobId: null,
+    revision: 0,
+    extractionApplied: false,
+    historyRevision: 0,
+    diffRevision: 0,
+    historyRuns: [],
+};
 
 const elements = {
     profileForm: document.querySelector("#profile-form"),
@@ -14,6 +22,19 @@ const elements = {
     evidenceList: document.querySelector("#evidence-list"),
     extractionWarning: document.querySelector("#extraction-warning"),
     resetWorkbench: document.querySelector("#reset-workbench"),
+    refreshHistory: document.querySelector("#refresh-history"),
+    historyCount: document.querySelector("#history-count"),
+    historyEmpty: document.querySelector("#history-empty"),
+    historyContent: document.querySelector("#history-content"),
+    historyList: document.querySelector("#history-list"),
+    baseRun: document.querySelector("#base-run"),
+    targetRun: document.querySelector("#target-run"),
+    compareRuns: document.querySelector("#compare-runs"),
+    diffPanel: document.querySelector("#diff-panel"),
+    diffFacts: document.querySelector("#diff-facts"),
+    rankingChanges: document.querySelector("#ranking-changes"),
+    scoreChanges: document.querySelector("#score-changes"),
+    gapChanges: document.querySelector("#gap-changes"),
 };
 
 const reasonLabels = {
@@ -145,6 +166,149 @@ async function postJson(path, body) {
         throw new Error(detail || `请求失败 (${response.status})`);
     }
     return response.json();
+}
+
+async function getJson(path) {
+    const response = await fetch(path);
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail || `请求失败 (${response.status})`);
+    }
+    return response.json();
+}
+
+function formatRunLabel(run) {
+    const timestamp = new Date(run.created_at).toLocaleString("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    return `${timestamp} · ${run.considered_jobs} 岗位 · ${run.state}`;
+}
+
+function appendTextItem(list, text, className = "") {
+    const item = document.createElement("li");
+    item.textContent = text;
+    if (className) item.className = className;
+    list.append(item);
+}
+
+function renderHistory(runs) {
+    state.historyRuns = runs;
+    elements.historyList.replaceChildren();
+    elements.baseRun.replaceChildren();
+    elements.targetRun.replaceChildren();
+    elements.diffPanel.hidden = true;
+    elements.historyCount.textContent = runs.length ? `${runs.length} 次运行` : "暂无运行";
+    elements.historyEmpty.hidden = runs.length > 0;
+    elements.historyContent.hidden = runs.length === 0;
+
+    runs.forEach((run, index) => {
+        const label = formatRunLabel(run);
+        [elements.baseRun, elements.targetRun].forEach((select) => {
+            const option = document.createElement("option");
+            option.value = run.run_id;
+            option.textContent = label;
+            select.append(option);
+        });
+        const item = document.createElement("li");
+        const rank = document.createElement("span");
+        rank.className = "history-rank";
+        rank.textContent = String(index + 1).padStart(2, "0");
+        const summary = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = label;
+        const meta = document.createElement("span");
+        meta.textContent = `${run.matches.length} 个结果 · ${run.gaps.length} 项缺口 · ${run.run_id.slice(-8)}`;
+        summary.append(title, meta);
+        item.append(rank, summary);
+        elements.historyList.append(item);
+    });
+
+    if (runs.length > 1) {
+        elements.targetRun.value = runs[0].run_id;
+        elements.baseRun.value = runs[1].run_id;
+    }
+    updateCompareButton();
+}
+
+function updateCompareButton() {
+    elements.compareRuns.disabled = !(
+        elements.baseRun.value
+        && elements.targetRun.value
+        && elements.baseRun.value !== elements.targetRun.value
+    );
+}
+
+function renderDiff(diff) {
+    elements.diffFacts.replaceChildren();
+    elements.rankingChanges.replaceChildren();
+    elements.scoreChanges.replaceChildren();
+    elements.gapChanges.replaceChildren();
+
+    appendTextItem(
+        elements.diffFacts,
+        diff.candidate_document_changed ? "候选文档已更新" : "候选文档未变",
+        diff.candidate_document_changed ? "changed" : "stable",
+    );
+    appendTextItem(
+        elements.diffFacts,
+        diff.job_catalog_document_changed ? "岗位目录已更新" : "岗位目录未变",
+        diff.job_catalog_document_changed ? "changed" : "stable",
+    );
+    appendTextItem(
+        elements.diffFacts,
+        diff.confirmation_changed ? "确认事实已更新" : "确认事实未变",
+        diff.confirmation_changed ? "changed" : "stable",
+    );
+    appendTextItem(
+        elements.diffFacts,
+        diff.plan_changed ? "行动计划已更新" : "行动计划未变",
+        diff.plan_changed ? "changed" : "stable",
+    );
+
+    diff.ranking_changes.forEach((change) => {
+        const movement = change.position_delta < 0
+            ? `上升 ${Math.abs(change.position_delta)} 位`
+            : `下降 ${change.position_delta} 位`;
+        appendTextItem(
+            elements.rankingChanges,
+            `岗位 ${change.catalog_number} · ${change.base_position} → ${change.target_position} · ${movement}`,
+        );
+    });
+    diff.added_catalog_numbers.forEach((number) => {
+        appendTextItem(elements.rankingChanges, `新增岗位 ${number}`);
+    });
+    diff.removed_catalog_numbers.forEach((number) => {
+        appendTextItem(elements.rankingChanges, `移除岗位 ${number}`);
+    });
+    diff.replaced_catalog_numbers.forEach((number) => {
+        appendTextItem(elements.rankingChanges, `岗位 ${number} 已替换`);
+    });
+    if (!elements.rankingChanges.children.length) {
+        appendTextItem(elements.rankingChanges, "排名未变", "muted-item");
+    }
+
+    diff.score_changes.forEach((change) => {
+        const delta = change.score_delta >= 0
+            ? `+${change.score_delta.toFixed(1)}`
+            : change.score_delta.toFixed(1);
+        appendTextItem(
+            elements.scoreChanges,
+            `岗位 ${change.catalog_number} · ${change.base_score.toFixed(1)} → ${change.target_score.toFixed(1)} · ${delta}`,
+        );
+    });
+    if (!elements.scoreChanges.children.length) {
+        appendTextItem(elements.scoreChanges, "分数未变", "muted-item");
+    }
+
+    diff.added_gaps.forEach((skill) => appendTextItem(elements.gapChanges, `新增 ${skill}`));
+    diff.resolved_gaps.forEach((skill) => appendTextItem(elements.gapChanges, `解决 ${skill}`));
+    if (!elements.gapChanges.children.length) {
+        appendTextItem(elements.gapChanges, "缺口未变", "muted-item");
+    }
+    elements.diffPanel.hidden = false;
 }
 
 function setSaving(form, saving) {
@@ -301,6 +465,66 @@ elements.runMatch.addEventListener("click", async () => {
             ? "重新匹配"
             : "运行匹配";
         updateMatchButton(false);
+    }
+});
+
+elements.refreshHistory.addEventListener("click", async () => {
+    const revision = ++state.historyRevision;
+    state.diffRevision += 1;
+    elements.refreshHistory.disabled = true;
+    elements.refreshHistory.textContent = "正在刷新...";
+    elements.historyCount.textContent = "正在加载";
+    elements.diffPanel.hidden = true;
+    try {
+        const runs = await getJson("/agent/runs?limit=20");
+        if (state.historyRevision !== revision) return;
+        renderHistory(runs);
+        setRunState(runs.length ? "运行历史已更新" : "暂无 Agent Run", "ready");
+    } catch (error) {
+        if (state.historyRevision !== revision) return;
+        elements.historyCount.textContent = "加载失败";
+        elements.historyEmpty.hidden = false;
+        elements.historyEmpty.textContent = error.message;
+        elements.historyContent.hidden = true;
+        setRunState(error.message, "error");
+    } finally {
+        if (state.historyRevision === revision) {
+            elements.refreshHistory.disabled = false;
+            elements.refreshHistory.textContent = "刷新历史";
+        }
+    }
+});
+
+[elements.baseRun, elements.targetRun].forEach((select) => {
+    select.addEventListener("change", () => {
+        state.diffRevision += 1;
+        elements.diffPanel.hidden = true;
+        updateCompareButton();
+    });
+});
+
+elements.compareRuns.addEventListener("click", async () => {
+    const baseRunId = elements.baseRun.value;
+    const targetRunId = elements.targetRun.value;
+    if (!baseRunId || !targetRunId || baseRunId === targetRunId) return;
+    const revision = ++state.diffRevision;
+    elements.compareRuns.disabled = true;
+    elements.compareRuns.textContent = "正在比较...";
+    setRunState("正在比较运行版本");
+    try {
+        const diff = await getJson(`/agent/runs/${baseRunId}/diff/${targetRunId}`);
+        if (state.diffRevision !== revision) return;
+        renderDiff(diff);
+        setRunState("版本比较完成", "ready");
+        elements.diffPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (error) {
+        if (state.diffRevision !== revision) return;
+        setRunState(error.message, "error");
+    } finally {
+        if (state.diffRevision === revision) {
+            elements.compareRuns.textContent = "比较变化";
+            updateCompareButton();
+        }
     }
 });
 

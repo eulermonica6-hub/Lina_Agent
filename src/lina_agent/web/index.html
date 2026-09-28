@@ -1,13 +1,15 @@
 <!doctype html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 求职岗位硬条件匹配工作台">
     <title>Lina 求职决策台</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=6">
-    <script src="/assets/app.js?v=5" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=7">
+    <script src="/assets/app.js?v=6" defer></script>
 </head>
+
 <body>
     <header class="topbar">
         <a class="brand" href="/" aria-label="Lina 首页">
@@ -52,7 +54,8 @@
                 <div class="field-grid">
                     <label>
                         <span>毕业年份</span>
-                        <input id="graduation-year" name="graduationYear" type="number" min="1900" max="2200" required placeholder="2028">
+                        <input id="graduation-year" name="graduationYear" type="number" min="1900" max="2200" required
+                            placeholder="2028">
                     </label>
                     <label>
                         <span>最高学历</span>
@@ -66,7 +69,8 @@
                     </label>
                     <label>
                         <span>工作经验（年）</span>
-                        <input id="experience" name="experience" type="number" min="0" step="0.1" required placeholder="0.5">
+                        <input id="experience" name="experience" type="number" min="0" step="0.1" required
+                            placeholder="0.5">
                     </label>
                     <label>
                         <span>意向地点</span>
@@ -115,7 +119,8 @@
                     </label>
                     <label>
                         <span>最低经验（年）</span>
-                        <input id="minimum-experience" name="minimumExperience" type="number" min="0" step="0.1" placeholder="不限">
+                        <input id="minimum-experience" name="minimumExperience" type="number" min="0" step="0.1"
+                            placeholder="不限">
                     </label>
                     <label>
                         <span>工作地点</span>
@@ -123,7 +128,8 @@
                     </label>
                     <label class="wide-field">
                         <span>岗位描述</span>
-                        <textarea id="description" name="description" rows="5" required placeholder="粘贴岗位职责与要求"></textarea>
+                        <textarea id="description" name="description" rows="5" required
+                            placeholder="粘贴岗位职责与要求"></textarea>
                     </label>
                 </div>
                 <div class="extraction-row">
@@ -149,12 +155,66 @@
                 </div>
                 <button class="match-action" id="run-match" type="button" disabled>运行匹配</button>
             </section>
+
+            <section class="history-panel" id="run-history">
+                <div class="history-heading">
+                    <div>
+                        <p class="section-index">RUN HISTORY</p>
+                        <h2>运行历史</h2>
+                    </div>
+                    <div class="history-heading-actions">
+                        <span id="history-count">尚未加载</span>
+                        <button class="extract-action" id="refresh-history" type="button">刷新历史</button>
+                    </div>
+                </div>
+
+                <p class="history-empty" id="history-empty">暂无可比较的 Agent Run。</p>
+                <div class="history-content" id="history-content" hidden>
+                    <div class="compare-controls">
+                        <label>
+                            <span>基线运行</span>
+                            <select id="base-run"></select>
+                        </label>
+                        <span class="compare-arrow" aria-hidden="true">→</span>
+                        <label>
+                            <span>目标运行</span>
+                            <select id="target-run"></select>
+                        </label>
+                        <button class="primary-action compare-action" id="compare-runs" type="button"
+                            disabled>比较变化</button>
+                    </div>
+                    <ol class="history-list" id="history-list"></ol>
+                </div>
+
+                <section class="diff-panel" id="diff-panel" hidden aria-live="polite">
+                    <div class="diff-heading">
+                        <p class="section-index">VERSION DIFF</p>
+                        <h3>变化摘要</h3>
+                    </div>
+                    <ul class="diff-facts" id="diff-facts"></ul>
+                    <div class="diff-columns">
+                        <section>
+                            <h4>排名位移</h4>
+                            <ul id="ranking-changes"></ul>
+                        </section>
+                        <section>
+                            <h4>分数变化</h4>
+                            <ul id="score-changes"></ul>
+                        </section>
+                        <section>
+                            <h4>能力缺口</h4>
+                            <ul id="gap-changes"></ul>
+                        </section>
+                    </div>
+                </section>
+            </section>
         </section>
     </main>
 
     <footer>
         <span>Deterministic matching · No LLM involved</span>
-        <span>数据暂存于当前服务进程</span>
+        <span>结构化状态与脱敏运行历史保存于本地 SQLite</span>
     </footer>
 </body>
+
 </html>
