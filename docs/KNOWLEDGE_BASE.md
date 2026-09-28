@@ -56,6 +56,7 @@
 | 048 | 2026-09-28 | 个性化 Top 9 与探索池扩容 | 扩展到 31 家公司，以 6+3 配额、周轮换和本地偏好控制主页推荐 | [个性化 Top 9](iterations/048-personalized-top-nine.md) |
 | 049 | 2026-09-28 | 首页发现模式与公司准入 | 默认上海早期岗位、迁移决策台，并用统一标准评估 Garena/TapTap | [首页与准入](iterations/049-home-discovery-and-company-criteria.md) |
 | 050 | 2026-09-28 | Live 推荐边界与目标审计 | 只推荐已复核岗位，隐藏内部池，并统一当前能力与产品目标 | [Live 推荐审计](iterations/050-live-recommendation-boundary.md) |
+| 051 | 2026-09-28 | 首页首屏与对话入口精简 | 压缩非核心内容，让岗位和 Lina 对话入口直接进入首屏 | [首页首屏精简](iterations/051-first-viewport-home.md) |
 
 ## 文档入口
 

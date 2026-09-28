@@ -190,6 +190,36 @@ main {
     content: "MATCH";
 }
 
+.home-page .intro {
+    min-height: 0;
+    padding: 24px 0 18px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px 28px;
+}
+
+.home-page .intro::after {
+    display: none;
+}
+
+.home-page .intro h1 {
+    max-width: none;
+    font-size: 34px;
+    line-height: 1.15;
+}
+
+.home-page .intro-copy {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.home-page .intro-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
+
 .eyebrow,
 .section-index {
     margin: 0 0 12px;
@@ -255,7 +285,7 @@ h1 {
 }
 
 .opportunity-feed {
-    padding: 38px 0 44px;
+    padding: 22px 0 44px;
     border-top: 4px solid var(--ink);
     border-bottom: 1px solid var(--line);
     scroll-margin-top: 92px;
@@ -281,21 +311,36 @@ h1 {
 
 .feed-freshness {
     max-width: 760px;
-    margin: 14px 0 24px;
+    margin: 8px 0 14px;
     color: var(--muted);
     font-size: 12px;
     line-height: 1.6;
 }
 
 .opportunity-search {
-    margin: 0 0 24px;
-    padding: 18px;
+    margin: 0 0 18px;
+    padding: 12px 0;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     display: grid;
     grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
     align-items: end;
     gap: 14px;
+}
+
+.opportunity-filters summary {
+    display: none;
+}
+
+.opportunity-search input,
+.opportunity-search select {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+.opportunity-search .primary-action {
+    min-height: 40px;
 }
 
 .opportunity-search .primary-action {
@@ -976,12 +1021,13 @@ textarea:focus {
 }
 
 .chat-toggle {
-    width: 54px;
+    width: auto;
+    min-width: 146px;
     height: 54px;
-    padding: 0;
+    padding: 0 16px 0 10px;
     color: white;
     border: 0;
-    border-radius: 50%;
+    border-radius: 0;
     background: var(--green);
     box-shadow: 0 10px 28px rgb(23 33 27 / 24%);
     position: fixed;
@@ -989,9 +1035,22 @@ textarea:focus {
     bottom: 24px;
     z-index: 30;
     cursor: pointer;
-    font-family: Georgia, serif;
-    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
     font-weight: 700;
+}
+
+.chat-toggle-mark {
+    width: 30px;
+    height: 30px;
+    color: var(--green);
+    background: var(--green-bright);
+    display: grid;
+    place-items: center;
+    font-family: Georgia, serif;
+    font-size: 17px;
 }
 
 .chat-toggle:hover {
@@ -1115,9 +1174,24 @@ footer {
         width: min(100% - 24px, 1180px);
     }
 
-    .intro {
+    .workbench-page .intro {
         min-height: 300px;
         padding-top: 54px;
+    }
+
+    .home-page .intro {
+        padding: 18px 0 14px;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .home-page .intro h1 {
+        font-size: 28px;
+    }
+
+    .home-page .intro-actions {
+        grid-column: 1;
+        grid-row: auto;
     }
 
     .intro::after {
@@ -1155,7 +1229,41 @@ footer {
     }
 
     .opportunity-search {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .opportunity-filters {
+        margin-bottom: 14px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .opportunity-filters summary {
+        padding: 12px 0;
+        color: var(--green);
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .opportunity-filters summary span {
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .opportunity-filters .opportunity-search {
+        margin-bottom: 10px;
+        padding-top: 4px;
+        border: 0;
+    }
+
+    .opportunity-search label:first-child,
+    .opportunity-search .primary-action {
+        grid-column: 1 / -1;
     }
 
     .opportunity-card {
@@ -1237,8 +1345,10 @@ footer {
     }
 
     .chat-toggle {
-        right: 16px;
-        bottom: 16px;
+        width: 100%;
+        min-width: 0;
+        position: static;
+        justify-content: center;
     }
 
     .chat-panel {

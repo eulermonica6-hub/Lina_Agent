@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.32
+> 适用版本：0.2.33
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -94,7 +94,7 @@ flowchart LR
 
 | 入口 | 输入 | 主要处理 | 输出 | 状态副作用 |
 | --- | --- | --- | --- | --- |
-| `GET /` | 无 | 渲染版本号并返回静态工作台 | HTML/CSS/JS | 无 |
+| `GET /` | 无 | 渲染机会首页、Top 9、筛选、简历入口和对话预览 | HTML/CSS/JS | 无 |
 | `GET /health` | 无 | 读取应用设置与运行时版本 | `HealthResponse` | 无 |
 | `POST /profiles` | `CandidateProfile` JSON | Pydantic 校验并保存 | 201 + 同一画像 | 写本地 SQLite 候选人表 |
 | `POST /jobs/parse` | `{description}` | 确定性硬条件解析 | `JobConstraintExtraction` | 无，只预览 |

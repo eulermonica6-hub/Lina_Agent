@@ -1,6 +1,6 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.32
+> 适用版本：0.2.33
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
@@ -67,7 +67,8 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 
 保持终端运行，然后访问：
 
-- 工作台：<http://127.0.0.1:8000/>
+- 机会首页：<http://127.0.0.1:8000/>
+- 决策工具：<http://127.0.0.1:8000/workbench>
 - API 文档：<http://127.0.0.1:8000/docs>
 - 健康检查：<http://127.0.0.1:8000/health>
 
@@ -77,7 +78,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.32"
+  "version": "0.2.33"
 }
 ```
 
@@ -85,7 +86,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 
 1. 打开机会首页，默认筛选上海的实习/校招，同时接受明确的完全远程岗位。
 2. 首页只显示本周 Top 9；点击与搜索偏好会影响下周和下次加载的顺序。
-3. 可修改关键词、公司、地点和岗位类型，检索完整当前数据集并查看来源健康。
+3. 可修改关键词、公司、地点和岗位类型，检索完整当前数据集；手机端点击“筛选岗位”展开条件。
 4. 点击岗位卡的“打开官网复核”，确认岗位是否仍开放。
 5. 在“上传简历匹配岗位”选择简历，保留“使用首页官方核验快照”，即可对当前筛选结果运行摘要初筛。
 6. 点击右下角 `L` 打开对话预览，可以输入“帮我找 Agent 实习”或“怎么上传简历匹配”。

@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
     <title>Lina 求职 Agent</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=14">
-    <script src="/assets/app.js?v=13" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=15">
+    <script src="/assets/app.js?v=15" defer></script>
 </head>
 
 <body class="{{PAGE_MODE}}">
@@ -30,14 +30,18 @@
 
     <main>
         <section class="intro">
-            <p class="eyebrow">ACTIVE JOB SEARCH · EVIDENCE FIRST</p>
-            <h1 class="home-only">值得关注的 AI 岗位，先替你看一遍</h1>
+            <p class="eyebrow workbench-only">CAREER DECISION WORKBENCH</p>
+            <h1 class="home-only">本周值得投的 AI 岗位</h1>
             <h1 class="workbench-only">Lina 求职决策工具</h1>
-            <p class="intro-copy home-only">浏览官方核验岗位快照，上传简历完成证据化初筛，或直接和 Lina 描述你的求职目标。</p>
+            <p class="intro-copy home-only">上海 · 实习 / 校招 · 2026-09-28 已复核</p>
             <p class="intro-copy workbench-only">维护结构化画像、核对单个 JD 硬条件，并审计历史 Agent Run。</p>
             <div class="intro-actions home-only">
-                <a class="secondary-action" href="#opportunities">查看岗位</a>
-                <a class="reset-action" href="#file-agent">上传简历匹配</a>
+                <a class="secondary-action" href="#file-agent">上传简历匹配</a>
+                <button class="chat-toggle" id="chat-toggle" type="button" aria-label="和 Lina 对话" aria-expanded="false"
+                    aria-controls="chat-panel" title="和 Lina 对话">
+                    <span class="chat-toggle-mark" aria-hidden="true">L</span>
+                    <span>和 Lina 对话</span>
+                </button>
             </div>
         </section>
 
@@ -53,37 +57,40 @@
                 </div>
             </div>
             <p class="feed-freshness" id="opportunity-freshness" aria-live="polite">正在读取岗位来源状态…</p>
-            <form class="opportunity-search" id="opportunity-search-form">
-                <label>
-                    <span>关键词</span>
-                    <input id="opportunity-query" placeholder="Agent、RAG、CUDA">
-                </label>
-                <label>
-                    <span>公司</span>
-                    <select id="opportunity-company">
-                        <option value="">全部公司</option>
-                        <option value="MiniMax">MiniMax</option>
-                        <option value="小红书">小红书</option>
-                        <option value="字节跳动">字节跳动</option>
-                        <option value="Apple">Apple</option>
-                        <option value="NVIDIA">NVIDIA</option>
-                    </select>
-                </label>
-                <label>
-                    <span>地点</span>
-                    <input id="opportunity-location" value="上海" placeholder="上海">
-                </label>
-                <label>
-                    <span>岗位类型</span>
-                    <select id="opportunity-job-type">
-                        <option value="early_career" selected>实习 / 校招</option>
-                        <option value="internship">仅实习</option>
-                        <option value="campus">仅校招</option>
-                        <option value="">全部类型</option>
-                    </select>
-                </label>
-                <button class="primary-action" type="submit">搜索岗位</button>
-            </form>
+            <details class="opportunity-filters" id="opportunity-filters" open>
+                <summary>筛选岗位 <span>上海 · 实习 / 校招</span></summary>
+                <form class="opportunity-search" id="opportunity-search-form">
+                    <label>
+                        <span>关键词</span>
+                        <input id="opportunity-query" placeholder="Agent、RAG、CUDA">
+                    </label>
+                    <label>
+                        <span>公司</span>
+                        <select id="opportunity-company">
+                            <option value="">全部公司</option>
+                            <option value="MiniMax">MiniMax</option>
+                            <option value="小红书">小红书</option>
+                            <option value="字节跳动">字节跳动</option>
+                            <option value="Apple">Apple</option>
+                            <option value="NVIDIA">NVIDIA</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>地点</span>
+                        <input id="opportunity-location" value="上海" placeholder="上海">
+                    </label>
+                    <label>
+                        <span>岗位类型</span>
+                        <select id="opportunity-job-type">
+                            <option value="early_career" selected>实习 / 校招</option>
+                            <option value="internship">仅实习</option>
+                            <option value="campus">仅校招</option>
+                            <option value="">全部类型</option>
+                        </select>
+                    </label>
+                    <button class="primary-action" type="submit">搜索岗位</button>
+                </form>
+            </details>
             <div class="opportunity-list" id="opportunity-list" aria-live="polite"></div>
         </section>
 
@@ -365,8 +372,6 @@
         <span>结构化状态与脱敏运行历史保存于本地 SQLite</span>
     </footer>
 
-    <button class="chat-toggle" id="chat-toggle" type="button" aria-label="和 Lina 对话" aria-expanded="false"
-        aria-controls="chat-panel" title="和 Lina 对话">L</button>
     <aside class="chat-panel" id="chat-panel" role="dialog" hidden aria-labelledby="chat-title">
         <header class="chat-heading">
             <div>

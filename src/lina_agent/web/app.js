@@ -51,6 +51,7 @@ const elements = {
     opportunityList: document.querySelector("#opportunity-list"),
     refreshOpportunities: document.querySelector("#refresh-opportunities"),
     opportunitySearchForm: document.querySelector("#opportunity-search-form"),
+    opportunityFilters: document.querySelector("#opportunity-filters"),
     opportunityQuery: document.querySelector("#opportunity-query"),
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
@@ -379,6 +380,10 @@ function opportunityCatalog() {
 
 function updateFeedMatchMode() {
     elements.agentJobs.disabled = elements.agentUseFeed.checked;
+}
+
+function updateFilterDisclosure() {
+    elements.opportunityFilters.open = !window.matchMedia("(max-width: 720px)").matches;
 }
 
 function toggleChat(open) {
@@ -955,4 +960,6 @@ elements.jobForm.addEventListener("input", (event) => {
 });
 
 updateFeedMatchMode();
+updateFilterDisclosure();
+window.matchMedia("(max-width: 720px)").addEventListener("change", updateFilterDisclosure);
 loadOpportunities();

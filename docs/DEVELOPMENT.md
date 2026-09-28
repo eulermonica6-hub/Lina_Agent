@@ -26,7 +26,7 @@ uv run --extra dev --locked pytest --browser chromium
 uv run --locked uvicorn lina_agent.main:app --app-dir src --reload --port 8000
 ```
 
-访问 <http://127.0.0.1:8000/> 使用 Lina 工作台；访问 <http://127.0.0.1:8000/docs> 调用 `GET /health`。如果返回服务名和版本号，说明应用、路由、配置注入已经连通。
+访问 <http://127.0.0.1:8000/> 使用机会首页；访问 <http://127.0.0.1:8000/workbench> 使用结构化决策工具；访问 <http://127.0.0.1:8000/docs> 查看 API。如果健康检查返回服务名和版本号，说明应用、路由和配置注入已经连通。
 
 本地文件 Agent 的最短验证路径：
 
@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.32`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.33`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 

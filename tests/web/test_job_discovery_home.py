@@ -75,6 +75,8 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#profile-form")).to_be_hidden()
     expect(page.locator("#run-history")).to_be_hidden()
     expect(page.locator("a[href='/workbench']")).to_be_visible()
+    expect(page.locator("#opportunity-list article").first).to_be_in_viewport()
+    expect(page.locator("#chat-toggle")).to_contain_text("和 Lina 对话")
     expect(page.get_by_text("COMPANY RADAR")).to_have_count(0)
     expect(page.locator(".opportunity-pool")).to_have_count(0)
 
@@ -83,6 +85,40 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#chat-message")).to_be_focused()
     page.locator("#chat-close").click()
     expect(page.locator("#chat-panel")).to_be_hidden()
+
+
+def test_mobile_home_keeps_jobs_and_chat_visible_without_overlap(
+    page: Page,
+    live_server_url: str,
+) -> None:
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
+    page.goto(live_server_url)
+
+    first_card = page.locator("#opportunity-list article").first
+    chat = page.locator("#chat-toggle")
+    expect(first_card).to_be_in_viewport()
+    expect(chat).to_be_in_viewport()
+    expect(chat).to_contain_text("和 Lina 对话")
+    expect(page.locator("#opportunity-filters")).not_to_have_attribute("open", "")
+    boxes = page.evaluate(
+        """() => {
+            const card = document
+                .querySelector('#opportunity-list article')
+                .getBoundingClientRect();
+            const chat = document.querySelector('#chat-toggle').getBoundingClientRect();
+            return { card, chat, overflow: document.documentElement.scrollWidth > innerWidth };
+        }"""
+    )
+    assert boxes["overflow"] is False
+    assert (
+        boxes["chat"]["bottom"] <= boxes["card"]["top"]
+        or boxes["chat"]["top"] >= boxes["card"]["bottom"]
+        or boxes["chat"]["left"] >= boxes["card"]["right"]
+    )
 
 
 def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_url: str) -> None:
