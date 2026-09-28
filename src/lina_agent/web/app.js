@@ -357,12 +357,12 @@ async function loadOpportunities() {
             recent_companies: readPreferenceList("linaRecentCompanies"),
             preferred_locations: ["上海", "远程"],
             preferred_job_types: ["internship", "campus"],
-            limit: 9,
+            limit: 6,
         });
         const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
         renderOpportunities({
             data_as_of: capturedDates.sort().at(-1),
-            source_note: "每周更新 · 已验证详情和投递入口 · 申请前请再次确认",
+            source_note: "每日轮换 · 已验证详情和投递入口 · 申请前请再次确认",
             opportunities: result.leads.map((lead) => ({
                 opportunity_id: lead.external_id,
                 company: lead.company,

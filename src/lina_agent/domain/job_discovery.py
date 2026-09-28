@@ -17,6 +17,8 @@ class JobSourceStatus(StrEnum):
 
 class CompanyPool(StrEnum):
     ANCHOR = "anchor"
+    DOMESTIC_MAJOR = "domestic_major"
+    GLOBAL_MAJOR = "global_major"
     FOCUSED_AI = "focused_ai"
 
 
@@ -40,7 +42,7 @@ class JobLead(DomainModel):
     source_id: str = Field(min_length=1)
     external_id: str = Field(min_length=1)
     company: str = Field(min_length=1)
-    company_pool: CompanyPool = Field(default=CompanyPool.ANCHOR, exclude=True)
+    company_pool: CompanyPool = Field(default=CompanyPool.DOMESTIC_MAJOR, exclude=True)
     title: str = Field(min_length=1)
     job_type: JobType = JobType.UNKNOWN
     locations: tuple[str, ...]
@@ -65,8 +67,9 @@ class JobRecommendationRequest(DomainModel):
     recent_companies: tuple[str, ...] = ()
     preferred_locations: tuple[str, ...] = ()
     preferred_job_types: tuple[JobType, ...] = ()
+    rotation_date: date | None = None
     week_start: date | None = None
-    limit: int = Field(default=9, ge=1, le=9)
+    limit: int = Field(default=6, ge=1, le=9)
 
 
 class JobSourceResult(DomainModel):

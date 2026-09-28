@@ -1,5 +1,5 @@
 import hashlib
-from datetime import date, timedelta
+from datetime import date
 from typing import Protocol
 
 from lina_agent.domain.job_discovery import (
@@ -31,17 +31,17 @@ class JobDiscoveryService:
                 unique_leads.setdefault(lead.deduplication_key, lead)
 
         ordered_leads = tuple(unique_leads.values())
-        anchor_leads = tuple(
-            lead for lead in ordered_leads if lead.company_pool is CompanyPool.ANCHOR
+        major_leads = tuple(
+            lead for lead in ordered_leads if lead.company_pool is not CompanyPool.FOCUSED_AI
         )
         focused_leads = tuple(
             lead for lead in ordered_leads if lead.company_pool is CompanyPool.FOCUSED_AI
         )
         balanced_leads = tuple(
             lead
-            for index in range(max(len(anchor_leads), len(focused_leads)))
+            for index in range(max(len(major_leads), len(focused_leads)))
             for lead in (
-                anchor_leads[index] if index < len(anchor_leads) else None,
+                major_leads[index] if index < len(major_leads) else None,
                 focused_leads[index] if index < len(focused_leads) else None,
             )
             if lead is not None
@@ -58,7 +58,7 @@ class JobDiscoveryService:
             for lead in discovery.leads
             if lead.verification_status is JobVerificationStatus.LIVE
         )
-        week_start = request.week_start or (date.today() - timedelta(days=date.today().weekday()))
+        rotation_date = request.rotation_date or request.week_start or date.today()
         preferred_companies = {value.casefold() for value in request.preferred_companies}
         recent_companies = {value.casefold() for value in request.recent_companies}
         preferred_directions = tuple(value.casefold() for value in request.preferred_directions)
@@ -78,19 +78,35 @@ class JobDiscoveryService:
             if lead.job_type in request.preferred_job_types:
                 score += 30
             rotation = hashlib.sha256(
-                f"{week_start.isoformat()}:{lead.lead_id}".encode()
+                f"{rotation_date.isoformat()}:{lead.lead_id}".encode()
             ).hexdigest()
             return -score, rotation
 
-        anchor = sorted(
-            (lead for lead in eligible_leads if lead.company_pool is CompanyPool.ANCHOR),
+        domestic_major = sorted(
+            (
+                lead
+                for lead in eligible_leads
+                if lead.company_pool in {CompanyPool.ANCHOR, CompanyPool.DOMESTIC_MAJOR}
+            ),
+            key=ranking_key,
+        )
+        global_major = sorted(
+            (lead for lead in eligible_leads if lead.company_pool is CompanyPool.GLOBAL_MAJOR),
             key=ranking_key,
         )
         focused = sorted(
             (lead for lead in eligible_leads if lead.company_pool is CompanyPool.FOCUSED_AI),
             key=ranking_key,
         )
-        selected = [*anchor[:6], *focused[:3]]
+        base_quota, remainder = divmod(request.limit, 3)
+        domestic_quota = base_quota + int(remainder >= 1)
+        global_quota = base_quota + int(remainder >= 2)
+        focused_quota = base_quota
+        selected = [
+            *domestic_major[:domestic_quota],
+            *global_major[:global_quota],
+            *focused[:focused_quota],
+        ]
         selected_ids = {lead.lead_id for lead in selected}
         remaining = sorted(
             (lead for lead in eligible_leads if lead.lead_id not in selected_ids),

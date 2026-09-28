@@ -60,7 +60,7 @@ Lina 已经不是一个空目录或单 Prompt Demo。它包含两条可执行链
 | --- | --- | --- | --- | --- |
 | Web 硬条件链 | `CandidateProfile`、`JobPosting` | 毕业年、学历、经验、地点规则 | `HardConstraintResult` | 工作台与 `/matches` |
 | 文件证据 Agent 链 | `IngestedDocument`、`CatalogJob` | 词表技能覆盖与缺口聚合 | `CareerAgentRun` | `lina-match` 与 `/agent/runs` |
-| 岗位发现与监控链 | 内部公司目录、`JobLead`、来源状态 | live 过滤、去重、推荐和来源健康 | Top 9、搜索结果、周报 | 首页、`/opportunities/*` 与 `lina-monitor` |
+| 岗位发现与监控链 | 内部公司目录、`JobLead`、来源状态 | live 过滤、去重、推荐和来源健康 | Top 6、搜索结果、周报 | 首页、`/opportunities/*` 与 `lina-monitor` |
 
 文件 Agent 还没有使用 Web 链的全部硬条件，岗位发现也尚未保存完整 JD 并直接调用同一匹配聚合。后续开发应让三条链收敛到统一的候选人、岗位、证据与 Agent Run 契约，不再新增平行模型。
 

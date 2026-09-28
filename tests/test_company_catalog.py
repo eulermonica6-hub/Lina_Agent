@@ -19,13 +19,31 @@ def _request(path: str) -> Response:
     return asyncio.run(send())
 
 
-def test_company_catalog_balances_anchor_and_focused_ai_pools() -> None:
-    anchor = tuple(source for source in MONITORED_JOB_SOURCES if source.pool is CompanyPool.ANCHOR)
+def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
+    domestic = tuple(
+        source for source in MONITORED_JOB_SOURCES if source.pool is CompanyPool.DOMESTIC_MAJOR
+    )
+    global_major = tuple(
+        source for source in MONITORED_JOB_SOURCES if source.pool is CompanyPool.GLOBAL_MAJOR
+    )
     focused = tuple(
         source for source in MONITORED_JOB_SOURCES if source.pool is CompanyPool.FOCUSED_AI
     )
 
-    assert len(anchor) == 10
+    assert {source.company for source in domestic} == {
+        "腾讯",
+        "字节跳动",
+        "阿里巴巴",
+        "蚂蚁集团",
+        "小红书",
+    }
+    assert {source.company for source in global_major} == {
+        "Microsoft",
+        "Amazon",
+        "Meltwater",
+        "Apple",
+        "NVIDIA",
+    }
     assert len(focused) == 22
     assert {source.company for source in focused} == {
         "MiniMax",

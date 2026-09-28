@@ -19,7 +19,7 @@ class MonitoredJobSource(DomainModel):
     company: str = Field(min_length=1)
     url: str = Field(pattern=r"^https://")
     keywords: tuple[str, ...] = Field(min_length=1)
-    pool: CompanyPool = CompanyPool.ANCHOR
+    pool: CompanyPool = CompanyPool.DOMESTIC_MAJOR
     regions: tuple[str, ...] = ()
     why_watch: str = ""
 

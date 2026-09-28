@@ -24,7 +24,7 @@ def test_opportunity_feed_exposes_dated_official_snapshots() -> None:
     payload = response.json()
     assert payload["data_as_of"] == "2026-09-28"
     assert payload["freshness"] == "verified_recommendations"
-    assert len(payload["opportunities"]) == 9
+    assert len(payload["opportunities"]) == 6
     assert {item["company"] for item in payload["opportunities"]} >= {
         "MiniMax",
         "字节跳动",
@@ -80,7 +80,7 @@ def test_manual_opportunity_search_returns_leads_and_source_health() -> None:
     assert all("deduplication_key" not in lead for lead in payload["leads"])
 
 
-def test_homepage_recommendation_api_returns_six_anchor_and_three_focused() -> None:
+def test_homepage_recommendation_api_returns_two_per_company_segment() -> None:
     response = _request(
         "POST",
         "/opportunities/recommended",
@@ -94,6 +94,10 @@ def test_homepage_recommendation_api_returns_six_anchor_and_three_focused() -> N
 
     assert response.status_code == 200
     leads = response.json()["leads"]
-    assert len(leads) == 9
+    assert len(leads) == 6
+    companies = [lead["company"] for lead in leads]
+    assert sum(company in {"字节跳动", "小红书"} for company in companies) == 2
+    assert sum(company in {"Apple", "NVIDIA"} for company in companies) == 2
+    assert sum(company in {"MiniMax", "Unstructured"} for company in companies) == 2
     assert all(lead["verification_status"] == "live" for lead in leads)
     assert all("company_pool" not in lead for lead in leads)

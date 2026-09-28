@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.35
+> 适用版本：0.2.36
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -10,7 +10,7 @@ Lina 的目标架构是“对话编排 + 岗位发现与监控 + 可信决策内
 
 1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
 2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核；
-3. **岗位发现与监控链**：内部公司目录、来源健康、岗位去重、live-only Top 9、手动搜索和每周调度。
+3. **岗位发现与监控链**：内部公司目录、来源健康、岗位去重、live-only Top 6、手动搜索和每周调度。
 
 三条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或执行检查点。结构化实体、脱敏 Agent Run Snapshot、metadata-only 文档引用与确认版本已持久化；浏览器可直接创建文件 Agent Run。岗位发现已建立 32 个内部来源，但大部分实时岗位解析器尚未实现。
 
@@ -94,14 +94,14 @@ flowchart LR
 
 | 入口 | 输入 | 主要处理 | 输出 | 状态副作用 |
 | --- | --- | --- | --- | --- |
-| `GET /` | 无 | 渲染机会首页、Top 9、筛选、简历入口和对话预览 | HTML/CSS/JS | 无 |
+| `GET /` | 无 | 渲染机会首页、Top 6、筛选、简历入口和对话预览 | HTML/CSS/JS | 无 |
 | `GET /health` | 无 | 读取应用设置与运行时版本 | `HealthResponse` | 无 |
 | `POST /profiles` | `CandidateProfile` JSON | Pydantic 校验并保存 | 201 + 同一画像 | 写本地 SQLite 候选人表 |
 | `POST /jobs/parse` | `{description}` | 确定性硬条件解析 | `JobConstraintExtraction` | 无，只预览 |
 | `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写本地 SQLite 岗位表 |
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
-| `GET /opportunities` | 无 | 返回 9 条已复核推荐岗位 | `OpportunityFeed` | 无；不访问公网 |
+| `GET /opportunities` | 无 | 返回 6 条已复核推荐岗位 | `OpportunityFeed` | 无；不访问公网 |
 | `POST /opportunities/search` | 关键词、公司、地点、limit | 调用所有来源并跨来源去重 | `JobDiscoveryResult` | 无；当前仅快照适配器 |
 | `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
 | `POST /opportunities/recommended` | 公司/方向/地点/类型/近期偏好、周次 | 过滤 live 岗位并执行内部多样性配额 | `JobDiscoveryResult` | 无；内部池字段不序列化 |

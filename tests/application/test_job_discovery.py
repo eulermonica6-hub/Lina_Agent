@@ -30,7 +30,7 @@ def _lead(
     lead_id: str,
     company: str = "MiniMax",
     deduplication_key: str | None = None,
-    pool: CompanyPool = CompanyPool.ANCHOR,
+    pool: CompanyPool = CompanyPool.DOMESTIC_MAJOR,
     locations: tuple[str, ...] = ("上海",),
     job_type: JobType = JobType.UNKNOWN,
     verification_status: JobVerificationStatus = JobVerificationStatus.LIVE,
@@ -121,9 +121,17 @@ def test_discovery_interleaves_anchor_and_focused_ai_leads() -> None:
     ]
 
 
-def test_homepage_recommendations_use_six_three_quota_and_preferences() -> None:
+def test_homepage_recommendations_use_two_two_two_quota_and_preferences() -> None:
     leads = (
-        *(_lead(f"anchor-{index}", company=f"Anchor {index}") for index in range(8)),
+        *(_lead(f"domestic-{index}", company=f"Domestic {index}") for index in range(4)),
+        *(
+            _lead(
+                f"global-{index}",
+                company=f"Global {index}",
+                pool=CompanyPool.GLOBAL_MAJOR,
+            )
+            for index in range(4)
+        ),
         _lead("focused-a", company="Focused A", pool=CompanyPool.FOCUSED_AI),
         _lead("focused-b", company="Focused B", pool=CompanyPool.FOCUSED_AI),
         _lead("focused-c", company="Focused C", pool=CompanyPool.FOCUSED_AI),
@@ -140,18 +148,20 @@ def test_homepage_recommendations_use_six_three_quota_and_preferences() -> None:
     result = asyncio.run(
         service.recommend(
             JobRecommendationRequest(
-                preferred_companies=("Anchor 7",),
+                preferred_companies=("Domestic 3", "Global 3"),
                 recent_companies=("Focused D",),
                 week_start=date(2026, 9, 28),
             )
         )
     )
 
-    assert len(result.leads) == 9
-    assert [lead.company_pool for lead in result.leads[:6]] == [CompanyPool.ANCHOR] * 6
-    assert [lead.company_pool for lead in result.leads[6:]] == [CompanyPool.FOCUSED_AI] * 3
-    assert result.leads[0].company == "Anchor 7"
-    assert result.leads[6].company == "Focused D"
+    assert len(result.leads) == 6
+    assert [lead.company_pool for lead in result.leads[:2]] == [CompanyPool.DOMESTIC_MAJOR] * 2
+    assert [lead.company_pool for lead in result.leads[2:4]] == [CompanyPool.GLOBAL_MAJOR] * 2
+    assert [lead.company_pool for lead in result.leads[4:]] == [CompanyPool.FOCUSED_AI] * 2
+    assert result.leads[0].company == "Domestic 3"
+    assert result.leads[2].company == "Global 3"
+    assert result.leads[4].company == "Focused D"
 
 
 def test_homepage_recommendations_fill_missing_pool_capacity() -> None:
@@ -171,9 +181,11 @@ def test_homepage_recommendations_fill_missing_pool_capacity() -> None:
     assert len(result.leads) == 2
 
 
-def test_homepage_recommendations_rotate_between_weeks() -> None:
-    leads = tuple(_lead(f"anchor-{index}") for index in range(8)) + tuple(
-        _lead(f"focused-{index}", pool=CompanyPool.FOCUSED_AI) for index in range(5)
+def test_homepage_recommendations_rotate_between_days() -> None:
+    leads = (
+        tuple(_lead(f"domestic-{index}") for index in range(5))
+        + tuple(_lead(f"global-{index}", pool=CompanyPool.GLOBAL_MAJOR) for index in range(5))
+        + tuple(_lead(f"focused-{index}", pool=CompanyPool.FOCUSED_AI) for index in range(5))
     )
     source = JobSourceResult(
         source_id="source-a",
@@ -183,16 +195,17 @@ def test_homepage_recommendations_rotate_between_weeks() -> None:
     )
     service = JobDiscoveryService((FakeSource("source-a", source),))
 
-    first_week = asyncio.run(
-        service.recommend(JobRecommendationRequest(week_start=date(2026, 9, 28)))
+    first_day = asyncio.run(
+        service.recommend(JobRecommendationRequest(rotation_date=date(2026, 9, 28)))
     )
-    next_week = asyncio.run(
-        service.recommend(JobRecommendationRequest(week_start=date(2026, 10, 5)))
+    next_day = asyncio.run(
+        service.recommend(JobRecommendationRequest(rotation_date=date(2026, 9, 29)))
     )
 
-    assert [lead.lead_id for lead in first_week.leads] != [lead.lead_id for lead in next_week.leads]
-    assert [lead.company_pool for lead in next_week.leads[:6]] == [CompanyPool.ANCHOR] * 6
-    assert [lead.company_pool for lead in next_week.leads[6:]] == [CompanyPool.FOCUSED_AI] * 3
+    assert [lead.lead_id for lead in first_day.leads] != [lead.lead_id for lead in next_day.leads]
+    assert [lead.company_pool for lead in next_day.leads[:2]] == [CompanyPool.DOMESTIC_MAJOR] * 2
+    assert [lead.company_pool for lead in next_day.leads[2:4]] == [CompanyPool.GLOBAL_MAJOR] * 2
+    assert [lead.company_pool for lead in next_day.leads[4:]] == [CompanyPool.FOCUSED_AI] * 2
 
 
 def test_homepage_recommendations_prioritize_location_and_early_career() -> None:

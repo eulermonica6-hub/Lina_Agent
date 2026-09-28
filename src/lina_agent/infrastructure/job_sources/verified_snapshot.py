@@ -59,7 +59,7 @@ def _lead(
     direction: str,
     source_url: str,
     highlights: tuple[str, ...],
-    company_pool: CompanyPool = CompanyPool.ANCHOR,
+    company_pool: CompanyPool = CompanyPool.DOMESTIC_MAJOR,
     verification_status: JobVerificationStatus = JobVerificationStatus.NEEDS_REVERIFICATION,
     job_type: JobType = JobType.INTERNSHIP,
     locations: tuple[str, ...] = ("上海",),
@@ -135,6 +135,7 @@ _LEADS = (
         "机器学习 / LLM",
         "https://jobs.apple.com/en-us/details/200609538-3715/machine-learning-engineer-intern-shanghai?team=STDNT",
         ("Python", "ML", "LLM", "全职 3-6 个月"),
+        CompanyPool.GLOBAL_MAJOR,
         verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
@@ -144,6 +145,7 @@ _LEADS = (
         "AI Infra / 测试",
         "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/China-Shanghai/CUDA-Full-Stack---AI-Test-Dev-Intern---2027_JR2023666-1",
         ("LLM", "AI Agent", "测试评测", "至少 1 年"),
+        CompanyPool.GLOBAL_MAJOR,
         verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
@@ -162,6 +164,7 @@ _LEADS = (
         "AI 工具 / 软件工程",
         "https://jobs.apple.com/en-us/details/200676912-3715/software-engineering-intern-ai-tools-for-hardware-engineering?team=STDNT",
         ("AI Tools", "TypeScript", "硕士在读", "全职至少 4 个月"),
+        CompanyPool.GLOBAL_MAJOR,
         verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(
@@ -190,6 +193,7 @@ _LEADS = (
         "CUDA / AI 测试",
         "https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/China-Shanghai/Software-Engineering-Intern--CUDA-Test-Development---2027_JR2023645",
         ("C/C++", "Python", "AI Agent", "CUDA"),
+        CompanyPool.GLOBAL_MAJOR,
         verification_status=JobVerificationStatus.LIVE,
     ),
     _lead(

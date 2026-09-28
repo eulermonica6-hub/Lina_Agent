@@ -28,9 +28,9 @@ Lina 根据用户的即时搜索和持久化订阅检查公司官方招聘来源
 | Amazon | [Amazon 上海实习搜索](https://www.amazon.jobs/en/search?base_query=intern&loc_query=Shanghai%2C%20China) | OpenSearch、SDE、AI/ML |
 | Meltwater | [Meltwater Careers](https://www.meltwater.com/en/careers) | AI、Data、Product Analytics |
 
-主池另包含小红书、Apple 和 NVIDIA。专注型 AI 探索池包含 MiniMax、Garena、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain、Together AI、Sierra、Scale AI、Lambda、Cartesia、Harvey、Vapi、WRITER、Unstructured、Glean 和 Arize AI。完整地区、方向和关注理由只保存在内部代码注册表，不通过公共 API 暴露。
+国内大厂池包含腾讯、字节跳动、阿里巴巴、蚂蚁集团和小红书；国外大厂池包含 Microsoft、Amazon、Meltwater、Apple 和 NVIDIA。专注型 AI 探索池包含 MiniMax、Garena、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain、Together AI、Sierra、Scale AI、Lambda、Cartesia、Harvey、Vapi、WRITER、Unstructured、Glean 和 Arize AI。完整地区、方向和关注理由只保存在内部代码注册表，不通过公共 API 暴露。
 
-公司来源健康每周自动更新；公司成员资格每月人工审查。主页不展示公司池或全部岗位，只展示 9 条已验证推荐。内部多样性配额、偏好公司、近期点击、地点、岗位类型和搜索方向共同影响排序，同分项按周次稳定轮换。
+公司来源健康每周自动更新；公司成员资格每月人工审查。主页不展示公司池或全部岗位，只展示 6 条已验证推荐。内部多样性配额、偏好公司、近期点击、地点、岗位类型和搜索方向共同影响排序，同分项按日期每日稳定轮换。
 
 “专注型 AI”是可观察的产品方向分类，不是对融资轮次、估值或经营状态的断言。
 

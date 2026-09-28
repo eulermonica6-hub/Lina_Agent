@@ -67,11 +67,13 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     page.goto(live_server_url)
 
     expect(page.locator("#opportunity-list article")).to_have_count(2)
+    expect(page.locator("#opportunity-title")).to_have_text("今天为你推荐的 6 个岗位")
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
     expect(page.locator(".opportunity-logo img")).to_have_count(2)
     expect(page.locator(".opportunity-logo img").first).to_have_attribute("alt", "MiniMax logo")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-28")
     expect(page.locator("#opportunity-freshness")).to_contain_text("已复核推荐")
+    expect(page.locator("#opportunity-freshness")).to_contain_text("每日轮换")
     expect(page.locator("#opportunity-location")).to_have_value("上海")
     expect(page.locator("#opportunity-job-type")).to_have_value("early_career")
     expect(page.locator("#opportunity-filters")).not_to_have_attribute("open", "")
@@ -284,13 +286,13 @@ def test_home_does_not_expose_internal_company_pools(
     expect(page.get_by_text("探索池 · 小而美 / 专注型 AI")).to_have_count(0)
 
 
-def test_homepage_recommendations_use_habits_and_six_three_layout(
+def test_homepage_recommendations_use_habits_and_six_card_layout(
     page: Page,
     live_server_url: str,
 ) -> None:
     requests: list[dict[str, Any]] = []
     leads: list[dict[str, Any]] = []
-    for index in range(9):
+    for index in range(6):
         leads.append(
             {
                 "lead_id": f"lead-{index}",
@@ -324,7 +326,7 @@ def test_homepage_recommendations_use_habits_and_six_three_layout(
     page.goto(live_server_url)
 
     cards = page.locator("#opportunity-list article")
-    expect(cards).to_have_count(9)
+    expect(cards).to_have_count(6)
     expect(cards.locator(".opportunity-pool")).to_have_count(0)
     assert requests == [
         {
@@ -333,6 +335,6 @@ def test_homepage_recommendations_use_habits_and_six_three_layout(
             "recent_companies": ["MiniMax"],
             "preferred_locations": ["上海", "远程"],
             "preferred_job_types": ["internship", "campus"],
-            "limit": 9,
+            "limit": 6,
         }
     ]
