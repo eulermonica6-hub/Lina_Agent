@@ -33,8 +33,17 @@ WEB_DIRECTORY = Path(__file__).parent / "web"
 WORKBENCH_TEMPLATE = (WEB_DIRECTORY / "index.html").read_text(encoding="utf-8")
 
 
+def _render_page(page_mode: str) -> HTMLResponse:
+    content = WORKBENCH_TEMPLATE.replace("{{APP_VERSION}}", __version__)
+    return HTMLResponse(content.replace("{{PAGE_MODE}}", page_mode))
+
+
+async def serve_home() -> HTMLResponse:
+    return _render_page("home-page")
+
+
 async def serve_workbench() -> HTMLResponse:
-    return HTMLResponse(WORKBENCH_TEMPLATE.replace("{{APP_VERSION}}", __version__))
+    return _render_page("workbench-page")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -68,7 +77,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(agent.router)
     app.include_router(discovery.router)
     app.mount("/assets", StaticFiles(directory=WEB_DIRECTORY), name="assets")
-    app.add_api_route("/", serve_workbench, methods=["GET"], include_in_schema=False)
+    app.add_api_route("/", serve_home, methods=["GET"], include_in_schema=False)
+    app.add_api_route("/workbench", serve_workbench, methods=["GET"], include_in_schema=False)
     return app
 
 

@@ -56,6 +56,7 @@ class JobDiscoveryService:
         preferred_companies = {value.casefold() for value in request.preferred_companies}
         recent_companies = {value.casefold() for value in request.recent_companies}
         preferred_directions = tuple(value.casefold() for value in request.preferred_directions)
+        preferred_locations = {value.casefold() for value in request.preferred_locations}
 
         def ranking_key(lead: JobLead) -> tuple[int, str]:
             score = 0
@@ -65,6 +66,11 @@ class JobDiscoveryService:
                 score += 50
             searchable = " ".join((lead.direction, *lead.highlights)).casefold()
             score += 20 * sum(direction in searchable for direction in preferred_directions)
+            lead_locations = {location.casefold() for location in lead.locations}
+            if preferred_locations & lead_locations:
+                score += 30
+            if lead.job_type in request.preferred_job_types:
+                score += 30
             rotation = hashlib.sha256(
                 f"{week_start.isoformat()}:{lead.lead_id}".encode()
             ).hexdigest()

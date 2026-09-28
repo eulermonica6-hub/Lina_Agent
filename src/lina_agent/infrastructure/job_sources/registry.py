@@ -124,6 +124,15 @@ MONITORED_JOB_SOURCES = (
         why_watch="模型与 Agent 产品团队聚焦，已有上海实习核验记录。",
     ),
     _source(
+        "garena-careers",
+        "Garena",
+        "https://careers.garena.com/global/careers",
+        ("Game AI", "Data Analytics", "Recommendation", "Backend"),
+        pool=CompanyPool.FOCUSED_AI,
+        regions=("新加坡", "印度尼西亚", "东南亚"),
+        why_watch="有公开实习与早期人才入口，适合游戏工程、数据和产品方向条件关注。",
+    ),
+    _source(
         "baseten-careers",
         "Baseten",
         "https://www.baseten.co/careers",

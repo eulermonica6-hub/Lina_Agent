@@ -5,6 +5,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 IMPORTANT_DOCUMENTS = (
     "releaseNote.md",
     "docs/USER_GUIDE.md",
+    "docs/COMPANY_SELECTION.md",
     "docs/PRODUCT_VISION.md",
     "docs/CODING_PLAN.md",
     "docs/AGENT_ARCHITECTURE.md",
@@ -52,6 +53,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/046-weekly-source-monitoring.md",
     "docs/iterations/047-balanced-company-universe.md",
     "docs/iterations/048-personalized-top-nine.md",
+    "docs/iterations/049-home-discovery-and-company-criteria.md",
 )
 
 

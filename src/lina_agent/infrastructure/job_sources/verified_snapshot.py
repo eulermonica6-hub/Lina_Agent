@@ -6,6 +6,7 @@ from lina_agent.domain.job_discovery import (
     JobSearchRequest,
     JobSourceResult,
     JobSourceStatus,
+    JobType,
     JobVerificationStatus,
 )
 
@@ -46,7 +47,9 @@ def _matches(lead: JobLead, request: JobSearchRequest) -> bool:
 
     locations = {location.casefold() for location in request.locations}
     lead_locations = {location.casefold() for location in lead.locations}
-    return not locations or bool(locations & lead_locations)
+    if locations and not locations & lead_locations:
+        return False
+    return not request.job_types or lead.job_type in request.job_types
 
 
 def _lead(
@@ -66,6 +69,7 @@ def _lead(
         company=company,
         company_pool=company_pool,
         title=title,
+        job_type=JobType.INTERNSHIP,
         locations=("上海",),
         direction=direction,
         source_url=source_url,

@@ -79,7 +79,7 @@ def workbench_page(page: Page, live_server_url: str) -> Iterator[Page]:
     page_errors: list[str] = []
     page.on("pageerror", lambda error: page_errors.append(str(error)))
     page.add_init_script(script=_DEFERRED_FETCH_SCRIPT)
-    page.goto(live_server_url)
+    page.goto(f"{live_server_url}/workbench")
     expect(page.locator("#run-state span:last-child")).to_have_text("等待输入")
 
     yield page

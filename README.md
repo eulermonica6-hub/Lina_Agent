@@ -4,11 +4,11 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.30` 建立了 31 家公司双池目录：10 家平台型主池与 21 家专注型 AI 探索池。Lina 每周一监控全部官方 Careers 入口；首页只显示 9 个引导岗位，固定为前 6 主池、后 3 探索池，并根据周次、搜索偏好和近期点击调整池内顺序。实时岗位解析器仍待逐个实现；网页岗位仍来自 2026-09-14 人工核验快照。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.31` 建立了 32 家公司双池目录：10 家平台型主池与 22 家专注型 AI 探索池。Lina 每周一监控全部官方 Careers 入口；首页只显示 9 个引导岗位，固定为前 6 主池、后 3 探索池，并根据上海/远程、实习/校招、周次、搜索偏好和近期点击调整池内顺序。实时岗位解析器仍待逐个实现；网页岗位仍来自 2026-09-14 人工核验快照。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.30** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.31** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -121,7 +121,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 
 | 信号 | 当前结果 |
 | --- | --- |
-| 自动化测试 | 227 个测试通过 |
+| 自动化测试 | 233 个测试通过 |
 | 推理实验测试 | 本机 16 项通过、6 项 CUDA 测试因无 NVIDIA 环境跳过 |
 | 覆盖率 | 语句与分支覆盖率均为 100% |
 | 静态分析 | Pyright strict，0 个错误 |
@@ -142,7 +142,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 输入版本关联 | Snapshot v2 关联 metadata-only 文档引用和候选确认版本 |
 | Run 历史比较 | 不加载正文即可比较输入、确认、排名、分数、gap 和计划变化 |
 | 历史工作台 | 最近 Run、基线/目标选择和结构化 Diff，桌面/移动端可用 |
-| 公司雷达与每周监控 | 10 家主池 + 21 家专注型 AI 探索池；每周检查 31 个官方入口 |
+| 公司雷达与每周监控 | 10 家主池 + 22 家专注型 AI 探索池；每周检查 32 个官方入口 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 23 个 Playwright 测试覆盖 Top 9 推荐、公司雷达、岗位搜索、对话预览、简历初筛与历史 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -330,6 +330,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | --- | --- |
 | [当前版本使用手册](docs/USER_GUIDE.md) | 安装、启动、页面流程、API、隐私和故障处理 |
 | [产品愿景与边界](docs/PRODUCT_VISION.md) | 目标体验、自治等级、保留资产、新增领域和成功指标 |
+| [公司与岗位准入标准](docs/COMPANY_SELECTION.md) | 公司池准入、岗位值得投判断、Garena 与 TapTap 结论 |
 | [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
 | [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
 | [Agent 架构与数据流](docs/AGENT_ARCHITECTURE.md) | 当前入口、模块、输入输出、传输方向、脚本边界与收敛方案 |
@@ -377,6 +378,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [Lina 每周官方来源监控](docs/iterations/046-weekly-source-monitoring.md) | 7 源注册、周次幂等、HTTP 健康分类、CLI、schedule 和 artifact |
 | [主池与专注型 AI 公司宇宙](docs/iterations/047-balanced-company-universe.md) | 首批 21 家双池公司目录、地区/方向/理由和网页公司雷达 |
 | [个性化 Top 9 与探索池扩容](docs/iterations/048-personalized-top-nine.md) | 31 家公司、每周轮换、浏览器偏好和 3×3 推荐入口 |
+| [首页发现模式与公司准入](docs/iterations/049-home-discovery-and-company-criteria.md) | 上海早期岗位默认值、主页拆分及 Garena/TapTap 评估 |
 
 ## 欢迎讨论
 

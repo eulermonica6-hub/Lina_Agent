@@ -54,6 +54,7 @@
 | 046 | 2026-09-28 | Lina 每周官方来源监控 | 每周检查 7 个官方入口，分类来源健康并上传可审计 JSON artifact | [每周来源监控](iterations/046-weekly-source-monitoring.md) |
 | 047 | 2026-09-28 | 主池与专注型 AI 公司宇宙 | 用首批 21 家双池目录同时覆盖大厂与探索型机会 | [双池公司宇宙](iterations/047-balanced-company-universe.md) |
 | 048 | 2026-09-28 | 个性化 Top 9 与探索池扩容 | 扩展到 31 家公司，以 6+3 配额、周轮换和本地偏好控制主页推荐 | [个性化 Top 9](iterations/048-personalized-top-nine.md) |
+| 049 | 2026-09-28 | 首页发现模式与公司准入 | 默认上海早期岗位、迁移决策台，并用统一标准评估 Garena/TapTap | [首页与准入](iterations/049-home-discovery-and-company-criteria.md) |
 
 ## 文档入口
 
@@ -71,6 +72,7 @@
 | 查看能力指标 | [JD 解析基线评测](evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果与失败分类 |
 | 查看技能排序指标 | [技能证据与 Top-K 基线](evaluations/CAREER_MATCHING_BASELINE.md) | 技能、匹配、引用、排序和权重校准结果 |
 | 管理重要文档 | [文档治理](DOCUMENTATION_GOVERNANCE.md) | 文档职责、事实来源和版本 Review 清单 |
+| 维护公司清单 | [公司与岗位准入标准](COMPANY_SELECTION.md) | 主池/探索池/待补证规则和岗位值得投判断 |
 | 维护决策信号 | [决策信号行为准则](DECISION_SIGNAL_RULES.md) | 抽取、证据、Gold、评测与发布约束 |
 | 准备评测数据 | [数据匿名化与标注指南](DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核流程 |
 

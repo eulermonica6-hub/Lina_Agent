@@ -9,6 +9,7 @@ from lina_agent.domain.job_discovery import (
     JobSearchRequest,
     JobSourceResult,
     JobSourceStatus,
+    JobType,
     JobVerificationStatus,
 )
 from lina_agent.domain.weekly_monitoring import CompanyPool
@@ -30,6 +31,8 @@ def _lead(
     company: str = "MiniMax",
     deduplication_key: str | None = None,
     pool: CompanyPool = CompanyPool.ANCHOR,
+    locations: tuple[str, ...] = ("上海",),
+    job_type: JobType = JobType.UNKNOWN,
 ) -> JobLead:
     return JobLead(
         lead_id=lead_id,
@@ -38,13 +41,14 @@ def _lead(
         external_id=lead_id,
         company=company,
         title="Agent Intern",
-        locations=("上海",),
+        locations=locations,
         direction="Agent / LLM 应用",
         source_url=f"https://example.com/{lead_id}",
         captured_at=_CAPTURED_AT,
         verification_status=JobVerificationStatus.NEEDS_REVERIFICATION,
         highlights=("Agent", "Python"),
         company_pool=pool,
+        job_type=job_type,
     )
 
 
@@ -188,3 +192,35 @@ def test_homepage_recommendations_rotate_between_weeks() -> None:
     assert [lead.lead_id for lead in first_week.leads] != [lead.lead_id for lead in next_week.leads]
     assert [lead.company_pool for lead in next_week.leads[:6]] == [CompanyPool.ANCHOR] * 6
     assert [lead.company_pool for lead in next_week.leads[6:]] == [CompanyPool.FOCUSED_AI] * 3
+
+
+def test_homepage_recommendations_prioritize_location_and_early_career() -> None:
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=(
+            _lead("beijing-full-time", locations=("北京",), job_type=JobType.FULL_TIME),
+            _lead("shanghai-intern", job_type=JobType.INTERNSHIP),
+            _lead(
+                "remote-campus",
+                locations=("远程",),
+                job_type=JobType.CAMPUS,
+                pool=CompanyPool.FOCUSED_AI,
+            ),
+        ),
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    result = asyncio.run(
+        service.recommend(
+            JobRecommendationRequest(
+                preferred_locations=("上海", "远程"),
+                preferred_job_types=(JobType.INTERNSHIP, JobType.CAMPUS),
+            )
+        )
+    )
+
+    assert result.leads[0].lead_id == "shanghai-intern"
+    assert result.leads[1].lead_id == "beijing-full-time"
+    assert result.leads[2].lead_id == "remote-campus"

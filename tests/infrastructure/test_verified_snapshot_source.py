@@ -1,6 +1,6 @@
 import asyncio
 
-from lina_agent.domain.job_discovery import JobSearchRequest, JobSourceStatus
+from lina_agent.domain.job_discovery import JobSearchRequest, JobSourceStatus, JobType
 from lina_agent.infrastructure.job_sources.verified_snapshot import VerifiedSnapshotJobSource
 
 
@@ -10,6 +10,7 @@ def test_snapshot_source_filters_query_company_and_location() -> None:
         query="agent",
         companies=("MiniMax", "小红书"),
         locations=("上海",),
+        job_types=(JobType.INTERNSHIP, JobType.CAMPUS),
     )
 
     result = asyncio.run(source.search(request))

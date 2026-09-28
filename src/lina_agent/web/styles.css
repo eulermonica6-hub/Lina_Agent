@@ -117,6 +117,51 @@ a {
     text-decoration: none;
 }
 
+.topnav {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.home-only,
+.workbench-only {
+    display: none;
+}
+
+.home-page h1.home-only,
+.home-page p.home-only,
+.workbench-page h1.workbench-only,
+.workbench-page p.workbench-only {
+    display: block;
+}
+
+.home-page .intro-actions.home-only {
+    display: flex;
+}
+
+.workbench-page .intro-actions.home-only {
+    display: none;
+}
+
+.home-page .topnav .home-only,
+.workbench-page .topnav .workbench-only {
+    display: inline;
+}
+
+.home-page .legacy-actions,
+.home-page .step-track,
+.home-page #profile-form,
+.home-page #job-form,
+.home-page #result-panel,
+.home-page #run-history,
+.workbench-page #opportunities,
+.workbench-page #file-agent,
+.workbench-page #chat-toggle,
+.workbench-page #chat-panel {
+    display: none;
+}
+
 main {
     width: min(1180px, calc(100% - 40px));
     margin: 0 auto;
@@ -129,7 +174,7 @@ main {
 }
 
 .intro::after {
-    content: "MATCH";
+    content: "DISCOVER";
     color: rgb(23 79 56 / 5%);
     position: absolute;
     right: 0;
@@ -139,6 +184,10 @@ main {
     font-weight: 700;
     line-height: 1;
     pointer-events: none;
+}
+
+.workbench-page .intro::after {
+    content: "MATCH";
 }
 
 .eyebrow,
@@ -359,7 +408,7 @@ h1 {
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr auto;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
     align-items: end;
     gap: 14px;
 }

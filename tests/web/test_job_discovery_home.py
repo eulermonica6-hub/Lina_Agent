@@ -74,9 +74,14 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-14")
     expect(page.locator("#opportunity-freshness")).to_contain_text("历史核验快照")
-    expect(page.locator("#monitoring-sources")).to_contain_text("31 个来源")
+    expect(page.locator("#opportunity-location")).to_have_value("上海")
+    expect(page.locator("#opportunity-job-type")).to_have_value("early_career")
+    expect(page.locator("#profile-form")).to_be_hidden()
+    expect(page.locator("#run-history")).to_be_hidden()
+    expect(page.locator("a[href='/workbench']")).to_be_visible()
+    expect(page.locator("#monitoring-sources")).to_contain_text("32 个来源")
     expect(page.locator("#monitoring-sources")).to_contain_text("10 家主池")
-    expect(page.locator("#monitoring-sources")).to_contain_text("21 家探索池")
+    expect(page.locator("#monitoring-sources")).to_contain_text("22 家探索池")
 
     page.locator("#chat-toggle").click()
     expect(page.locator("#chat-panel")).to_be_visible()
@@ -163,6 +168,7 @@ def test_manual_search_filters_feed_and_reports_source_health(
             "query": "infra",
             "companies": ["MiniMax"],
             "locations": ["上海"],
+            "job_types": ["internship", "campus"],
             "max_results": 50,
         }
         response: dict[str, Any] = {
@@ -297,6 +303,8 @@ def test_homepage_recommendations_use_habits_and_six_three_layout(
             "preferred_companies": ["Apple"],
             "preferred_directions": ["Agent"],
             "recent_companies": ["MiniMax"],
+            "preferred_locations": ["上海", "远程"],
+            "preferred_job_types": ["internship", "campus"],
             "limit": 9,
         }
     ]

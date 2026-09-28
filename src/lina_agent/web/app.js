@@ -54,6 +54,7 @@ const elements = {
     opportunityQuery: document.querySelector("#opportunity-query"),
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
+    opportunityJobType: document.querySelector("#opportunity-job-type"),
     monitoringSources: document.querySelector("#monitoring-sources"),
     anchorCompanyList: document.querySelector("#anchor-company-list"),
     focusedCompanyList: document.querySelector("#focused-company-list"),
@@ -329,6 +330,8 @@ async function loadOpportunities() {
             preferred_companies: readPreferenceList("linaPreferredCompanies"),
             preferred_directions: readPreferenceList("linaPreferredDirections"),
             recent_companies: readPreferenceList("linaRecentCompanies"),
+            preferred_locations: ["上海", "远程"],
+            preferred_job_types: ["internship", "campus"],
             limit: 9,
         });
         const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
@@ -786,12 +789,16 @@ elements.opportunitySearchForm.addEventListener("submit", async (event) => {
     rememberValue("linaPreferredCompanies", elements.opportunityCompany.value);
     rememberValue("linaPreferredDirections", elements.opportunityQuery.value.trim());
     try {
+        const selectedJobType = elements.opportunityJobType.value;
         const result = await postJson("/opportunities/search", {
             query: elements.opportunityQuery.value.trim() || null,
             companies: elements.opportunityCompany.value
                 ? [elements.opportunityCompany.value]
                 : [],
             locations: commaValues(elements.opportunityLocation.value),
+            job_types: selectedJobType === "early_career"
+                ? ["internship", "campus"]
+                : selectedJobType ? [selectedJobType] : [],
             max_results: 50,
         });
         renderOpportunitySearch(result);

@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
     <title>Lina 求职 Agent</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=13">
-    <script src="/assets/app.js?v=12" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=14">
+    <script src="/assets/app.js?v=13" defer></script>
 </head>
 
-<body>
+<body class="{{PAGE_MODE}}">
     <header class="topbar">
         <a class="brand" href="/" aria-label="Lina 首页">
             <span class="brand-mark">L</span>
@@ -21,15 +21,21 @@
             <span class="state-dot"></span>
             <span>等待输入</span>
         </div>
-        <a class="api-link" href="/docs">API</a>
+        <nav class="topnav" aria-label="主要导航">
+            <a class="api-link home-only" href="/workbench">决策工具</a>
+            <a class="api-link workbench-only" href="/">机会首页</a>
+            <a class="api-link" href="/docs">API</a>
+        </nav>
     </header>
 
     <main>
         <section class="intro">
             <p class="eyebrow">ACTIVE JOB SEARCH · EVIDENCE FIRST</p>
-            <h1>值得关注的 AI 岗位，先替你看一遍</h1>
-            <p class="intro-copy">浏览官方核验岗位快照，上传简历完成证据化初筛，或直接和 Lina 描述你的求职目标。</p>
-            <div class="intro-actions">
+            <h1 class="home-only">值得关注的 AI 岗位，先替你看一遍</h1>
+            <h1 class="workbench-only">Lina 求职决策工具</h1>
+            <p class="intro-copy home-only">浏览官方核验岗位快照，上传简历完成证据化初筛，或直接和 Lina 描述你的求职目标。</p>
+            <p class="intro-copy workbench-only">维护结构化画像、核对单个 JD 硬条件，并审计历史 Agent Run。</p>
+            <div class="intro-actions home-only">
                 <a class="secondary-action" href="#opportunities">查看岗位</a>
                 <a class="reset-action" href="#file-agent">上传简历匹配</a>
             </div>
@@ -88,7 +94,16 @@
                 </label>
                 <label>
                     <span>地点</span>
-                    <input id="opportunity-location" placeholder="上海">
+                    <input id="opportunity-location" value="上海" placeholder="上海">
+                </label>
+                <label>
+                    <span>岗位类型</span>
+                    <select id="opportunity-job-type">
+                        <option value="early_career" selected>实习 / 校招</option>
+                        <option value="internship">仅实习</option>
+                        <option value="campus">仅校招</option>
+                        <option value="">全部类型</option>
+                    </select>
                 </label>
                 <button class="primary-action" type="submit">搜索岗位</button>
             </form>

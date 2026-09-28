@@ -138,7 +138,7 @@ def history_page(page: Page, live_server_url: str) -> Iterator[Page]:
         f"**/agent/runs/{_BASE_ID}/diff/{_TARGET_ID}",
         lambda route: route.fulfill(json=_DIFF),
     )
-    page.goto(live_server_url)
+    page.goto(f"{live_server_url}/workbench")
 
     yield page
 
@@ -169,7 +169,7 @@ def test_history_panel_loads_runs_and_renders_structured_diff(history_page: Page
 
 def test_history_panel_handles_empty_history(page: Page, live_server_url: str) -> None:
     page.route("**/agent/runs?limit=20", lambda route: route.fulfill(json=[]))
-    page.goto(live_server_url)
+    page.goto(f"{live_server_url}/workbench")
 
     page.locator("#refresh-history").click()
 
@@ -183,7 +183,7 @@ def test_history_panel_recovers_from_load_error(page: Page, live_server_url: str
         "**/agent/runs?limit=20",
         lambda route: route.fulfill(status=500, json={"detail": "历史服务暂不可用"}),
     )
-    page.goto(live_server_url)
+    page.goto(f"{live_server_url}/workbench")
 
     page.locator("#refresh-history").click()
 
@@ -199,7 +199,7 @@ def test_diff_button_recovers_from_request_error(page: Page, live_server_url: st
         f"**/agent/runs/{_BASE_ID}/diff/{_TARGET_ID}",
         lambda route: route.fulfill(status=500, json={"detail": "比较暂不可用"}),
     )
-    page.goto(live_server_url)
+    page.goto(f"{live_server_url}/workbench")
     page.locator("#refresh-history").click()
 
     page.locator("#compare-runs").click()

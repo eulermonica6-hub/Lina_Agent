@@ -82,7 +82,7 @@ def test_monitoring_sources_expose_companies_urls_and_keywords() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert len(payload) == 31
+    assert len(payload) == 32
     assert payload[0] == {
         "source_id": "tencent-careers",
         "company": "腾讯",

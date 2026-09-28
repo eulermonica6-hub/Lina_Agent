@@ -20,6 +20,13 @@ class CompanyPool(StrEnum):
     FOCUSED_AI = "focused_ai"
 
 
+class JobType(StrEnum):
+    INTERNSHIP = "internship"
+    CAMPUS = "campus"
+    FULL_TIME = "full_time"
+    UNKNOWN = "unknown"
+
+
 class JobVerificationStatus(StrEnum):
     LIVE = "live"
     NEEDS_REVERIFICATION = "needs_reverification"
@@ -35,6 +42,7 @@ class JobLead(DomainModel):
     company: str = Field(min_length=1)
     company_pool: CompanyPool = CompanyPool.ANCHOR
     title: str = Field(min_length=1)
+    job_type: JobType = JobType.UNKNOWN
     locations: tuple[str, ...]
     direction: str = Field(min_length=1)
     source_url: str = Field(pattern=r"^https://")
@@ -47,6 +55,7 @@ class JobSearchRequest(DomainModel):
     query: str | None = Field(default=None, min_length=1)
     companies: tuple[str, ...] = ()
     locations: tuple[str, ...] = ()
+    job_types: tuple[JobType, ...] = ()
     max_results: int = Field(default=50, ge=1, le=100)
 
 
@@ -54,6 +63,8 @@ class JobRecommendationRequest(DomainModel):
     preferred_companies: tuple[str, ...] = ()
     preferred_directions: tuple[str, ...] = ()
     recent_companies: tuple[str, ...] = ()
+    preferred_locations: tuple[str, ...] = ()
+    preferred_job_types: tuple[JobType, ...] = ()
     week_start: date | None = None
     limit: int = Field(default=9, ge=1, le=9)
 
