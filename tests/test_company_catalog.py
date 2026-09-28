@@ -1,11 +1,19 @@
 import asyncio
+import tomllib
+from pathlib import Path
 
+import pytest
 from httpx import ASGITransport, AsyncClient, Response
 
 from lina_agent.config import Settings
 from lina_agent.domain.weekly_monitoring import CompanyPool
-from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
+from lina_agent.infrastructure.job_sources.registry import (
+    MONITORED_JOB_SOURCES,
+    load_company_catalog,
+)
 from lina_agent.main import create_app
+
+PROJECT_ROOT = Path(__file__).parents[1]
 
 
 def _request(path: str) -> Response:
@@ -71,6 +79,68 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
     }
     assert all(source.regions for source in MONITORED_JOB_SOURCES)
     assert all(source.why_watch for source in MONITORED_JOB_SOURCES)
+
+
+def test_company_catalog_toml_is_the_reviewable_source_of_truth() -> None:
+    catalog_path = (
+        PROJECT_ROOT
+        / "src"
+        / "lina_agent"
+        / "infrastructure"
+        / "job_sources"
+        / "company_catalog.toml"
+    )
+    catalog = tomllib.loads(catalog_path.read_text(encoding="utf-8"))
+
+    assert catalog["schema_version"] == 1
+    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 32
+    assert [item["source_id"] for item in catalog["companies"]] == [
+        source.source_id for source in MONITORED_JOB_SOURCES
+    ]
+    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 32
+
+
+@pytest.mark.parametrize(
+    ("catalog", "message"),
+    [
+        ("schema_version = 2\ncompanies = []", "schema version"),
+        (
+            """
+            schema_version = 1
+            [[companies]]
+            source_id = "duplicate"
+            company = "Company A"
+            url = "https://example.com/a"
+            keywords = ["AI"]
+            [[companies]]
+            source_id = "duplicate"
+            company = "Company B"
+            url = "https://example.com/b"
+            keywords = ["AI"]
+            """,
+            "source_id",
+        ),
+        (
+            """
+            schema_version = 1
+            [[companies]]
+            source_id = "company-a"
+            company = "Same Company"
+            url = "https://example.com/a"
+            keywords = ["AI"]
+            [[companies]]
+            source_id = "company-b"
+            company = "same company"
+            url = "https://example.com/b"
+            keywords = ["AI"]
+            """,
+            "company names",
+        ),
+    ],
+)
+def test_company_catalog_rejects_invalid_metadata(catalog: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        load_company_catalog(catalog)
 
 
 def test_internal_company_catalog_is_not_exposed_publicly() -> None:

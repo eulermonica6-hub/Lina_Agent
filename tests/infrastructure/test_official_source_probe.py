@@ -12,7 +12,7 @@ _NOW = datetime(2026, 9, 28, 1, 0, tzinfo=UTC)
 
 
 def test_registry_contains_all_seven_requested_official_sources() -> None:
-    assert [(source.company, source.source_id) for source in MONITORED_JOB_SOURCES[:7]] == [
+    requested_sources = {
         ("腾讯", "tencent-careers"),
         ("字节跳动", "bytedance-careers"),
         ("阿里巴巴", "alibaba-careers"),
@@ -20,7 +20,10 @@ def test_registry_contains_all_seven_requested_official_sources() -> None:
         ("Microsoft", "microsoft-careers"),
         ("Amazon", "amazon-shanghai"),
         ("Meltwater", "meltwater-careers"),
-    ]
+    }
+    actual_sources = {(source.company, source.source_id) for source in MONITORED_JOB_SOURCES}
+
+    assert requested_sources <= actual_sources
     assert all(source.url.startswith("https://") for source in MONITORED_JOB_SOURCES)
     assert all(source.keywords for source in MONITORED_JOB_SOURCES)
 

@@ -1,0 +1,289 @@
+schema_version = 1
+
+[[companies]]
+source_id = "tencent-careers"
+company = "腾讯"
+url = "https://careers.tencent.com/"
+pool = "domestic_major"
+keywords = ["Agent Memory", "RAG", "知识图谱", "评测", "向量检索"]
+regions = ["中国"]
+why_watch = "业务场景广，覆盖 Agent、内容、搜索与基础平台。"
+
+[[companies]]
+source_id = "bytedance-careers"
+company = "字节跳动"
+url = "https://joinbytedance.com/"
+pool = "domestic_major"
+keywords = ["大模型应用", "搜索", "数据算法", "AI 产品"]
+regions = ["中国", "全球"]
+why_watch = "大规模推荐、搜索与国际化 AI 产品场景密集。"
+
+[[companies]]
+source_id = "alibaba-careers"
+company = "阿里巴巴"
+url = "https://talent.alibaba.com/"
+pool = "domestic_major"
+keywords = ["搜索推荐", "智能客服", "AI 应用"]
+regions = ["中国", "全球"]
+why_watch = "电商、云和企业服务提供多种 AI 落地场景。"
+
+[[companies]]
+source_id = "ant-group-careers"
+company = "蚂蚁集团"
+url = "https://talent.antgroup.com/"
+pool = "domestic_major"
+keywords = ["大模型评测", "金融 AI", "Agent", "数据智能"]
+regions = ["中国"]
+why_watch = "金融 AI 对可靠性、评测和风控能力要求明确。"
+
+[[companies]]
+source_id = "xiaohongshu-careers"
+company = "小红书"
+url = "https://job.xiaohongshu.com/"
+pool = "domestic_major"
+keywords = ["AI Agent", "推荐", "搜索", "AI 产品"]
+regions = ["中国"]
+why_watch = "内容社区场景连接推荐、搜索、Agent 和 AI 产品。"
+
+[[companies]]
+source_id = "microsoft-careers"
+company = "Microsoft"
+url = "https://careers.microsoft.com/"
+pool = "global_major"
+keywords = ["Applied Science", "Data Science", "AI Engineering"]
+regions = ["全球"]
+why_watch = "研究、云平台与企业 AI 岗位体系完整。"
+
+[[companies]]
+source_id = "amazon-shanghai"
+company = "Amazon"
+url = "https://www.amazon.jobs/en/search?base_query=intern&loc_query=Shanghai%2C%20China"
+pool = "global_major"
+keywords = ["OpenSearch", "SDE", "AI/ML"]
+regions = ["上海", "全球"]
+why_watch = "云、搜索与工程岗位可提供大规模系统经验。"
+
+[[companies]]
+source_id = "meltwater-careers"
+company = "Meltwater"
+url = "https://www.meltwater.com/en/careers"
+pool = "global_major"
+keywords = ["AI", "Data", "Product Analytics"]
+regions = ["全球"]
+why_watch = "媒体智能产品连接 NLP、数据与产品分析。"
+
+[[companies]]
+source_id = "apple-careers"
+company = "Apple"
+url = "https://jobs.apple.com/"
+pool = "global_major"
+keywords = ["Machine Learning", "LLM", "AI Tools", "Applied Research"]
+regions = ["全球"]
+why_watch = "硬件、系统与机器学习交叉岗位具备独特工程场景。"
+
+[[companies]]
+source_id = "nvidia-careers"
+company = "NVIDIA"
+url = "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite"
+pool = "global_major"
+keywords = ["CUDA", "AI Infrastructure", "LLM", "Evaluation"]
+regions = ["全球"]
+why_watch = "GPU、推理系统和 AI 基础设施岗位与技术证据计划高度相关。"
+
+[[companies]]
+source_id = "minimax-careers"
+company = "MiniMax"
+url = "https://vrfi1sk8a0.jobs.feishu.cn/379481/"
+pool = "focused_ai"
+keywords = ["Agent", "RAG", "MCP", "AI Infrastructure"]
+regions = ["中国"]
+why_watch = "模型与 Agent 产品团队聚焦，已有上海实习核验记录。"
+
+[[companies]]
+source_id = "garena-careers"
+company = "Garena"
+url = "https://careers.garena.com/global/careers"
+pool = "focused_ai"
+keywords = ["Game AI", "Data Analytics", "Recommendation", "Backend"]
+regions = ["新加坡", "印度尼西亚", "东南亚"]
+why_watch = "有公开实习与早期人才入口，适合游戏工程、数据和产品方向条件关注。"
+
+[[companies]]
+source_id = "baseten-careers"
+company = "Baseten"
+url = "https://www.baseten.co/careers"
+pool = "focused_ai"
+keywords = ["Inference", "GPU", "Model Performance", "AI Infrastructure"]
+regions = ["美国", "加拿大", "远程"]
+why_watch = "专注推理基础设施，岗位覆盖 GPU、运行时和模型性能。"
+
+[[companies]]
+source_id = "cohere-careers"
+company = "Cohere"
+url = "https://cohere.com/careers"
+pool = "focused_ai"
+keywords = ["Foundation Models", "RAG", "Enterprise AI", "Applied AI"]
+regions = ["加拿大", "美国", "英国", "法国", "韩国", "远程"]
+why_watch = "企业大模型、检索和安全部署方向集中，并支持分布式团队。"
+
+[[companies]]
+source_id = "fireworks-ai-careers"
+company = "Fireworks AI"
+url = "https://fireworks.ai/careers"
+pool = "focused_ai"
+keywords = ["Inference", "Agentic Systems", "Training", "GPU"]
+regions = ["美国", "新加坡", "英国", "远程"]
+why_watch = "AI 推理与训练平台岗位密集，覆盖新加坡等亚洲地点。"
+
+[[companies]]
+source_id = "anyscale-careers"
+company = "Anyscale"
+url = "https://www.anyscale.com/careers"
+pool = "focused_ai"
+keywords = ["Ray", "Distributed Systems", "AI Infrastructure", "ML Platform"]
+regions = ["美国", "印度"]
+why_watch = "围绕 Ray 构建分布式 AI 计算平台，工程深度高。"
+
+[[companies]]
+source_id = "llamaindex-careers"
+company = "LlamaIndex"
+url = "https://www.llamaindex.ai/careers"
+pool = "focused_ai"
+keywords = ["Agent", "RAG", "Document AI", "Applied Research"]
+regions = ["美国", "远程"]
+why_watch = "Agent 与知识工作自动化方向高度集中。"
+
+[[companies]]
+source_id = "pinecone-careers"
+company = "Pinecone"
+url = "https://www.pinecone.io/careers"
+pool = "focused_ai"
+keywords = ["Vector Database", "Search", "Retrieval", "Distributed Systems"]
+regions = ["美国", "以色列", "远程"]
+why_watch = "向量检索和可信知识基础设施与 RAG 能力直接相关。"
+
+[[companies]]
+source_id = "weaviate-careers"
+company = "Weaviate"
+url = "https://weaviate.io/company/careers"
+pool = "focused_ai"
+keywords = ["Vector Database", "RAG", "Agentic AI", "Search"]
+regions = ["全球", "远程"]
+why_watch = "远程优先，聚焦向量数据库、搜索和 Agentic AI。"
+
+[[companies]]
+source_id = "elevenlabs-careers"
+company = "ElevenLabs"
+url = "https://elevenlabs.io/careers"
+pool = "focused_ai"
+keywords = ["Voice AI", "Agents", "Multimodal", "Applied AI"]
+regions = ["全球", "远程"]
+why_watch = "全球化语音 AI 与 Agents 产品，地域覆盖和远程机会较广。"
+
+[[companies]]
+source_id = "langchain-careers"
+company = "LangChain"
+url = "https://www.langchain.com/careers"
+pool = "focused_ai"
+keywords = ["Agents", "Evaluation", "Observability", "LangGraph"]
+regions = ["多地区"]
+why_watch = "Agent 编排、评测和可观测性与 Lina 技术方向直接重合。"
+
+[[companies]]
+source_id = "together-ai-careers"
+company = "Together AI"
+url = "https://www.together.ai/careers"
+pool = "focused_ai"
+keywords = ["AI Infrastructure", "Inference", "GPU", "Open Models"]
+regions = ["美国"]
+why_watch = "开放模型、训练与推理基础设施方向集中。"
+
+[[companies]]
+source_id = "sierra-careers"
+company = "Sierra"
+url = "https://sierra.ai/careers"
+pool = "focused_ai"
+keywords = ["Agent Engineering", "Agent Product", "AI Voice", "Early Career"]
+regions = ["美国", "英国", "新加坡", "日本", "韩国", "澳大利亚"]
+why_watch = "企业 Agent 产品岗位密集，并公开新毕业生和实习项目。"
+
+[[companies]]
+source_id = "scale-ai-careers"
+company = "Scale AI"
+url = "https://scale.com/careers"
+pool = "focused_ai"
+keywords = ["AI Evaluation", "Agents", "RLHF", "ML Systems"]
+regions = ["美国", "英国", "中东", "加拿大"]
+why_watch = "可靠 AI、评测和数据引擎方向与 Lina 的证据化能力相关。"
+
+[[companies]]
+source_id = "lambda-careers"
+company = "Lambda"
+url = "https://lambda.ai/careers"
+pool = "focused_ai"
+keywords = ["GPU Cloud", "AI Infrastructure", "Distributed Systems", "Inference"]
+regions = ["美国", "远程"]
+why_watch = "专注 GPU 云与 AI 超算基础设施，适合系统和性能方向。"
+
+[[companies]]
+source_id = "cartesia-careers"
+company = "Cartesia"
+url = "https://www.cartesia.ai/careers"
+pool = "focused_ai"
+keywords = ["Voice AI", "Agent Harness", "Inference", "Evaluation"]
+regions = ["美国", "英国", "印度"]
+why_watch = "语音模型、Agent Harness、推理和评测岗位集中。"
+
+[[companies]]
+source_id = "harvey-careers"
+company = "Harvey"
+url = "https://www.harvey.ai/careers"
+pool = "focused_ai"
+keywords = ["Legal AI", "Agents", "Knowledge", "Applied AI"]
+regions = ["美国", "英国", "爱尔兰", "澳大利亚", "远程"]
+why_watch = "专业服务 Agent 场景成熟，强调知识、可靠性和真实工作流。"
+
+[[companies]]
+source_id = "vapi-careers"
+company = "Vapi"
+url = "https://vapi.ai/careers"
+pool = "focused_ai"
+keywords = ["Voice Agents", "Realtime Systems", "Infrastructure", "Developer Platform"]
+regions = ["美国"]
+why_watch = "语音 Agent 开发平台团队精简，实时系统问题密集。"
+
+[[companies]]
+source_id = "writer-careers"
+company = "WRITER"
+url = "https://writer.com/company/careers"
+pool = "focused_ai"
+keywords = ["Enterprise Agents", "LLM Platform", "Knowledge", "Applied AI"]
+regions = ["美国", "英国"]
+why_watch = "企业 Agent 和知识平台产品成熟，兼顾应用与平台工程。"
+
+[[companies]]
+source_id = "unstructured-careers"
+company = "Unstructured"
+url = "https://unstructured.io/careers"
+pool = "focused_ai"
+keywords = ["Document AI", "RAG", "Data Pipelines", "Open Source"]
+regions = ["远程"]
+why_watch = "文档解析与 RAG 数据管线和 Lina 的证据摄取方向直接相关。"
+
+[[companies]]
+source_id = "glean-careers"
+company = "Glean"
+url = "https://www.glean.com/careers"
+pool = "focused_ai"
+keywords = ["Enterprise Search", "Knowledge Agents", "RAG", "AI Platform"]
+regions = ["美国", "印度", "英国"]
+why_watch = "企业搜索和知识 Agent 具有清晰落地场景。"
+
+[[companies]]
+source_id = "arize-careers"
+company = "Arize AI"
+url = "https://arize.com/careers"
+pool = "focused_ai"
+keywords = ["Evaluation", "Observability", "LLMOps", "Applied AI"]
+regions = ["美国", "新加坡", "远程"]
+why_watch = "AI 评测与可观测性方向和 Lina 的验证体系高度重合。"

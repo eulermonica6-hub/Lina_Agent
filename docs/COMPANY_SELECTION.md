@@ -1,7 +1,9 @@
 # Lina 公司与岗位清单准入标准
 
-> 适用版本：0.2.36
+> 适用版本：0.2.37
 > 用途：决定哪些公司进入国内大厂池、国外大厂池、探索池或待补证名单，以及岗位是否值得投递。
+
+当前 32 家正式公司统一维护在 [`company_catalog.toml`](../src/lina_agent/infrastructure/job_sources/company_catalog.toml)。人工审核或调整公司时只修改该文件；应用启动时会校验字段类型、URL、分组以及公司名和来源 ID 的唯一性。
 
 ## 1. 两级判断
 

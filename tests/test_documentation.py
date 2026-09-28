@@ -59,6 +59,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/052-docked-agent-chat.md",
     "docs/iterations/053-roomy-jobs-and-chat-prompts.md",
     "docs/iterations/054-six-job-recommendations.md",
+    "docs/iterations/055-reviewable-company-catalog.md",
 )
 
 
