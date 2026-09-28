@@ -9,6 +9,7 @@ from lina_agent.domain.job_discovery import (
     CompanyPool,
     JobDiscoveryResult,
     JobLead,
+    JobRecommendationRequest,
     JobSearchRequest,
 )
 from lina_agent.domain.weekly_monitoring import MonitoredJobSource
@@ -24,6 +25,7 @@ _discovery_service = JobDiscoveryService((VerifiedSnapshotJobSource(),))
 class OpportunitySnapshot(BaseModel):
     opportunity_id: str = Field(min_length=1)
     company: str = Field(min_length=1)
+    company_pool: CompanyPool
     title: str = Field(min_length=1)
     location: str = Field(min_length=1)
     direction: str = Field(min_length=1)
@@ -54,6 +56,7 @@ def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
     return OpportunitySnapshot(
         opportunity_id=lead.external_id,
         company=lead.company,
+        company_pool=lead.company_pool,
         title=lead.title,
         location="、".join(lead.locations),
         direction=lead.direction,
@@ -66,7 +69,7 @@ def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
 
 @router.get("/opportunities", response_model=OpportunityFeed)
 async def list_opportunities() -> OpportunityFeed:
-    result = await _discovery_service.search(JobSearchRequest())
+    result = await _discovery_service.recommend(JobRecommendationRequest())
     data_as_of = max(lead.captured_at.date() for lead in result.leads)
     return OpportunityFeed(
         data_as_of=data_as_of,
@@ -79,6 +82,13 @@ async def list_opportunities() -> OpportunityFeed:
 @router.post("/opportunities/search", response_model=JobDiscoveryResult)
 async def search_opportunities(request: JobSearchRequest) -> JobDiscoveryResult:
     return await _discovery_service.search(request)
+
+
+@router.post("/opportunities/recommended", response_model=JobDiscoveryResult)
+async def recommend_opportunities(
+    request: JobRecommendationRequest,
+) -> JobDiscoveryResult:
+    return await _discovery_service.recommend(request)
 
 
 @router.get("/monitoring/sources", response_model=tuple[MonitoredJobSource, ...])

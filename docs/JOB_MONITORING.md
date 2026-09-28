@@ -1,6 +1,6 @@
 # Lina 岗位发现、订阅与推送设计
 
-> 状态：`JobLead`、快照搜索、21 家双池公司目录、每周调度、HTTP 健康探针和 artifact 已实现；实时岗位列表解析、跨周变化和推送尚未实现。
+> 状态：`JobLead`、快照搜索、31 家双池公司目录、6+3 周轮换推荐、每周调度、HTTP 健康探针和 artifact 已实现；实时岗位列表解析、跨周变化和推送尚未实现。
 > 下一切片：为一个可稳定读取职位列表与地点字段的官方来源实现真实解析器和 Fixture。
 
 ## 1. 目标
@@ -28,7 +28,9 @@ Lina 根据用户的即时搜索和持久化订阅检查公司官方招聘来源
 | Amazon | [Amazon 上海实习搜索](https://www.amazon.jobs/en/search?base_query=intern&loc_query=Shanghai%2C%20China) | OpenSearch、SDE、AI/ML |
 | Meltwater | [Meltwater Careers](https://www.meltwater.com/en/careers) | AI、Data、Product Analytics |
 
-主池另包含小红书、Apple 和 NVIDIA。专注型 AI 探索池包含 MiniMax、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain 和 Together AI。完整地区、方向和关注理由由 `GET /companies` 与代码注册表统一提供。
+主池另包含小红书、Apple 和 NVIDIA。专注型 AI 探索池包含 MiniMax、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain、Together AI、Sierra、Scale AI、Lambda、Cartesia、Harvey、Vapi、WRITER、Unstructured、Glean 和 Arize AI。完整地区、方向和关注理由由 `GET /companies` 与代码注册表统一提供。
+
+公司来源健康每周自动更新；公司成员资格每月人工审查。主页不展示全部岗位，而是固定 3×3：前 6 个主池、后 3 个探索池。偏好公司、近期点击和搜索方向只调整池内排序，同分项按周次稳定轮换。
 
 “专注型 AI”是可观察的产品方向分类，不是对融资轮次、估值或经营状态的断言。
 

@@ -52,7 +52,8 @@
 | 044 | 2026-09-28 | 岗位 Feed 与对话预览 | 首页自动展示历史官方核验岗位，只上传简历即可初筛，并提供类型化对话入口 | [岗位 Feed 与对话预览](iterations/044-opportunity-feed-chat-preview.md) |
 | 045 | 2026-09-28 | 岗位发现契约与手动搜索 | 用 JobLead、来源状态和跨来源去重建立可替换适配器，并接入网页搜索 | [岗位发现契约](iterations/045-job-discovery-contract.md) |
 | 046 | 2026-09-28 | Lina 每周官方来源监控 | 每周检查 7 个官方入口，分类来源健康并上传可审计 JSON artifact | [每周来源监控](iterations/046-weekly-source-monitoring.md) |
-| 047 | 2026-09-28 | 主池与专注型 AI 公司宇宙 | 用 21 家双池目录和混排机制同时覆盖大厂与探索型机会 | [双池公司宇宙](iterations/047-balanced-company-universe.md) |
+| 047 | 2026-09-28 | 主池与专注型 AI 公司宇宙 | 用首批 21 家双池目录同时覆盖大厂与探索型机会 | [双池公司宇宙](iterations/047-balanced-company-universe.md) |
+| 048 | 2026-09-28 | 个性化 Top 9 与探索池扩容 | 扩展到 31 家公司，以 6+3 配额、周轮换和本地偏好控制主页推荐 | [个性化 Top 9](iterations/048-personalized-top-nine.md) |
 
 ## 文档入口
 

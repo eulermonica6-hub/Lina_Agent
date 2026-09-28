@@ -256,10 +256,14 @@ function renderOpportunities(feed) {
         const company = document.createElement("span");
         company.className = "opportunity-company";
         company.textContent = opportunity.company;
+        const pool = document.createElement("span");
+        const isFocused = opportunity.company_pool === "focused_ai";
+        pool.className = `opportunity-pool ${isFocused ? "focused" : "anchor"}`;
+        pool.textContent = isFocused ? "探索池" : "主池";
         const direction = document.createElement("span");
         direction.className = "opportunity-direction";
         direction.textContent = opportunity.direction;
-        heading.append(company, direction);
+        heading.append(company, pool, direction);
 
         const title = document.createElement("h3");
         title.textContent = opportunity.title;
@@ -275,6 +279,7 @@ function renderOpportunities(feed) {
         link.target = "_blank";
         link.rel = "noreferrer";
         link.textContent = "打开官网复核";
+        link.addEventListener("click", () => rememberValue("linaRecentCompanies", opportunity.company));
         card.append(heading, title, meta, highlights, link);
         elements.opportunityList.append(card);
     });
@@ -289,6 +294,7 @@ function renderOpportunitySearch(result) {
         opportunities: result.leads.map((lead) => ({
             opportunity_id: lead.external_id,
             company: lead.company,
+            company_pool: lead.company_pool,
             title: lead.title,
             location: lead.locations.join("、"),
             direction: lead.direction,
@@ -300,11 +306,48 @@ function renderOpportunitySearch(result) {
     });
 }
 
+function readPreferenceList(key) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+    } catch {
+        return [];
+    }
+}
+
+function rememberValue(key, value) {
+    if (!value) return;
+    const values = readPreferenceList(key).filter((item) => item !== value);
+    localStorage.setItem(key, JSON.stringify([value, ...values].slice(0, 8)));
+}
+
 async function loadOpportunities() {
     elements.refreshOpportunities.disabled = true;
     elements.refreshOpportunities.textContent = "加载中...";
     try {
-        renderOpportunities(await getJson("/opportunities"));
+        const result = await postJson("/opportunities/recommended", {
+            preferred_companies: readPreferenceList("linaPreferredCompanies"),
+            preferred_directions: readPreferenceList("linaPreferredDirections"),
+            recent_companies: readPreferenceList("linaRecentCompanies"),
+            limit: 9,
+        });
+        const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
+        renderOpportunities({
+            data_as_of: capturedDates.sort().at(-1),
+            source_note: "每周轮换推荐 · 前 6 主池 + 后 3 探索池 · 申请前请打开官网复核",
+            opportunities: result.leads.map((lead) => ({
+                opportunity_id: lead.external_id,
+                company: lead.company,
+                company_pool: lead.company_pool,
+                title: lead.title,
+                location: lead.locations.join("、"),
+                direction: lead.direction,
+                source_url: lead.source_url,
+                last_verified_at: lead.captured_at.slice(0, 10),
+                verification_status: lead.verification_status,
+                highlights: lead.highlights,
+            })),
+        });
     } catch (error) {
         state.opportunities = [];
         elements.opportunityCount.textContent = "加载失败";
@@ -740,6 +783,8 @@ elements.opportunitySearchForm.addEventListener("submit", async (event) => {
     const button = elements.opportunitySearchForm.querySelector("button[type='submit']");
     button.disabled = true;
     button.textContent = "搜索中...";
+    rememberValue("linaPreferredCompanies", elements.opportunityCompany.value);
+    rememberValue("linaPreferredDirections", elements.opportunityQuery.value.trim());
     try {
         const result = await postJson("/opportunities/search", {
             query: elements.opportunityQuery.value.trim() || null,

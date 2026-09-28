@@ -1,9 +1,12 @@
+import hashlib
+from datetime import date, timedelta
 from typing import Protocol
 
 from lina_agent.domain.job_discovery import (
     CompanyPool,
     JobDiscoveryResult,
     JobLead,
+    JobRecommendationRequest,
     JobSearchRequest,
     JobSourceResult,
 )
@@ -45,4 +48,44 @@ class JobDiscoveryService:
         return JobDiscoveryResult(
             sources=source_results,
             leads=balanced_leads[: request.max_results],
+        )
+
+    async def recommend(self, request: JobRecommendationRequest) -> JobDiscoveryResult:
+        discovery = await self.search(JobSearchRequest(max_results=100))
+        week_start = request.week_start or (date.today() - timedelta(days=date.today().weekday()))
+        preferred_companies = {value.casefold() for value in request.preferred_companies}
+        recent_companies = {value.casefold() for value in request.recent_companies}
+        preferred_directions = tuple(value.casefold() for value in request.preferred_directions)
+
+        def ranking_key(lead: JobLead) -> tuple[int, str]:
+            score = 0
+            if lead.company.casefold() in preferred_companies:
+                score += 100
+            if lead.company.casefold() in recent_companies:
+                score += 50
+            searchable = " ".join((lead.direction, *lead.highlights)).casefold()
+            score += 20 * sum(direction in searchable for direction in preferred_directions)
+            rotation = hashlib.sha256(
+                f"{week_start.isoformat()}:{lead.lead_id}".encode()
+            ).hexdigest()
+            return -score, rotation
+
+        anchor = sorted(
+            (lead for lead in discovery.leads if lead.company_pool is CompanyPool.ANCHOR),
+            key=ranking_key,
+        )
+        focused = sorted(
+            (lead for lead in discovery.leads if lead.company_pool is CompanyPool.FOCUSED_AI),
+            key=ranking_key,
+        )
+        selected = [*anchor[:6], *focused[:3]]
+        selected_ids = {lead.lead_id for lead in selected}
+        remaining = sorted(
+            (lead for lead in discovery.leads if lead.lead_id not in selected_ids),
+            key=ranking_key,
+        )
+        selected.extend(remaining[: max(0, request.limit - len(selected))])
+        return JobDiscoveryResult(
+            sources=discovery.sources,
+            leads=tuple(selected[: request.limit]),
         )

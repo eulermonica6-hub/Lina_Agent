@@ -20,7 +20,7 @@ def test_health_check_reports_service_metadata() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "Lina Test",
-        "version": "0.2.29",
+        "version": "0.2.30",
     }
 
 
@@ -36,9 +36,9 @@ def test_root_serves_mvp_workbench() -> None:
 
     assert response.status_code == 200
     assert "Lina 求职 Agent" in response.text
-    assert 'class="brand-version">v0.2.29</span>' in response.text
+    assert 'class="brand-version">v0.2.30</span>' in response.text
     assert "{{APP_VERSION}}" not in response.text
     assert "从描述提取硬条件" in response.text
     assert "开始新一轮" in response.text
-    assert 'href="/assets/styles.css?v=12"' in response.text
-    assert 'src="/assets/app.js?v=11"' in response.text
+    assert 'href="/assets/styles.css?v=13"' in response.text
+    assert 'src="/assets/app.js?v=12"' in response.text

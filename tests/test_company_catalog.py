@@ -26,7 +26,7 @@ def test_company_catalog_balances_anchor_and_focused_ai_pools() -> None:
     )
 
     assert len(anchor) == 10
-    assert len(focused) == 11
+    assert len(focused) == 21
     assert {source.company for source in focused} == {
         "MiniMax",
         "Baseten",
@@ -39,6 +39,16 @@ def test_company_catalog_balances_anchor_and_focused_ai_pools() -> None:
         "ElevenLabs",
         "LangChain",
         "Together AI",
+        "Sierra",
+        "Scale AI",
+        "Lambda",
+        "Cartesia",
+        "Harvey",
+        "Vapi",
+        "WRITER",
+        "Unstructured",
+        "Glean",
+        "Arize AI",
     }
     assert all(source.regions for source in MONITORED_JOB_SOURCES)
     assert all(source.why_watch for source in MONITORED_JOB_SOURCES)
@@ -49,7 +59,7 @@ def test_company_api_filters_focused_ai_pool() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert len(payload) == 11
+    assert len(payload) == 21
     assert all(company["pool"] == "focused_ai" for company in payload)
     assert {company["company"] for company in payload} >= {
         "Baseten",

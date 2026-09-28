@@ -1,10 +1,11 @@
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from lina_agent.application.job_discovery import JobDiscoveryService, JobSourceAdapter
 from lina_agent.domain.job_discovery import (
     JobDiscoveryResult,
     JobLead,
+    JobRecommendationRequest,
     JobSearchRequest,
     JobSourceResult,
     JobSourceStatus,
@@ -113,3 +114,77 @@ def test_discovery_interleaves_anchor_and_focused_ai_leads() -> None:
         "anchor-two",
         "focused-two",
     ]
+
+
+def test_homepage_recommendations_use_six_three_quota_and_preferences() -> None:
+    leads = (
+        *(_lead(f"anchor-{index}", company=f"Anchor {index}") for index in range(8)),
+        _lead("focused-a", company="Focused A", pool=CompanyPool.FOCUSED_AI),
+        _lead("focused-b", company="Focused B", pool=CompanyPool.FOCUSED_AI),
+        _lead("focused-c", company="Focused C", pool=CompanyPool.FOCUSED_AI),
+        _lead("focused-d", company="Focused D", pool=CompanyPool.FOCUSED_AI),
+    )
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=leads,
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    result = asyncio.run(
+        service.recommend(
+            JobRecommendationRequest(
+                preferred_companies=("Anchor 7",),
+                recent_companies=("Focused D",),
+                week_start=date(2026, 9, 28),
+            )
+        )
+    )
+
+    assert len(result.leads) == 9
+    assert [lead.company_pool for lead in result.leads[:6]] == [CompanyPool.ANCHOR] * 6
+    assert [lead.company_pool for lead in result.leads[6:]] == [CompanyPool.FOCUSED_AI] * 3
+    assert result.leads[0].company == "Anchor 7"
+    assert result.leads[6].company == "Focused D"
+
+
+def test_homepage_recommendations_fill_missing_pool_capacity() -> None:
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=(
+            _lead("anchor-one"),
+            _lead("focused-one", pool=CompanyPool.FOCUSED_AI),
+        ),
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    result = asyncio.run(service.recommend(JobRecommendationRequest()))
+
+    assert len(result.leads) == 2
+
+
+def test_homepage_recommendations_rotate_between_weeks() -> None:
+    leads = tuple(_lead(f"anchor-{index}") for index in range(8)) + tuple(
+        _lead(f"focused-{index}", pool=CompanyPool.FOCUSED_AI) for index in range(5)
+    )
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=leads,
+    )
+    service = JobDiscoveryService((FakeSource("source-a", source),))
+
+    first_week = asyncio.run(
+        service.recommend(JobRecommendationRequest(week_start=date(2026, 9, 28)))
+    )
+    next_week = asyncio.run(
+        service.recommend(JobRecommendationRequest(week_start=date(2026, 10, 5)))
+    )
+
+    assert [lead.lead_id for lead in first_week.leads] != [lead.lead_id for lead in next_week.leads]
+    assert [lead.company_pool for lead in next_week.leads[:6]] == [CompanyPool.ANCHOR] * 6
+    assert [lead.company_pool for lead in next_week.leads[6:]] == [CompanyPool.FOCUSED_AI] * 3

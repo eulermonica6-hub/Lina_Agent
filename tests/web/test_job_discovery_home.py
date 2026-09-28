@@ -17,6 +17,7 @@ _FEED: dict[str, Any] = {
         {
             "opportunity_id": "minimax-agent",
             "company": "MiniMax",
+            "company_pool": "focused_ai",
             "title": "Agent 研发实习生-AI Infra",
             "location": "上海",
             "direction": "AI Infra",
@@ -28,6 +29,7 @@ _FEED: dict[str, Any] = {
         {
             "opportunity_id": "bytedance-risk",
             "company": "字节跳动",
+            "company_pool": "anchor",
             "title": "国际支付风控算法实习生",
             "location": "上海",
             "direction": "机器学习",
@@ -38,19 +40,43 @@ _FEED: dict[str, Any] = {
         },
     ],
 }
+_RECOMMENDATION_RESPONSE: dict[str, Any] = {
+    "sources": [],
+    "leads": [
+        {
+            "lead_id": f"snapshot:{item['opportunity_id']}",
+            "deduplication_key": item["opportunity_id"],
+            "source_id": "verified-snapshot-2026-09-14",
+            "external_id": item["opportunity_id"],
+            "company": item["company"],
+            "company_pool": item["company_pool"],
+            "title": item["title"],
+            "locations": [item["location"]],
+            "direction": item["direction"],
+            "source_url": item["source_url"],
+            "captured_at": "2026-09-14T00:00:00Z",
+            "verification_status": item["verification_status"],
+            "highlights": item["highlights"],
+        }
+        for item in _FEED["opportunities"]
+    ],
+}
 
 
 def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server_url: str) -> None:
-    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
     page.goto(live_server_url)
 
     expect(page.locator("#opportunity-list article")).to_have_count(2)
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-14")
     expect(page.locator("#opportunity-freshness")).to_contain_text("历史核验快照")
-    expect(page.locator("#monitoring-sources")).to_contain_text("21 个来源")
+    expect(page.locator("#monitoring-sources")).to_contain_text("31 个来源")
     expect(page.locator("#monitoring-sources")).to_contain_text("10 家主池")
-    expect(page.locator("#monitoring-sources")).to_contain_text("11 家探索池")
+    expect(page.locator("#monitoring-sources")).to_contain_text("21 家探索池")
 
     page.locator("#chat-toggle").click()
     expect(page.locator("#chat-panel")).to_be_visible()
@@ -60,7 +86,10 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
 
 
 def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_url: str) -> None:
-    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
 
     def reply(route: Route) -> None:
         route.fulfill(
@@ -84,7 +113,10 @@ def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_
 
 def test_resume_only_matches_loaded_opportunity_feed(page: Page, live_server_url: str) -> None:
     requests: list[dict[str, Any]] = []
-    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
 
     def run_agent(route: Route) -> None:
         payload = route.request.post_data_json
@@ -121,7 +153,10 @@ def test_manual_search_filters_feed_and_reports_source_health(
     page: Page,
     live_server_url: str,
 ) -> None:
-    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
 
     def search(route: Route) -> None:
         assert route.request.post_data_json == {
@@ -175,7 +210,10 @@ def test_company_radar_displays_anchor_and_focused_ai_pools(
     page: Page,
     live_server_url: str,
 ) -> None:
-    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+    page.route(
+        "**/opportunities/recommended",
+        lambda route: route.fulfill(json=_RECOMMENDATION_RESPONSE),
+    )
     page.route(
         "**/companies",
         lambda route: route.fulfill(
@@ -206,3 +244,59 @@ def test_company_radar_displays_anchor_and_focused_ai_pools(
     expect(page.locator("#anchor-company-list")).to_contain_text("腾讯")
     expect(page.locator("#focused-company-list")).to_contain_text("LlamaIndex")
     expect(page.locator("#focused-company-list")).to_contain_text("Agent 与知识工作自动化")
+
+
+def test_homepage_recommendations_use_habits_and_six_three_layout(
+    page: Page,
+    live_server_url: str,
+) -> None:
+    requests: list[dict[str, Any]] = []
+    leads: list[dict[str, Any]] = []
+    for index in range(9):
+        pool = "anchor" if index < 6 else "focused_ai"
+        leads.append(
+            {
+                "lead_id": f"lead-{index}",
+                "deduplication_key": f"key-{index}",
+                "source_id": "test",
+                "external_id": f"external-{index}",
+                "company": f"Company {index}",
+                "company_pool": pool,
+                "title": f"Agent Role {index}",
+                "locations": ["上海"],
+                "direction": "Agent",
+                "source_url": f"https://example.com/{index}",
+                "captured_at": "2026-09-14T00:00:00Z",
+                "verification_status": "needs_reverification",
+                "highlights": ["Agent"],
+            }
+        )
+
+    def recommend(route: Route) -> None:
+        payload = route.request.post_data_json
+        assert isinstance(payload, dict)
+        requests.append(cast(dict[str, Any], payload))
+        route.fulfill(json={"sources": [], "leads": leads})
+
+    page.add_init_script(
+        script="""
+            localStorage.setItem("linaPreferredCompanies", JSON.stringify(["Apple"]));
+            localStorage.setItem("linaPreferredDirections", JSON.stringify(["Agent"]));
+            localStorage.setItem("linaRecentCompanies", JSON.stringify(["MiniMax"]));
+        """
+    )
+    page.route("**/opportunities/recommended", recommend)
+    page.goto(live_server_url)
+
+    cards = page.locator("#opportunity-list article")
+    expect(cards).to_have_count(9)
+    expect(cards.locator(".opportunity-pool.anchor")).to_have_count(6)
+    expect(cards.locator(".opportunity-pool.focused")).to_have_count(3)
+    assert requests == [
+        {
+            "preferred_companies": ["Apple"],
+            "preferred_directions": ["Agent"],
+            "recent_companies": ["MiniMax"],
+            "limit": 9,
+        }
+    ]

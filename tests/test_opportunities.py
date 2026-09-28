@@ -82,7 +82,7 @@ def test_monitoring_sources_expose_companies_urls_and_keywords() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert len(payload) == 21
+    assert len(payload) == 31
     assert payload[0] == {
         "source_id": "tencent-careers",
         "company": "腾讯",
@@ -92,4 +92,23 @@ def test_monitoring_sources_expose_companies_urls_and_keywords() -> None:
         "regions": ["中国"],
         "why_watch": "业务场景广，覆盖 Agent、内容、搜索与基础平台。",
     }
-    assert payload[-1]["company"] == "Together AI"
+    assert payload[-1]["company"] == "Arize AI"
+
+
+def test_homepage_recommendation_api_returns_six_anchor_and_three_focused() -> None:
+    response = _request(
+        "POST",
+        "/opportunities/recommended",
+        {
+            "preferred_companies": ["Apple"],
+            "preferred_directions": ["Agent"],
+            "recent_companies": ["MiniMax"],
+            "week_start": "2026-09-28",
+        },
+    )
+
+    assert response.status_code == 200
+    leads = response.json()["leads"]
+    assert len(leads) == 9
+    assert [lead["company_pool"] for lead in leads[:6]] == ["anchor"] * 6
+    assert [lead["company_pool"] for lead in leads[6:]] == ["focused_ai"] * 3

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 
 from pydantic import Field
@@ -48,6 +48,14 @@ class JobSearchRequest(DomainModel):
     companies: tuple[str, ...] = ()
     locations: tuple[str, ...] = ()
     max_results: int = Field(default=50, ge=1, le=100)
+
+
+class JobRecommendationRequest(DomainModel):
+    preferred_companies: tuple[str, ...] = ()
+    preferred_directions: tuple[str, ...] = ()
+    recent_companies: tuple[str, ...] = ()
+    week_start: date | None = None
+    limit: int = Field(default=9, ge=1, le=9)
 
 
 class JobSourceResult(DomainModel):
