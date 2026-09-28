@@ -1,0 +1,50 @@
+import asyncio
+
+from httpx import ASGITransport, AsyncClient, Response
+
+from lina_agent.config import Settings
+from lina_agent.main import create_app
+
+
+def _request(method: str, path: str, json: dict[str, str] | None = None) -> Response:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+
+    async def send() -> Response:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            return await client.request(method, path, json=json)
+
+    return asyncio.run(send())
+
+
+def test_opportunity_feed_exposes_dated_official_snapshots() -> None:
+    response = _request("GET", "/opportunities")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["data_as_of"] == "2026-09-14"
+    assert payload["freshness"] == "historical_snapshot"
+    assert len(payload["opportunities"]) >= 5
+    assert {item["company"] for item in payload["opportunities"]} >= {
+        "MiniMax",
+        "字节跳动",
+        "小红书",
+    }
+    assert all(item["source_url"].startswith("https://") for item in payload["opportunities"])
+    assert all(item["verification_status"] != "live" for item in payload["opportunities"])
+
+
+def test_assistant_preview_routes_job_and_resume_intents() -> None:
+    jobs = _request("POST", "/assistant/messages", {"message": "帮我找 AI Agent 实习"})
+    resume = _request("POST", "/assistant/messages", {"message": "怎么上传简历匹配?"})
+    other = _request("POST", "/assistant/messages", {"message": "你好"})
+
+    assert jobs.status_code == 200
+    assert jobs.json()["suggested_action"] == "view_opportunities"
+    assert "核验快照" in jobs.json()["answer"]
+    assert jobs.json()["mode"] == "typed_preview"
+    assert resume.status_code == 200
+    assert resume.json()["suggested_action"] == "upload_resume"
+    assert other.status_code == 200
+    assert other.json()["suggested_action"] == "none"
+    assert "尚未联网自主搜索" in other.json()["answer"]

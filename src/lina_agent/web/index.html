@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Lina 求职岗位硬条件匹配工作台">
-    <title>Lina 求职决策台</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=8">
-    <script src="/assets/app.js?v=7" defer></script>
+    <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
+    <title>Lina 求职 Agent</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=9">
+    <script src="/assets/app.js?v=8" defer></script>
 </head>
 
 <body>
@@ -26,14 +26,35 @@
 
     <main>
         <section class="intro">
-            <p class="eyebrow">CAREER DECISION WORKBENCH · MVP 01</p>
-            <h1>Lina 求职决策台</h1>
-            <p class="intro-copy">录入候选人和目标岗位，快速识别毕业年份、学历、经验与地点硬门槛。</p>
+            <p class="eyebrow">ACTIVE JOB SEARCH · EVIDENCE FIRST</p>
+            <h1>值得关注的 AI 岗位，先替你看一遍</h1>
+            <p class="intro-copy">浏览官方核验岗位快照，上传简历完成证据化初筛，或直接和 Lina 描述你的求职目标。</p>
             <div class="intro-actions">
-                <button class="secondary-action" id="load-example" type="button">载入匿名示例</button>
-                <button class="reset-action" id="reset-workbench" type="button">开始新一轮</button>
+                <a class="secondary-action" href="#opportunities">查看岗位</a>
+                <a class="reset-action" href="#file-agent">上传简历匹配</a>
             </div>
         </section>
+
+        <section class="opportunity-feed" id="opportunities" aria-labelledby="opportunity-title">
+            <div class="feed-heading">
+                <div>
+                    <p class="section-index">OPPORTUNITY FEED</p>
+                    <h2 id="opportunity-title">AI / Agent 岗位快照</h2>
+                </div>
+                <div class="feed-meta">
+                    <span id="opportunity-count">正在加载</span>
+                    <button class="extract-action" id="refresh-opportunities" type="button">刷新</button>
+                </div>
+            </div>
+            <p class="feed-freshness" id="opportunity-freshness" aria-live="polite">正在读取岗位来源状态…</p>
+            <div class="opportunity-list" id="opportunity-list" aria-live="polite"></div>
+        </section>
+
+        <div class="legacy-actions">
+            <span>结构化硬条件工具</span>
+            <button class="secondary-action" id="load-example" type="button">载入匿名示例</button>
+            <button class="reset-action" id="reset-workbench" type="button">开始新一轮</button>
+        </div>
 
         <ol class="step-track" aria-label="分析步骤">
             <li class="active" data-step="profile"><span>01</span>候选人</li>
@@ -161,7 +182,7 @@
                     <div class="panel-heading">
                         <div>
                             <p class="section-index">FILE AGENT</p>
-                            <h2>文件 Agent</h2>
+                            <h2>上传简历匹配岗位</h2>
                         </div>
                         <span class="status-label" id="agent-run-status">未运行</span>
                     </div>
@@ -180,6 +201,11 @@
                             <input id="agent-top-k" type="number" min="1" max="50" value="5" required>
                         </label>
                     </div>
+
+                    <label class="feed-match-control">
+                        <input id="agent-use-feed" type="checkbox" checked>
+                        <span>使用首页官方核验快照；申请前仍需打开官网确认有效性</span>
+                    </label>
 
                     <div class="agent-toggles">
                         <label class="toggle-control">
@@ -301,6 +327,26 @@
         <span>Deterministic by default · LLM requires explicit opt-in</span>
         <span>结构化状态与脱敏运行历史保存于本地 SQLite</span>
     </footer>
+
+    <button class="chat-toggle" id="chat-toggle" type="button" aria-label="和 Lina 对话" aria-expanded="false"
+        aria-controls="chat-panel" title="和 Lina 对话">L</button>
+    <aside class="chat-panel" id="chat-panel" role="dialog" hidden aria-labelledby="chat-title">
+        <header class="chat-heading">
+            <div>
+                <p class="section-index">LINA ASSISTANT · PREVIEW</p>
+                <h2 id="chat-title">和 Lina 对话</h2>
+            </div>
+            <button class="chat-close" id="chat-close" type="button" aria-label="关闭对话" title="关闭">×</button>
+        </header>
+        <div class="chat-log" id="chat-log" aria-live="polite">
+            <p class="chat-message assistant-message">告诉我你想找什么岗位，或问我如何用简历匹配。当前为类型化预览，尚未联网自主搜索。</p>
+        </div>
+        <form class="chat-form" id="chat-form">
+            <label class="chat-input-label" for="chat-message">消息</label>
+            <textarea id="chat-message" rows="2" maxlength="2000" required placeholder="例如：帮我找上海的 Agent 实习"></textarea>
+            <button class="primary-action" type="submit">发送</button>
+        </form>
+    </aside>
 </body>
 
 </html>

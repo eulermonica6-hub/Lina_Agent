@@ -137,6 +137,7 @@ def test_file_agent_submits_base64_confirmations_and_refreshes_history(
     file_agent_page: tuple[Page, list[dict[str, Any]]],
 ) -> None:
     page, requests = file_agent_page
+    page.locator("#agent-use-feed").uncheck()
     page.locator("#agent-resume").set_input_files(
         {"name": "resume.txt", "mimeType": "text/plain", "buffer": b"Python Agent"}
     )
@@ -198,6 +199,7 @@ def test_docx_llm_request_omits_disabled_confirmations(
     page.route("**/agent/runs", fulfill_run)
     page.route("**/agent/runs?limit=20", lambda route: route.fulfill(json=[]))
     page.goto(live_server_url)
+    page.locator("#agent-use-feed").uncheck()
     page.locator("#agent-resume").set_input_files(
         {
             "name": "resume.docx",
@@ -226,6 +228,7 @@ def test_agent_failure_restores_submit_button(page: Page, live_server_url: str) 
         lambda route: route.fulfill(status=422, json={"detail": "岗位目录无法解析"}),
     )
     page.goto(live_server_url)
+    page.locator("#agent-use-feed").uncheck()
     page.locator("#agent-resume").set_input_files(
         {"name": "resume.txt", "mimeType": "text/plain", "buffer": b"resume"}
     )
@@ -248,6 +251,7 @@ def test_changed_file_invalidates_pending_agent_response(
 ) -> None:
     page.add_init_script(script=_DEFERRED_AGENT_FETCH_SCRIPT)
     page.goto(live_server_url)
+    page.locator("#agent-use-feed").uncheck()
     page.locator("#agent-resume").set_input_files(
         {"name": "resume.txt", "mimeType": "text/plain", "buffer": b"old resume"}
     )

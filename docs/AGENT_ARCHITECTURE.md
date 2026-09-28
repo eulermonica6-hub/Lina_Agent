@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.25
+> 适用版本：0.2.26
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -99,6 +99,8 @@ flowchart LR
 | `POST /jobs` | `JobPosting` JSON | Pydantic 校验并保存 | 201 + 同一岗位 | 写本地 SQLite 岗位表 |
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
+| `GET /opportunities` | 无 | 返回带核验日期的历史官方岗位快照 | `OpportunityFeed` | 无；不访问公网 |
+| `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |
 | `GET /agent/runs?limit=N` | 1..100 | 按创建时间查询最近历史 | `AgentRunSnapshot[]` | 无 |
 | `GET /agent/documents/{reference_id}` | Reference UUID | 加载 metadata-only 文档版本 | `DocumentReference` | 无 |

@@ -7,6 +7,7 @@ const state = {
     diffRevision: 0,
     agentRevision: 0,
     historyRuns: [],
+    opportunities: [],
 };
 
 const elements = {
@@ -45,6 +46,18 @@ const elements = {
     agentMatchList: document.querySelector("#agent-match-list"),
     agentGapList: document.querySelector("#agent-gap-list"),
     agentWarning: document.querySelector("#agent-warning"),
+    opportunityCount: document.querySelector("#opportunity-count"),
+    opportunityFreshness: document.querySelector("#opportunity-freshness"),
+    opportunityList: document.querySelector("#opportunity-list"),
+    refreshOpportunities: document.querySelector("#refresh-opportunities"),
+    agentUseFeed: document.querySelector("#agent-use-feed"),
+    agentJobs: document.querySelector("#agent-jobs"),
+    chatToggle: document.querySelector("#chat-toggle"),
+    chatPanel: document.querySelector("#chat-panel"),
+    chatClose: document.querySelector("#chat-close"),
+    chatForm: document.querySelector("#chat-form"),
+    chatLog: document.querySelector("#chat-log"),
+    chatMessage: document.querySelector("#chat-message"),
 };
 
 const reasonLabels = {
@@ -64,6 +77,15 @@ function optionalNumber(value) {
 
 async function fileToBase64(file) {
     const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    return btoa(binary);
+}
+
+function textToBase64(text) {
+    const bytes = new TextEncoder().encode(text);
     let binary = "";
     for (let offset = 0; offset < bytes.length; offset += 0x8000) {
         binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
@@ -211,6 +233,102 @@ function appendTextItem(list, text, className = "") {
     item.textContent = text;
     if (className) item.className = className;
     list.append(item);
+}
+
+function renderOpportunities(feed) {
+    state.opportunities = feed.opportunities;
+    elements.opportunityList.replaceChildren();
+    elements.opportunityCount.textContent = `${feed.opportunities.length} 个岗位`;
+    elements.opportunityFreshness.textContent = `历史核验快照 · ${feed.data_as_of} · ${feed.source_note}`;
+
+    feed.opportunities.forEach((opportunity) => {
+        const card = document.createElement("article");
+        card.className = "opportunity-card";
+        const heading = document.createElement("div");
+        heading.className = "opportunity-card-heading";
+        const company = document.createElement("span");
+        company.className = "opportunity-company";
+        company.textContent = opportunity.company;
+        const direction = document.createElement("span");
+        direction.className = "opportunity-direction";
+        direction.textContent = opportunity.direction;
+        heading.append(company, direction);
+
+        const title = document.createElement("h3");
+        title.textContent = opportunity.title;
+        const meta = document.createElement("p");
+        meta.className = "opportunity-meta";
+        meta.textContent = `${opportunity.location} · 核验于 ${opportunity.last_verified_at}`;
+        const highlights = document.createElement("ul");
+        highlights.className = "opportunity-highlights";
+        opportunity.highlights.forEach((highlight) => appendTextItem(highlights, highlight));
+        const link = document.createElement("a");
+        link.className = "opportunity-link";
+        link.href = opportunity.source_url;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.textContent = "打开官网复核";
+        card.append(heading, title, meta, highlights, link);
+        elements.opportunityList.append(card);
+    });
+}
+
+async function loadOpportunities() {
+    elements.refreshOpportunities.disabled = true;
+    elements.refreshOpportunities.textContent = "加载中...";
+    try {
+        renderOpportunities(await getJson("/opportunities"));
+    } catch (error) {
+        state.opportunities = [];
+        elements.opportunityCount.textContent = "加载失败";
+        elements.opportunityFreshness.textContent = error.message;
+        elements.opportunityList.replaceChildren();
+    } finally {
+        elements.refreshOpportunities.disabled = false;
+        elements.refreshOpportunities.textContent = "刷新";
+    }
+}
+
+function opportunityCatalog() {
+    const sections = state.opportunities.map((opportunity, index) => [
+        `### ${index + 1}. ${opportunity.title} | ${opportunity.company}`,
+        "",
+        "**基本信息**",
+        "",
+        `- 地点：${opportunity.location}`,
+        `- 方向：${opportunity.direction}`,
+        "",
+        "**岗位职责**",
+        "",
+        `- ${opportunity.direction} 相关岗位，申请前需打开官网复核完整职责。`,
+        "",
+        "**任职要求**",
+        "",
+        ...opportunity.highlights.map((highlight) => `- ${highlight}`),
+        "",
+        "**状态与来源**",
+        "",
+        `- 待官网复核：${opportunity.source_url}`,
+    ].join("\n"));
+    return `# Lina 岗位核验快照\n\n${sections.join("\n\n")}`;
+}
+
+function updateFeedMatchMode() {
+    elements.agentJobs.disabled = elements.agentUseFeed.checked;
+}
+
+function toggleChat(open) {
+    elements.chatPanel.hidden = !open;
+    elements.chatToggle.setAttribute("aria-expanded", String(open));
+    if (open) elements.chatMessage.focus();
+}
+
+function appendChatMessage(text, role) {
+    const message = document.createElement("p");
+    message.className = `chat-message ${role}-message`;
+    message.textContent = text;
+    elements.chatLog.append(message);
+    elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
 }
 
 function renderHistory(runs) {
@@ -541,6 +659,38 @@ async function loadHistory() {
 }
 
 elements.refreshHistory.addEventListener("click", loadHistory);
+elements.refreshOpportunities.addEventListener("click", loadOpportunities);
+elements.agentUseFeed.addEventListener("change", updateFeedMatchMode);
+
+elements.chatToggle.addEventListener("click", () => toggleChat(elements.chatPanel.hidden));
+elements.chatClose.addEventListener("click", () => toggleChat(false));
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.chatPanel.hidden) toggleChat(false);
+});
+elements.chatForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = elements.chatMessage.value.trim();
+    if (!message) return;
+    const button = elements.chatForm.querySelector("button[type='submit']");
+    appendChatMessage(message, "user");
+    elements.chatMessage.value = "";
+    button.disabled = true;
+    button.textContent = "发送中...";
+    try {
+        const response = await postJson("/assistant/messages", { message });
+        appendChatMessage(response.answer, "assistant");
+        if (response.suggested_action === "view_opportunities") {
+            document.querySelector("#opportunities").scrollIntoView({ behavior: "smooth" });
+        } else if (response.suggested_action === "upload_resume") {
+            document.querySelector("#file-agent").scrollIntoView({ behavior: "smooth" });
+        }
+    } catch (error) {
+        appendChatMessage(error.message, "assistant");
+    } finally {
+        button.disabled = false;
+        button.textContent = "发送";
+    }
+});
 
 elements.fileAgentForm.addEventListener("input", () => {
     state.agentRevision += 1;
@@ -565,8 +715,12 @@ elements.fileAgentForm.addEventListener("submit", async (event) => {
     const form = event.currentTarget;
     const button = form.querySelector("button[type='submit']");
     const resume = document.querySelector("#agent-resume").files[0];
-    const jobCatalog = document.querySelector("#agent-jobs").files[0];
-    if (!resume || !jobCatalog) return;
+    const jobCatalog = elements.agentJobs.files[0];
+    if (!resume || (!elements.agentUseFeed.checked && !jobCatalog)) return;
+    if (elements.agentUseFeed.checked && !state.opportunities.length) {
+        elements.agentRunStatus.textContent = "岗位快照未加载";
+        return;
+    }
 
     button.disabled = true;
     button.textContent = "正在运行...";
@@ -577,7 +731,9 @@ elements.fileAgentForm.addEventListener("submit", async (event) => {
     try {
         const payload = {
             resume: { filename: resume.name, content: await fileToBase64(resume) },
-            job_catalog: { filename: jobCatalog.name, content: await fileToBase64(jobCatalog) },
+            job_catalog: elements.agentUseFeed.checked
+                ? { filename: "lina-opportunity-snapshots.md", content: textToBase64(opportunityCatalog()) }
+                : { filename: jobCatalog.name, content: await fileToBase64(jobCatalog) },
             top_k: Number(document.querySelector("#agent-top-k").value),
             include_inactive: false,
             auto_decision_signals: elements.agentAutoSignals.checked,
@@ -704,3 +860,6 @@ elements.jobForm.addEventListener("input", (event) => {
         setRunState("内容已修改，请保存");
     }
 });
+
+updateFeedMatchMode();
+loadOpportunities();

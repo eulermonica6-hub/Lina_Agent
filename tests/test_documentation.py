@@ -47,6 +47,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/041-run-history-workbench.md",
     "docs/iterations/042-browser-file-agent.md",
     "docs/iterations/043-product-direction-reset.md",
+    "docs/iterations/044-opportunity-feed-chat-preview.md",
 )
 
 
