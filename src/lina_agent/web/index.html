@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
     <title>Lina 求职 Agent</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=9">
-    <script src="/assets/app.js?v=8" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=10">
+    <script src="/assets/app.js?v=9" defer></script>
 </head>
 
 <body>
@@ -47,6 +47,28 @@
                 </div>
             </div>
             <p class="feed-freshness" id="opportunity-freshness" aria-live="polite">正在读取岗位来源状态…</p>
+            <form class="opportunity-search" id="opportunity-search-form">
+                <label>
+                    <span>关键词</span>
+                    <input id="opportunity-query" placeholder="Agent、RAG、CUDA">
+                </label>
+                <label>
+                    <span>公司</span>
+                    <select id="opportunity-company">
+                        <option value="">全部公司</option>
+                        <option value="MiniMax">MiniMax</option>
+                        <option value="小红书">小红书</option>
+                        <option value="字节跳动">字节跳动</option>
+                        <option value="Apple">Apple</option>
+                        <option value="NVIDIA">NVIDIA</option>
+                    </select>
+                </label>
+                <label>
+                    <span>地点</span>
+                    <input id="opportunity-location" placeholder="上海">
+                </label>
+                <button class="primary-action" type="submit">搜索岗位</button>
+            </form>
             <div class="opportunity-list" id="opportunity-list" aria-live="polite"></div>
         </section>
 

@@ -50,6 +50,7 @@
 | 042 | 2026-09-28 | 浏览器文件 Agent | 用文件上传、显式开关和自动历史刷新完成浏览器运行闭环 | [浏览器文件 Agent](iterations/042-browser-file-agent.md) |
 | 043 | 2026-09-28 | 产品方向调整 | 将可信匹配内核转为主动求职助理的底座，重排搜索、监控、决策与投递路线 | [产品方向调整](iterations/043-product-direction-reset.md) |
 | 044 | 2026-09-28 | 岗位 Feed 与对话预览 | 首页自动展示历史官方核验岗位，只上传简历即可初筛，并提供类型化对话入口 | [岗位 Feed 与对话预览](iterations/044-opportunity-feed-chat-preview.md) |
+| 045 | 2026-09-28 | 岗位发现契约与手动搜索 | 用 JobLead、来源状态和跨来源去重建立可替换适配器，并接入网页搜索 | [岗位发现契约](iterations/045-job-discovery-contract.md) |
 
 ## 文档入口
 

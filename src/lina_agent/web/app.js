@@ -50,6 +50,10 @@ const elements = {
     opportunityFreshness: document.querySelector("#opportunity-freshness"),
     opportunityList: document.querySelector("#opportunity-list"),
     refreshOpportunities: document.querySelector("#refresh-opportunities"),
+    opportunitySearchForm: document.querySelector("#opportunity-search-form"),
+    opportunityQuery: document.querySelector("#opportunity-query"),
+    opportunityCompany: document.querySelector("#opportunity-company"),
+    opportunityLocation: document.querySelector("#opportunity-location"),
     agentUseFeed: document.querySelector("#agent-use-feed"),
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
@@ -270,6 +274,26 @@ function renderOpportunities(feed) {
         link.textContent = "打开官网复核";
         card.append(heading, title, meta, highlights, link);
         elements.opportunityList.append(card);
+    });
+}
+
+function renderOpportunitySearch(result) {
+    const successfulSources = result.sources.filter((source) => source.status === "success").length;
+    const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
+    renderOpportunities({
+        data_as_of: capturedDates.length ? capturedDates.sort().at(-1) : "无结果",
+        source_note: `${successfulSources} 个来源正常，${result.sources.length - successfulSources} 个来源异常`,
+        opportunities: result.leads.map((lead) => ({
+            opportunity_id: lead.external_id,
+            company: lead.company,
+            title: lead.title,
+            location: lead.locations.join("、"),
+            direction: lead.direction,
+            source_url: lead.source_url,
+            last_verified_at: lead.captured_at.slice(0, 10),
+            verification_status: lead.verification_status,
+            highlights: lead.highlights,
+        })),
     });
 }
 
@@ -660,6 +684,29 @@ async function loadHistory() {
 
 elements.refreshHistory.addEventListener("click", loadHistory);
 elements.refreshOpportunities.addEventListener("click", loadOpportunities);
+elements.opportunitySearchForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = elements.opportunitySearchForm.querySelector("button[type='submit']");
+    button.disabled = true;
+    button.textContent = "搜索中...";
+    try {
+        const result = await postJson("/opportunities/search", {
+            query: elements.opportunityQuery.value.trim() || null,
+            companies: elements.opportunityCompany.value
+                ? [elements.opportunityCompany.value]
+                : [],
+            locations: commaValues(elements.opportunityLocation.value),
+            max_results: 50,
+        });
+        renderOpportunitySearch(result);
+    } catch (error) {
+        elements.opportunityCount.textContent = "搜索失败";
+        elements.opportunityFreshness.textContent = error.message;
+    } finally {
+        button.disabled = false;
+        button.textContent = "搜索岗位";
+    }
+});
 elements.agentUseFeed.addEventListener("change", updateFeedMatchMode);
 
 elements.chatToggle.addEventListener("click", () => toggleChat(elements.chatPanel.hidden));

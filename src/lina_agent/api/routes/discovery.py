@@ -4,7 +4,18 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from lina_agent.application.job_discovery import JobDiscoveryService
+from lina_agent.domain.job_discovery import (
+    JobDiscoveryResult,
+    JobLead,
+    JobSearchRequest,
+)
+from lina_agent.infrastructure.job_sources.verified_snapshot import (
+    VerifiedSnapshotJobSource,
+)
+
 router = APIRouter(tags=["job discovery"])
+_discovery_service = JobDiscoveryService((VerifiedSnapshotJobSource(),))
 
 
 class OpportunitySnapshot(BaseModel):
@@ -36,95 +47,35 @@ class AssistantMessageResponse(BaseModel):
     suggested_action: Literal["view_opportunities", "upload_resume", "none"]
 
 
-_OPPORTUNITIES = (
-    OpportunitySnapshot(
-        opportunity_id="minimax-open-source-agent-ecosystem-intern",
-        company="MiniMax",
-        title="开源 Agent 开发者生态实习生",
-        location="上海",
-        direction="Agent / LLM 应用",
-        source_url="https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7674929052376942886/detail",
-        last_verified_at=date(2026, 9, 14),
+def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
+    return OpportunitySnapshot(
+        opportunity_id=lead.external_id,
+        company=lead.company,
+        title=lead.title,
+        location="、".join(lead.locations),
+        direction=lead.direction,
+        source_url=lead.source_url,
+        last_verified_at=lead.captured_at.date(),
         verification_status="needs_reverification",
-        highlights=("Python", "Agent", "MCP", "每周 3 天以上"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="minimax-agent-ai-infra-intern",
-        company="MiniMax",
-        title="Agent 研发实习生-AI Infra",
-        location="上海",
-        direction="AI Infra",
-        source_url="https://vrfi1sk8a0.jobs.feishu.cn/379481/position/7685277183518427419/detail",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("Python", "Agent", "RAG/MCP", "每周 4 天以上"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="xiaohongshu-agent-development-intern",
-        company="小红书",
-        title="AI Agent 研发实习生",
-        location="上海",
-        direction="Agent / LLM 应用",
-        source_url="https://job.xiaohongshu.com/campus/intern/position/21231",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("AI Agent", "在校生", "每周 4 天以上"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="xiaohongshu-foundation-model-agent-research",
-        company="小红书",
-        title="基础大模型 Agent 能力研究",
-        location="上海",
-        direction="Agent 研究",
-        source_url="https://job.xiaohongshu.com/campus/intern/position/19823",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("大模型", "Agent", "不限年级"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="bytedance-payment-risk-algorithm-intern",
-        company="字节跳动",
-        title="国际支付风控算法实习生",
-        location="上海",
-        direction="机器学习 / 风险建模",
-        source_url="https://jobs.bytedance.com/campus/position/7683144915764726069/detail",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("机器学习", "LLM", "图模型", "每周 4 天"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="apple-ml-engineer-intern-shanghai",
-        company="Apple",
-        title="Machine Learning Engineer Intern",
-        location="上海",
-        direction="机器学习 / LLM",
-        source_url="https://jobs.apple.com/en-us/details/200609538-3715/machine-learning-engineer-intern-shanghai?team=STDNT",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("Python", "ML", "LLM", "全职 3-6 个月"),
-    ),
-    OpportunitySnapshot(
-        opportunity_id="nvidia-cuda-ai-test-intern",
-        company="NVIDIA",
-        title="CUDA Full Stack & AI Test Dev Intern",
-        location="上海",
-        direction="AI Infra / 测试",
-        source_url="https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/China-Shanghai/CUDA-Full-Stack---AI-Test-Dev-Intern---2027_JR2023666-1",
-        last_verified_at=date(2026, 9, 14),
-        verification_status="needs_reverification",
-        highlights=("LLM", "AI Agent", "测试评测", "至少 1 年"),
-    ),
-)
+        highlights=lead.highlights,
+    )
 
 
 @router.get("/opportunities", response_model=OpportunityFeed)
 async def list_opportunities() -> OpportunityFeed:
+    result = await _discovery_service.search(JobSearchRequest())
+    data_as_of = max(lead.captured_at.date() for lead in result.leads)
     return OpportunityFeed(
-        data_as_of=date(2026, 9, 14),
+        data_as_of=data_as_of,
         freshness="historical_snapshot",
         source_note="官方页面人工核验快照，不代表当前仍在招聘；申请前请打开官网重新确认。",
-        opportunities=_OPPORTUNITIES,
+        opportunities=tuple(_to_opportunity(lead) for lead in result.leads),
     )
+
+
+@router.post("/opportunities/search", response_model=JobDiscoveryResult)
+async def search_opportunities(request: JobSearchRequest) -> JobDiscoveryResult:
+    return await _discovery_service.search(request)
 
 
 @router.post("/assistant/messages", response_model=AssistantMessageResponse)

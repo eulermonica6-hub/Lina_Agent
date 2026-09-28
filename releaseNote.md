@@ -1,6 +1,6 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.26`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.27`，之后按可验收用户能力递增。
 
 ## Unreleased
 
@@ -8,6 +8,14 @@
 - 0.2.25 现有文档摄取、证据、硬条件、匹配、gap、Reviewer、SQLite、Snapshot/Diff 和评测继续作为可信决策内核，不推倒重写。
 - 近期唯一实现目标改为 `JobLead`、统一来源适配器和一个真实官方来源的手动搜索 API；Run 详情与恢复降为跨周期工作流的支撑能力。
 - 明确自治等级：公开信息检索可自动执行，通知需渠道授权，外部提交需逐次预览和确认；绕过验证码、伪造经历与无人值守海投属于禁止能力。
+
+## 0.2.27 - 2026-09-28
+
+- 新增 `JobLead`、`JobSearchRequest`、`JobSourceResult` 和来源健康状态，分离来源内 ID 与跨来源去重键。
+- 新增 `JobSourceAdapter` 与 `JobDiscoveryService`，聚合来源、保留失败状态、跨来源去重并在去重后应用全局 limit。
+- 将 7 条历史岗位迁移到 `VerifiedSnapshotJobSource`，API 路由不再持有岗位数据。
+- 新增 `POST /opportunities/search`，支持关键词、公司和地点过滤；首页加入对应搜索表单和来源健康展示。
+- 210 项测试通过，其中 21 项 Playwright；语句和分支覆盖率 100%，Ruff 与 Pyright strict 通过。
 
 ## 0.2.26 - 2026-09-28
 

@@ -112,3 +112,57 @@ def test_resume_only_matches_loaded_opportunity_feed(page: Page, live_server_url
     decoded = base64.b64decode(job_catalog["content"]).decode()
     assert "Agent 研发实习生-AI Infra | MiniMax" in decoded
     assert "国际支付风控算法实习生 | 字节跳动" in decoded
+
+
+def test_manual_search_filters_feed_and_reports_source_health(
+    page: Page,
+    live_server_url: str,
+) -> None:
+    page.route("**/opportunities", lambda route: route.fulfill(json=_FEED))
+
+    def search(route: Route) -> None:
+        assert route.request.post_data_json == {
+            "query": "infra",
+            "companies": ["MiniMax"],
+            "locations": ["上海"],
+            "max_results": 50,
+        }
+        response: dict[str, Any] = {
+            "sources": [
+                {
+                    "source_id": "verified-snapshot-2026-09-14",
+                    "status": "success",
+                    "fetched_at": "2026-09-14T00:00:00Z",
+                    "leads": [],
+                    "error_code": None,
+                }
+            ],
+            "leads": [
+                {
+                    "lead_id": "snapshot:minimax-infra",
+                    "deduplication_key": "minimax:infra:上海",
+                    "source_id": "verified-snapshot-2026-09-14",
+                    "external_id": "minimax-infra",
+                    "company": "MiniMax",
+                    "title": "Agent 研发实习生-AI Infra",
+                    "locations": ["上海"],
+                    "direction": "AI Infra",
+                    "source_url": "https://example.com/minimax",
+                    "captured_at": "2026-09-14T00:00:00Z",
+                    "verification_status": "needs_reverification",
+                    "highlights": ["Python", "Agent"],
+                }
+            ],
+        }
+        route.fulfill(json=response)
+
+    page.route("**/opportunities/search", search)
+    page.goto(live_server_url)
+    page.locator("#opportunity-query").fill("infra")
+    page.locator("#opportunity-company").select_option("MiniMax")
+    page.locator("#opportunity-location").fill("上海")
+    page.locator("#opportunity-search-form button[type='submit']").click()
+
+    expect(page.locator("#opportunity-list article")).to_have_count(1)
+    expect(page.locator("#opportunity-list")).to_contain_text("Agent 研发实习生-AI Infra")
+    expect(page.locator("#opportunity-freshness")).to_contain_text("1 个来源正常")

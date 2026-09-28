@@ -238,6 +238,22 @@ h1 {
     line-height: 1.6;
 }
 
+.opportunity-search {
+    margin: 0 0 24px;
+    padding: 18px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    align-items: end;
+    gap: 14px;
+}
+
+.opportunity-search .primary-action {
+    margin: 0;
+    white-space: nowrap;
+}
+
 .opportunity-list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1086,6 +1102,10 @@ footer {
     }
 
     .opportunity-list {
+        grid-template-columns: 1fr;
+    }
+
+    .opportunity-search {
         grid-template-columns: 1fr;
     }
 

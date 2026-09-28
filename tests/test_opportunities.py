@@ -6,7 +6,7 @@ from lina_agent.config import Settings
 from lina_agent.main import create_app
 
 
-def _request(method: str, path: str, json: dict[str, str] | None = None) -> Response:
+def _request(method: str, path: str, json: object | None = None) -> Response:
     app = create_app(Settings(app_name="Lina Test", environment="test"))
 
     async def send() -> Response:
@@ -48,3 +48,30 @@ def test_assistant_preview_routes_job_and_resume_intents() -> None:
     assert other.status_code == 200
     assert other.json()["suggested_action"] == "none"
     assert "尚未联网自主搜索" in other.json()["answer"]
+
+
+def test_manual_opportunity_search_returns_leads_and_source_health() -> None:
+    response = _request(
+        "POST",
+        "/opportunities/search",
+        {
+            "query": "agent",
+            "companies": ["MiniMax"],
+            "locations": ["上海"],
+            "max_results": 10,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["sources"] == [
+        {
+            "source_id": "verified-snapshot-2026-09-14",
+            "status": "success",
+            "fetched_at": "2026-09-14T00:00:00Z",
+            "leads": payload["leads"],
+            "error_code": None,
+        }
+    ]
+    assert len(payload["leads"]) == 2
+    assert {lead["company"] for lead in payload["leads"]} == {"MiniMax"}
