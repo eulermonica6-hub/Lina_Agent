@@ -6,12 +6,30 @@
 
 ## 1. 一句话结论
 
-Lina 当前由两个并行内核组成：
+Lina 的目标架构是“对话编排 + 岗位发现与监控 + 可信决策内核 + 受控执行”。当前代码只实现了其中的可信决策内核，由两个并行流程组成：
 
 1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
 2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核。
 
 两条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或执行检查点。结构化实体、脱敏 Agent Run Snapshot、metadata-only 文档引用与确认版本已持久化；浏览器可直接创建文件 Agent Run。
+
+### 1.1 方向调整后的目标边界
+
+```mermaid
+flowchart LR
+    CHAT[Conversation] --> INTENT[Typed Intent]
+    INTENT --> SEARCH[Job Discovery]
+    SEARCH --> LEADS[(JobLead Store)]
+    LEADS --> DECISION[Existing Decision Core]
+    DECISION --> INBOX[Recommendation Inbox]
+    INBOX --> MONITOR[Subscriptions and Notifications]
+    INBOX --> DRAFT[Application Draft]
+    DRAFT --> APPROVAL{User Approval}
+    APPROVAL --> EXECUTE[Browser-assisted Submission]
+    EXECUTE --> AUDIT[(Application Record)]
+```
+
+新增层必须调用现有确定性规则和证据模型，不能在对话 Prompt 中复制匹配逻辑。投递执行属于高风险副作用，必须经过可持久化审批；验证码、登录和歧义字段会暂停工作流。
 
 ## 2. 系统边界总图
 
@@ -412,11 +430,13 @@ sequenceDiagram
 | Web 候选人/岗位 | `data/lina.db` SQLite Repository | 本地数据库文件 | 服务重启后可恢复 |
 | Agent 中间状态 | Python 局部变量 | 单次请求/CLI 进程 | 不可恢复 |
 | Agent Run Snapshot | `agent_run_snapshots` SQLite 表 | 本地数据库文件 | 可查询历史，不可恢复执行 |
+| 文档引用 | `document_references` SQLite 表 | metadata-only，本地数据库文件 | 可关联内容身份，不保存正文 |
+| 候选人确认版本 | `candidate_confirmation_versions` SQLite 表 | 本地数据库文件 | 可比较确认事实和事件版本 |
 | 文档身份 | SHA-256 + UUIDv5 | 同一 bytes 稳定 | 可重新计算 |
 | LLM Key | `.env`、环境变量、私有 key 文件 | 本机配置 | 不进入响应或 Git |
 | Playwright Trace | `test-results/` | 测试失败 | CI artifact，可复现前端失败 |
 
-下一阶段仍需要 `DocumentRepository`、确认版本和检查点表；Snapshot 只保存稳定引用和脱敏结果。
+文档引用与确认版本已经实现；下一阶段的数据主线是 `JobLead`、来源运行和搜索结果持久化。检查点表在定时监控与受控投递出现跨步骤恢复需求时引入。Snapshot 继续只保存稳定引用和脱敏结果。
 
 ## 11. 工程脚本与自动化
 

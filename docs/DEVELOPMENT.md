@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、性能证据、SQLite、Snapshot、Diff、历史视图和浏览器文件 Agent 已完成。下一步增加脱敏 Run 详情视图。
+Repository、统一文档摄取、双 Gold 套件、性能证据、SQLite、Snapshot、Diff、历史视图和浏览器文件 Agent 已完成。下一步实现 `JobLead`、来源适配器和手动官方岗位搜索 API。
 
 ### 目标
 

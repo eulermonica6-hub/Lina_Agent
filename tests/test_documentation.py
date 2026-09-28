@@ -5,6 +5,7 @@ PROJECT_ROOT = Path(__file__).parents[1]
 IMPORTANT_DOCUMENTS = (
     "releaseNote.md",
     "docs/USER_GUIDE.md",
+    "docs/PRODUCT_VISION.md",
     "docs/CODING_PLAN.md",
     "docs/AGENT_ARCHITECTURE.md",
     "docs/ENGINEERING_HANDBOOK.md",
@@ -45,6 +46,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/040-agent-run-snapshot-diff.md",
     "docs/iterations/041-run-history-workbench.md",
     "docs/iterations/042-browser-file-agent.md",
+    "docs/iterations/043-product-direction-reset.md",
 )
 
 

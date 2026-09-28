@@ -1,10 +1,10 @@
 # Lina
 
-> 一个面向高风险职业决策、以证据为基础的决策系统，也是 Agent 工程实践与验证平台。
+> 一个能持续发现机会、解释选择并在用户授权下协助行动的个人求职 Agent。
 
-Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确定性、抽取事实需要在确认前提供来源证据，并且用户必须始终拥有控制权时，AI 系统应当如何给出有用的建议？**
+Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-职业规划是 Lina 的第一个垂直场景。当前版本既保留结构化工作台，也能读取本地 TXT、Markdown 和 DOCX 简历，将真实 JD 目录拆成独立岗位，生成带原文坐标的技能覆盖排序与 Agent Trace。用户显式启用时，经济型模型 Provider 只根据匿名化技能与匹配摘要生成结构化行动计划。Lina 刻意不止于聊天界面，也不把自己包装成自主运行的黑箱。
+当前 `0.2.25` 完成的是这套产品的**可信决策内核**：读取简历和 JD、核验硬条件、生成证据化 Top-K、聚合能力缺口并保存脱敏历史。对话、产品内官网搜索、定时推送和辅助投递尚未实现，已成为新的产品主线。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
@@ -21,6 +21,22 @@ Lina 关注一个实际的 Agent 工程问题：**当部分决策必须保持确
 - **保证并发状态一致性**：过期的保存、抽取和匹配响应不能覆盖浏览器中的较新状态。
 
 这些约束使职业决策成为一个适合验证 Agent 系统的场景：输入混乱、建议会产生真实影响，仅仅生成一句听起来合理的话不足以证明系统正确。
+
+## 产品方向
+
+```mermaid
+flowchart LR
+  TALK[对话表达目标] --> SEARCH[官方岗位检索]
+  SEARCH --> MONITOR[订阅与变化推送]
+  MONITOR --> MATCH[资格和证据匹配]
+  MATCH --> COMPARE[岗位/公司/薪资对比]
+  COMPARE --> PREP[简历与面试准备]
+  PREP --> APPROVE{用户确认}
+  APPROVE --> APPLY[辅助投递]
+  APPLY --> TRACK[状态跟踪与复盘]
+```
+
+近期唯一实现目标是打通一个真实官方来源的手动搜索链路。先证明来源、规范化、去重和失败状态可信，再加入对话、调度与投递。
 
 ## 产品流程
 
@@ -312,6 +328,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | 文档 | 用途 |
 | --- | --- |
 | [当前版本使用手册](docs/USER_GUIDE.md) | 安装、启动、页面流程、API、隐私和故障处理 |
+| [产品愿景与边界](docs/PRODUCT_VISION.md) | 目标体验、自治等级、保留资产、新增领域和成功指标 |
 | [Release Notes](releaseNote.md) | 已发布版本、验证结果与已知限制 |
 | [Coding Plan](docs/CODING_PLAN.md) | 阶段路线、依赖关系和验收标准 |
 | [Agent 架构与数据流](docs/AGENT_ARCHITECTURE.md) | 当前入口、模块、输入输出、传输方向、脚本边界与收敛方案 |
@@ -325,7 +342,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [MVP 实现记录](docs/MVP_IMPLEMENTATION.md) | 首个工作台的实现过程与历史复盘 |
 | [解析器评测基线](docs/evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果和失败分类 |
 | [技能证据与 Top-K 基线](docs/evaluations/CAREER_MATCHING_BASELINE.md) | 真实匿名 Gold、引用支持率、排序指标和权重校准结论 |
-| [岗位监控设计](docs/JOB_MONITORING.md) | 尚未实现的来源适配、快照、去重和周报设计 |
+| [岗位发现与推送设计](docs/JOB_MONITORING.md) | 尚未实现的来源适配、搜索、订阅、变化检测和通知契约 |
 | [公开 JD 摄取记录](docs/iterations/017-public-jd-ingestion.md) | 官方来源、匿名化边界和正式岗负例数据 |
 | [上海实习范围修正](docs/iterations/018-shanghai-ai-internship-scope.md) | 目标约束修正和腾讯职位族证据边界 |
 | [国内外大厂实习核验](docs/iterations/019-official-internship-verification.md) | 30 余家公司官网覆盖、资格证据和优先投递池 |
@@ -353,6 +370,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [Agent Run Snapshot Diff](docs/iterations/040-agent-run-snapshot-diff.md) | 输入 hash、排名位移、分数、gap 与计划变化 |
 | [Run 历史与 Diff 工作台](docs/iterations/041-run-history-workbench.md) | 只读历史、异步状态、隐私与响应式验收 |
 | [浏览器文件 Agent](docs/iterations/042-browser-file-agent.md) | 文件上传、显式自动信号/LLM、结果渲染与历史自动刷新 |
+| [产品方向调整](docs/iterations/043-product-direction-reset.md) | 从匹配工作台转向岗位发现、监控、决策和受控投递 |
 
 ## 欢迎讨论
 

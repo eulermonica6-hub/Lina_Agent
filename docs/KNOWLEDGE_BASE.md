@@ -48,19 +48,21 @@
 | 040 | 2026-09-24 | Agent Run Snapshot Diff | 不加载正文比较输入、确认、排名、分数、gap 与计划变化 | [Run Snapshot Diff](iterations/040-agent-run-snapshot-diff.md) |
 | 041 | 2026-09-28 | Run 历史与 Diff 工作台 | 用只读响应式界面浏览历史和结构化版本变化 | [历史工作台](iterations/041-run-history-workbench.md) |
 | 042 | 2026-09-28 | 浏览器文件 Agent | 用文件上传、显式开关和自动历史刷新完成浏览器运行闭环 | [浏览器文件 Agent](iterations/042-browser-file-agent.md) |
+| 043 | 2026-09-28 | 产品方向调整 | 将可信匹配内核转为主动求职助理的底座，重排搜索、监控、决策与投递路线 | [产品方向调整](iterations/043-product-direction-reset.md) |
 
 ## 文档入口
 
 | 读者 | 首选文档 | 用途 |
 | --- | --- | --- |
 | 第一次使用 Lina | [当前版本使用手册](USER_GUIDE.md) | 安装、启动、操作、API、隐私和故障处理 |
+| 理解最终产品目标 | [产品愿景与边界](PRODUCT_VISION.md) | 目标体验、自治等级、保留资产、新增领域和成功指标 |
 | 浏览项目概况 | [项目 README](../README.md) | 当前能力、目标、技术路线和文档导航 |
 | 参与开发 | [开发指南](DEVELOPMENT.md) | 环境、测试驱动流程和质量门禁 |
 | 系统学习完整代码 | [工程代码技术书](ENGINEERING_HANDBOOK.md) | 分层、领域契约、数据流、VS Code 调试、扩展方法和未来行动 |
 | 查看后续规划 | [Coding Plan](CODING_PLAN.md) | 阶段目标、验收标准和知识路线 |
 | 理解当前数据流 | [Agent 架构与数据流](AGENT_ARCHITECTURE.md) | 入口、领域契约、节点方向、脚本和架构债务 |
 | 复盘实现过程 | 本知识库的迭代索引 | 决策、失败、心得、验证和面试素材 |
-| 查看岗位监控设计 | [岗位监控设计](JOB_MONITORING.md) | 尚未实现的来源、调度和可靠性方案 |
+| 查看岗位发现设计 | [岗位发现与推送设计](JOB_MONITORING.md) | 尚未实现的来源、搜索、订阅、变化检测和通知方案 |
 | 查看能力指标 | [JD 解析基线评测](evaluations/JD_PARSER_BASELINE.md) | 指标口径、基线结果与失败分类 |
 | 查看技能排序指标 | [技能证据与 Top-K 基线](evaluations/CAREER_MATCHING_BASELINE.md) | 技能、匹配、引用、排序和权重校准结果 |
 | 管理重要文档 | [文档治理](DOCUMENTATION_GOVERNANCE.md) | 文档职责、事实来源和版本 Review 清单 |
@@ -83,6 +85,7 @@
 - **应用架构**：Repository Protocol、应用服务、FastAPI 契约、依赖注入。
 - **Agent 工程**：概率性抽取、上下文构建、Verifier、Human-in-the-loop、评测。
 - **产品工程**：工作台状态、可解释反馈、响应式布局、隐私边界。
+- **求职自动化**：来源适配、去重、订阅、推送、审批和投递状态。
 - **可靠性**：契约测试、分支覆盖、类型检查、真实浏览器验收、失败案例。
 
 后续新增迭代时，应先复制 [迭代日志模板](MVP_IMPLEMENTATION.md#11-后续日志模板)，完成后再把入口加入本索引。
