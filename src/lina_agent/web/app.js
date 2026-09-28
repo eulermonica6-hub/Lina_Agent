@@ -62,6 +62,7 @@ const elements = {
     chatPanel: document.querySelector("#chat-panel"),
     chatResizeHandle: document.querySelector("#chat-resize-handle"),
     chatClose: document.querySelector("#chat-close"),
+    chatPromptButtons: document.querySelectorAll("[data-chat-prompt]"),
     chatForm: document.querySelector("#chat-form"),
     chatLog: document.querySelector("#chat-log"),
     chatMessage: document.querySelector("#chat-message"),
@@ -242,6 +243,38 @@ function appendTextItem(list, text, className = "") {
     list.append(item);
 }
 
+const COMPANY_LOGO_SOURCES = {
+    Apple: "https://apple.com/favicon.ico",
+    MiniMax: "https://minimaxi.com/favicon.ico",
+    NVIDIA: "https://nvidia.com/favicon.ico",
+    Unstructured: "https://unstructured.io/favicon.ico",
+    小红书: "https://cdn.simpleicons.org/xiaohongshu/FF2442",
+    字节跳动: "https://cdn.simpleicons.org/bytedance/325AB4",
+};
+
+function createCompanyIdentity(companyName) {
+    const identity = document.createElement("span");
+    identity.className = "opportunity-company-identity";
+    const logo = document.createElement("span");
+    logo.className = "opportunity-logo";
+    logo.textContent = companyName.slice(0, 1).toUpperCase();
+    const logoSource = COMPANY_LOGO_SOURCES[companyName];
+    if (logoSource) {
+        const image = document.createElement("img");
+        image.src = logoSource;
+        image.alt = `${companyName} logo`;
+        image.loading = "lazy";
+        image.addEventListener("load", () => logo.classList.add("has-image"));
+        image.addEventListener("error", () => logo.classList.add("image-failed"));
+        logo.append(image);
+    }
+    const company = document.createElement("span");
+    company.className = "opportunity-company";
+    company.textContent = companyName;
+    identity.append(logo, company);
+    return identity;
+}
+
 function renderOpportunities(feed) {
     state.opportunities = feed.opportunities;
     elements.opportunityList.replaceChildren();
@@ -253,9 +286,7 @@ function renderOpportunities(feed) {
         card.className = "opportunity-card";
         const heading = document.createElement("div");
         heading.className = "opportunity-card-heading";
-        const company = document.createElement("span");
-        company.className = "opportunity-company";
-        company.textContent = opportunity.company;
+        const company = createCompanyIdentity(opportunity.company);
         const direction = document.createElement("span");
         direction.className = "opportunity-direction";
         direction.textContent = opportunity.direction;
@@ -381,10 +412,6 @@ function opportunityCatalog() {
 
 function updateFeedMatchMode() {
     elements.agentJobs.disabled = elements.agentUseFeed.checked;
-}
-
-function updateFilterDisclosure() {
-    elements.opportunityFilters.open = !window.matchMedia("(max-width: 720px)").matches;
 }
 
 const CHAT_PANEL_MIN_WIDTH = 320;
@@ -810,15 +837,15 @@ elements.chatResizeHandle.addEventListener("keydown", (event) => {
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !elements.chatPanel.hidden) toggleChat(false);
 });
-elements.chatForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const message = elements.chatMessage.value.trim();
+async function sendChatMessage(message) {
     if (!message) return;
     const button = elements.chatForm.querySelector("button[type='submit']");
+    if (button.disabled) return;
     appendChatMessage(message, "user");
     elements.chatMessage.value = "";
     button.disabled = true;
     button.textContent = "发送中...";
+    elements.chatPromptButtons.forEach((promptButton) => { promptButton.disabled = true; });
     try {
         const response = await postJson("/assistant/messages", { message });
         appendChatMessage(response.answer, "assistant");
@@ -832,7 +859,16 @@ elements.chatForm.addEventListener("submit", async (event) => {
     } finally {
         button.disabled = false;
         button.textContent = "发送";
+        elements.chatPromptButtons.forEach((promptButton) => { promptButton.disabled = false; });
     }
+}
+
+elements.chatPromptButtons.forEach((button) => {
+    button.addEventListener("click", () => sendChatMessage(button.dataset.chatPrompt));
+});
+elements.chatForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await sendChatMessage(elements.chatMessage.value.trim());
 });
 
 elements.fileAgentForm.addEventListener("input", () => {
@@ -1005,7 +1041,5 @@ elements.jobForm.addEventListener("input", (event) => {
 });
 
 updateFeedMatchMode();
-updateFilterDisclosure();
-window.matchMedia("(max-width: 720px)").addEventListener("change", updateFilterDisclosure);
 initializeChatPanel();
 loadOpportunities();

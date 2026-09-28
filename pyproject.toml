@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lina-career-agent"
-version = "0.2.34"
+version = "0.2.35"
 description = "An explainable AI agent for the job-search workflow."
 readme = "README.md"
 requires-python = ">=3.12"

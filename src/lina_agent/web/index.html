@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
     <title>Lina 求职 Agent</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=16">
-    <script src="/assets/app.js?v=17" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=18">
+    <script src="/assets/app.js?v=19" defer></script>
 </head>
 
 <body class="{{PAGE_MODE}}">
@@ -48,7 +48,6 @@
         <section class="opportunity-feed" id="opportunities" aria-labelledby="opportunity-title">
             <div class="feed-heading">
                 <div>
-                    <p class="section-index">OPPORTUNITY FEED</p>
                     <h2 id="opportunity-title">本周为你推荐的 9 个岗位</h2>
                 </div>
                 <div class="feed-meta">
@@ -57,7 +56,7 @@
                 </div>
             </div>
             <p class="feed-freshness" id="opportunity-freshness" aria-live="polite">正在读取岗位来源状态…</p>
-            <details class="opportunity-filters" id="opportunity-filters" open>
+            <details class="opportunity-filters" id="opportunity-filters">
                 <summary>筛选岗位 <span>上海 · 实习 / 校招</span></summary>
                 <form class="opportunity-search" id="opportunity-search-form">
                     <label>
@@ -382,6 +381,12 @@
             </div>
             <button class="chat-close" id="chat-close" type="button" aria-label="收起对话栏" title="收起对话栏">×</button>
         </header>
+        <div class="chat-prompts" aria-label="常用提示词">
+            <p>快速开始</p>
+            <button type="button" data-chat-prompt="帮我找上海的 Agent 实习">帮我找上海的 Agent 实习</button>
+            <button type="button" data-chat-prompt="根据我的简历推荐合适岗位">根据我的简历推荐合适岗位</button>
+            <button type="button" data-chat-prompt="帮我规划未来四周的求职准备">帮我规划四周求职准备</button>
+        </div>
         <div class="chat-log" id="chat-log" aria-live="polite">
             <p class="chat-message assistant-message">告诉我你想找什么岗位，或问我如何用简历匹配。当前为类型化预览，尚未联网自主搜索。</p>
         </div>

@@ -58,6 +58,7 @@
 | 050 | 2026-09-28 | Live 推荐边界与目标审计 | 只推荐已复核岗位，隐藏内部池，并统一当前能力与产品目标 | [Live 推荐审计](iterations/050-live-recommendation-boundary.md) |
 | 051 | 2026-09-28 | 首页首屏与对话入口精简 | 压缩非核心内容，让岗位和 Lina 对话入口直接进入首屏 | [首页首屏精简](iterations/051-first-viewport-home.md) |
 | 052 | 2026-09-28 | 右侧停靠 Agent 对话栏 | 默认展开、可调宽和可收起的 Copilot 式对话布局 | [右侧 Agent 对话栏](iterations/052-docked-agent-chat.md) |
+| 053 | 2026-09-28 | 宽松岗位与快捷对话 | 两列岗位卡、公司 logo、折叠筛选和一键提示词 | [宽松岗位与快捷对话](iterations/053-roomy-jobs-and-chat-prompts.md) |
 
 ## 文档入口
 

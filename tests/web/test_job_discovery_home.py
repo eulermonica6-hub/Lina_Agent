@@ -68,10 +68,13 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
 
     expect(page.locator("#opportunity-list article")).to_have_count(2)
     expect(page.locator("#opportunity-list")).to_contain_text("MiniMax")
+    expect(page.locator(".opportunity-logo img")).to_have_count(2)
+    expect(page.locator(".opportunity-logo img").first).to_have_attribute("alt", "MiniMax logo")
     expect(page.locator("#opportunity-freshness")).to_contain_text("2026-09-28")
     expect(page.locator("#opportunity-freshness")).to_contain_text("已复核推荐")
     expect(page.locator("#opportunity-location")).to_have_value("上海")
     expect(page.locator("#opportunity-job-type")).to_have_value("early_career")
+    expect(page.locator("#opportunity-filters")).not_to_have_attribute("open", "")
     expect(page.locator("#profile-form")).to_be_hidden()
     expect(page.locator("#run-history")).to_be_hidden()
     expect(page.locator("a[href='/workbench']")).to_be_visible()
@@ -122,6 +125,7 @@ def test_mobile_home_keeps_jobs_and_chat_visible_without_overlap(
     first_card = page.locator("#opportunity-list article").first
     chat = page.locator("#chat-toggle")
     expect(page.locator("#chat-panel")).to_be_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth") is True
     page.locator("#chat-close").click()
     expect(first_card).to_be_in_viewport()
     expect(chat).to_be_in_viewport()
@@ -161,10 +165,10 @@ def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_
 
     page.route("**/assistant/messages", reply)
     page.goto(live_server_url)
-    page.locator("#chat-message").fill("帮我找 Agent 实习")
-    page.locator("#chat-form button[type='submit']").click()
+    expect(page.locator("[data-chat-prompt]")).to_have_count(3)
+    page.get_by_role("button", name="帮我找上海的 Agent 实习").click()
 
-    expect(page.locator("#chat-log")).to_contain_text("帮我找 Agent 实习")
+    expect(page.locator("#chat-log")).to_contain_text("帮我找上海的 Agent 实习")
     expect(page.locator("#chat-log")).to_contain_text("我已加载 2 条官方核验快照")
     expect(page.locator("#opportunities")).to_be_in_viewport()
 
@@ -254,6 +258,7 @@ def test_manual_search_filters_feed_and_reports_source_health(
 
     page.route("**/opportunities/search", search)
     page.goto(live_server_url)
+    page.locator("#opportunity-filters summary").click()
     page.locator("#opportunity-query").fill("infra")
     page.locator("#opportunity-company").select_option("MiniMax")
     page.locator("#opportunity-location").fill("上海")

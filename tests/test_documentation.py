@@ -57,6 +57,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/050-live-recommendation-boundary.md",
     "docs/iterations/051-first-viewport-home.md",
     "docs/iterations/052-docked-agent-chat.md",
+    "docs/iterations/053-roomy-jobs-and-chat-prompts.md",
 )
 
 
