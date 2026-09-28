@@ -77,14 +77,35 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("a[href='/workbench']")).to_be_visible()
     expect(page.locator("#opportunity-list article").first).to_be_in_viewport()
     expect(page.locator("#chat-toggle")).to_contain_text("和 Lina 对话")
+    expect(page.locator(".topbar #chat-toggle")).to_be_visible()
+    expect(page.locator("#run-state")).to_be_hidden()
+    expect(page.locator("#chat-panel")).to_be_visible()
+    expect(page.locator("#chat-toggle")).to_have_attribute("aria-expanded", "true")
+    expect(page.locator("body")).to_have_class("home-page chat-open")
     expect(page.get_by_text("COMPANY RADAR")).to_have_count(0)
     expect(page.locator(".opportunity-pool")).to_have_count(0)
 
-    page.locator("#chat-toggle").click()
-    expect(page.locator("#chat-panel")).to_be_visible()
-    expect(page.locator("#chat-message")).to_be_focused()
+    resize_handle = page.locator("#chat-resize-handle")
+    expect(resize_handle).to_be_visible()
+    resize_handle.press("ArrowLeft")
+    expect(resize_handle).to_have_attribute("aria-valuenow", "416")
+    resize_box = resize_handle.bounding_box()
+    assert resize_box is not None
+    page.mouse.move(resize_box["x"] + resize_box["width"] / 2, 120)
+    page.mouse.down()
+    page.mouse.move(resize_box["x"] - 32, 120, steps=4)
+    page.mouse.up()
+    resized_width = page.locator("#chat-panel").evaluate(
+        "panel => Math.round(panel.getBoundingClientRect().width)"
+    )
+    assert resized_width > 416
+    assert resize_handle.get_attribute("aria-valuenow") == str(resized_width)
+
     page.locator("#chat-close").click()
     expect(page.locator("#chat-panel")).to_be_hidden()
+    expect(page.locator("body")).not_to_have_class("chat-open")
+    page.locator("#chat-toggle").click()
+    expect(page.locator("#chat-message")).to_be_focused()
 
 
 def test_mobile_home_keeps_jobs_and_chat_visible_without_overlap(
@@ -100,6 +121,8 @@ def test_mobile_home_keeps_jobs_and_chat_visible_without_overlap(
 
     first_card = page.locator("#opportunity-list article").first
     chat = page.locator("#chat-toggle")
+    expect(page.locator("#chat-panel")).to_be_visible()
+    page.locator("#chat-close").click()
     expect(first_card).to_be_in_viewport()
     expect(chat).to_be_in_viewport()
     expect(chat).to_contain_text("和 Lina 对话")
@@ -138,7 +161,6 @@ def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_
 
     page.route("**/assistant/messages", reply)
     page.goto(live_server_url)
-    page.locator("#chat-toggle").click()
     page.locator("#chat-message").fill("帮我找 Agent 实习")
     page.locator("#chat-form button[type='submit']").click()
 

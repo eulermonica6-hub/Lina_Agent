@@ -60,6 +60,7 @@ const elements = {
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
     chatPanel: document.querySelector("#chat-panel"),
+    chatResizeHandle: document.querySelector("#chat-resize-handle"),
     chatClose: document.querySelector("#chat-close"),
     chatForm: document.querySelector("#chat-form"),
     chatLog: document.querySelector("#chat-log"),
@@ -386,10 +387,33 @@ function updateFilterDisclosure() {
     elements.opportunityFilters.open = !window.matchMedia("(max-width: 720px)").matches;
 }
 
-function toggleChat(open) {
+const CHAT_PANEL_MIN_WIDTH = 320;
+const CHAT_PANEL_MAX_WIDTH = 640;
+
+function clampChatPanelWidth(width) {
+    return Math.min(CHAT_PANEL_MAX_WIDTH, Math.max(CHAT_PANEL_MIN_WIDTH, width));
+}
+
+function setChatPanelWidth(width, persist = false) {
+    const value = Math.round(clampChatPanelWidth(width));
+    document.documentElement.style.setProperty("--chat-panel-width", `${value}px`);
+    elements.chatResizeHandle.setAttribute("aria-valuenow", String(value));
+    if (persist) localStorage.setItem("linaChatPanelWidth", String(value));
+}
+
+function toggleChat(open, focus = true, persist = true) {
     elements.chatPanel.hidden = !open;
     elements.chatToggle.setAttribute("aria-expanded", String(open));
-    if (open) elements.chatMessage.focus();
+    document.body.classList.toggle("chat-open", open);
+    if (persist) localStorage.setItem("linaChatPanelOpen", String(open));
+    if (open && focus) elements.chatMessage.focus();
+}
+
+function initializeChatPanel() {
+    if (!document.body.classList.contains("home-page")) return;
+    const savedWidth = Number(localStorage.getItem("linaChatPanelWidth"));
+    if (Number.isFinite(savedWidth) && savedWidth > 0) setChatPanelWidth(savedWidth);
+    toggleChat(localStorage.getItem("linaChatPanelOpen") !== "false", false, false);
 }
 
 function appendChatMessage(text, role) {
@@ -762,6 +786,27 @@ elements.agentUseFeed.addEventListener("change", updateFeedMatchMode);
 
 elements.chatToggle.addEventListener("click", () => toggleChat(elements.chatPanel.hidden));
 elements.chatClose.addEventListener("click", () => toggleChat(false));
+elements.chatResizeHandle.addEventListener("pointerdown", (event) => {
+    if (window.matchMedia("(max-width: 720px)").matches) return;
+    elements.chatResizeHandle.setPointerCapture(event.pointerId);
+    document.body.classList.add("chat-resizing");
+});
+elements.chatResizeHandle.addEventListener("pointermove", (event) => {
+    if (!elements.chatResizeHandle.hasPointerCapture(event.pointerId)) return;
+    setChatPanelWidth(window.innerWidth - event.clientX);
+});
+elements.chatResizeHandle.addEventListener("pointerup", (event) => {
+    if (!elements.chatResizeHandle.hasPointerCapture(event.pointerId)) return;
+    elements.chatResizeHandle.releasePointerCapture(event.pointerId);
+    document.body.classList.remove("chat-resizing");
+    localStorage.setItem("linaChatPanelWidth", elements.chatResizeHandle.getAttribute("aria-valuenow"));
+});
+elements.chatResizeHandle.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const currentWidth = Number(elements.chatResizeHandle.getAttribute("aria-valuenow"));
+    setChatPanelWidth(currentWidth + (event.key === "ArrowLeft" ? 16 : -16), true);
+});
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !elements.chatPanel.hidden) toggleChat(false);
 });
@@ -962,4 +1007,5 @@ elements.jobForm.addEventListener("input", (event) => {
 updateFeedMatchMode();
 updateFilterDisclosure();
 window.matchMedia("(max-width: 720px)").addEventListener("change", updateFilterDisclosure);
+initializeChatPanel();
 loadOpportunities();

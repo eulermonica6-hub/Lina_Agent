@@ -9,6 +9,7 @@
     --red: #bd412e;
     --amber: #efb84c;
     --shadow: 0 14px 38px rgb(23 33 27 / 8%);
+    --chat-panel-width: 400px;
 }
 
 * {
@@ -24,6 +25,11 @@ body {
         var(--paper);
     background-size: 28px 28px;
     font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+    transition: padding-right 160ms ease;
+}
+
+body.home-page.chat-open {
+    padding-right: var(--chat-panel-width);
 }
 
 button,
@@ -141,6 +147,10 @@ a {
 }
 
 .workbench-page .intro-actions.home-only {
+    display: none;
+}
+
+.home-page #run-state {
     display: none;
 }
 
@@ -1022,18 +1032,13 @@ textarea:focus {
 
 .chat-toggle {
     width: auto;
-    min-width: 146px;
-    height: 54px;
-    padding: 0 16px 0 10px;
+    min-width: 142px;
+    height: 40px;
+    padding: 0 14px 0 7px;
     color: white;
     border: 0;
     border-radius: 0;
     background: var(--green);
-    box-shadow: 0 10px 28px rgb(23 33 27 / 24%);
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 30;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1043,8 +1048,8 @@ textarea:focus {
 }
 
 .chat-toggle-mark {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     color: var(--green);
     background: var(--green-bright);
     display: grid;
@@ -1058,21 +1063,50 @@ textarea:focus {
 }
 
 .chat-panel {
-    width: min(400px, calc(100vw - 32px));
-    max-height: min(620px, calc(100vh - 100px));
-    border: 1px solid var(--line);
+    width: var(--chat-panel-width);
+    height: 100vh;
+    height: 100dvh;
+    border-left: 1px solid var(--line);
     background: var(--surface);
-    box-shadow: 0 24px 60px rgb(23 33 27 / 22%);
+    box-shadow: -12px 0 32px rgb(23 33 27 / 10%);
     position: fixed;
-    right: 24px;
-    bottom: 90px;
-    z-index: 29;
+    inset: 0 0 0 auto;
+    z-index: 40;
     display: grid;
     grid-template-rows: auto minmax(120px, 1fr) auto;
 }
 
 .chat-panel[hidden] {
     display: none;
+}
+
+.chat-resize-handle {
+    width: 9px;
+    position: absolute;
+    inset: 0 auto 0 -5px;
+    z-index: 1;
+    cursor: col-resize;
+    touch-action: none;
+}
+
+.chat-resize-handle::after {
+    content: "";
+    width: 2px;
+    position: absolute;
+    inset: 0 auto 0 4px;
+    background: transparent;
+}
+
+.chat-resize-handle:hover::after,
+.chat-resize-handle:focus-visible::after,
+body.chat-resizing .chat-resize-handle::after {
+    background: var(--green);
+}
+
+body.chat-resizing {
+    cursor: col-resize;
+    user-select: none;
+    transition: none;
 }
 
 .chat-heading {
@@ -1162,12 +1196,41 @@ footer {
 }
 
 @media (max-width: 720px) {
+    body.home-page.chat-open {
+        padding-right: 0;
+    }
+
     .topbar {
-        grid-template-columns: 1fr auto;
+        height: 62px;
+        padding: 0 12px;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
     }
 
     .run-state {
         display: none;
+    }
+
+    .brand-version,
+    .topnav .api-link[href="/docs"] {
+        display: none;
+    }
+
+    .chat-toggle {
+        width: auto;
+        min-width: 92px;
+        height: 38px;
+        padding-right: 10px;
+        justify-self: center;
+    }
+
+    .chat-toggle-label {
+        font-size: 0;
+    }
+
+    .chat-toggle-label::after {
+        content: "问 Lina";
+        font-size: 13px;
     }
 
     main {
@@ -1344,16 +1407,13 @@ footer {
         flex-direction: column;
     }
 
-    .chat-toggle {
-        width: 100%;
-        min-width: 0;
-        position: static;
-        justify-content: center;
+    .chat-panel {
+        width: 100vw;
+        max-width: 100%;
     }
 
-    .chat-panel {
-        right: 16px;
-        bottom: 80px;
+    .chat-resize-handle {
+        display: none;
     }
 }
 

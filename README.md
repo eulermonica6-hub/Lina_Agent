@@ -4,11 +4,11 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.33` 内部维护 32 家官方 Careers 来源，并于每周一检查来源健康。用户打开首页即可看到 9 个在 2026-09-28 重新核验过详情和投递入口的岗位；首屏同时提供筛选、简历匹配和醒目的 Lina 对话入口。公司分层和配额属于内部召回策略，不向用户展示。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.34` 内部维护 32 家官方 Careers 来源，并于每周一检查来源健康。用户打开首页即可看到 9 个在 2026-09-28 重新核验过详情和投递入口的岗位；右侧 Lina 对话栏默认展开，可调节宽度或主动收起。公司分层和配额属于内部召回策略，不向用户展示。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.33** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.34** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -382,6 +382,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [首页发现模式与公司准入](docs/iterations/049-home-discovery-and-company-criteria.md) | 上海早期岗位默认值、主页拆分及 Garena/TapTap 评估 |
 | [Live 推荐边界与目标审计](docs/iterations/050-live-recommendation-boundary.md) | live-only Top 9、内部池隔离、岗位复核和全局文档收敛 |
 | [首页首屏与对话入口精简](docs/iterations/051-first-viewport-home.md) | 岗位进入首屏、紧凑筛选和醒目的 Lina 对话按钮 |
+| [右侧停靠 Agent 对话栏](docs/iterations/052-docked-agent-chat.md) | 默认展开、可调宽、可收起并记忆偏好的 Copilot 式对话布局 |
 
 ## 欢迎讨论
 

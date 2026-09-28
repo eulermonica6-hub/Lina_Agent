@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lina 主动求职 Agent：岗位发现、简历匹配与职业决策">
     <title>Lina 求职 Agent</title>
-    <link rel="stylesheet" href="/assets/styles.css?v=15">
-    <script src="/assets/app.js?v=15" defer></script>
+    <link rel="stylesheet" href="/assets/styles.css?v=16">
+    <script src="/assets/app.js?v=17" defer></script>
 </head>
 
 <body class="{{PAGE_MODE}}">
@@ -21,6 +21,11 @@
             <span class="state-dot"></span>
             <span>等待输入</span>
         </div>
+        <button class="chat-toggle" id="chat-toggle" type="button" aria-label="和 Lina 对话" aria-expanded="true"
+            aria-controls="chat-panel" title="和 Lina 对话">
+            <span class="chat-toggle-mark" aria-hidden="true">L</span>
+            <span class="chat-toggle-label">和 Lina 对话</span>
+        </button>
         <nav class="topnav" aria-label="主要导航">
             <a class="api-link home-only" href="/workbench">决策工具</a>
             <a class="api-link workbench-only" href="/">机会首页</a>
@@ -37,11 +42,6 @@
             <p class="intro-copy workbench-only">维护结构化画像、核对单个 JD 硬条件，并审计历史 Agent Run。</p>
             <div class="intro-actions home-only">
                 <a class="secondary-action" href="#file-agent">上传简历匹配</a>
-                <button class="chat-toggle" id="chat-toggle" type="button" aria-label="和 Lina 对话" aria-expanded="false"
-                    aria-controls="chat-panel" title="和 Lina 对话">
-                    <span class="chat-toggle-mark" aria-hidden="true">L</span>
-                    <span>和 Lina 对话</span>
-                </button>
             </div>
         </section>
 
@@ -372,13 +372,15 @@
         <span>结构化状态与脱敏运行历史保存于本地 SQLite</span>
     </footer>
 
-    <aside class="chat-panel" id="chat-panel" role="dialog" hidden aria-labelledby="chat-title">
+    <aside class="chat-panel" id="chat-panel" role="complementary" aria-labelledby="chat-title">
+        <div class="chat-resize-handle" id="chat-resize-handle" role="separator" tabindex="0" aria-label="调整对话栏宽度"
+            aria-orientation="vertical" aria-valuemin="320" aria-valuemax="640" aria-valuenow="400"></div>
         <header class="chat-heading">
             <div>
                 <p class="section-index">LINA ASSISTANT · PREVIEW</p>
                 <h2 id="chat-title">和 Lina 对话</h2>
             </div>
-            <button class="chat-close" id="chat-close" type="button" aria-label="关闭对话" title="关闭">×</button>
+            <button class="chat-close" id="chat-close" type="button" aria-label="收起对话栏" title="收起对话栏">×</button>
         </header>
         <div class="chat-log" id="chat-log" aria-live="polite">
             <p class="chat-message assistant-message">告诉我你想找什么岗位，或问我如何用简历匹配。当前为类型化预览，尚未联网自主搜索。</p>
