@@ -158,6 +158,114 @@ market_cap_as_of = 2026-09-28
 market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
 
 [[companies]]
+source_id = "trip-careers"
+company = "携程"
+url = "https://careers.trip.com/"
+pool = "domestic_major"
+keywords = ["旅行 AI", "推荐", "搜索", "数据平台"]
+regions = ["上海", "中国", "全球"]
+why_watch = "总部位于上海，旅行平台覆盖推荐、搜索、定价、客服 AI 和全球化工程。"
+
+[[companies]]
+source_id = "huawei-careers"
+company = "华为"
+url = "https://career.huawei.com/reccampportal/portal5/index.html"
+pool = "domestic_major"
+keywords = ["盘古大模型", "昇腾", "AI Infra", "通信"]
+regions = ["中国", "全球"]
+why_watch = "通信、云、芯片和盘古大模型形成完整软硬件 AI 技术栈。"
+
+[[companies]]
+source_id = "mihoyo-careers"
+company = "米哈游"
+url = "https://jobs.mihoyo.com/"
+pool = "domestic_major"
+keywords = ["游戏 AI", "图形渲染", "云游戏", "大模型"]
+regions = ["上海", "全球"]
+why_watch = "总部位于上海，长期投入图形渲染、人工智能、云游戏和全球化内容。"
+
+[[companies]]
+source_id = "bilibili-careers"
+company = "bilibili"
+url = "https://jobs.bilibili.com/"
+pool = "domestic_major"
+keywords = ["推荐", "搜索", "多模态", "视频理解"]
+regions = ["上海", "中国"]
+why_watch = "总部位于上海，视频社区和直播业务覆盖推荐、搜索、多模态和内容理解。"
+
+[[companies]]
+source_id = "dewu-careers"
+company = "得物"
+url = "https://campus.dewu.com/"
+pool = "domestic_major"
+keywords = ["推荐", "搜索", "风控", "计算机视觉"]
+regions = ["上海", "中国"]
+why_watch = "上海消费平台具备推荐搜索、交易风控、图像识别和供应链数据场景。"
+
+[[companies]]
+source_id = "didi-careers"
+company = "滴滴出行"
+url = "https://talent.didiglobal.com/"
+pool = "domestic_major"
+keywords = ["自动驾驶", "运筹优化", "地图", "大模型"]
+regions = ["中国", "全球"]
+why_watch = "移动出行平台覆盖自动驾驶、地图、调度优化、安全和国际化 AI。"
+
+[[companies]]
+source_id = "papergames-careers"
+company = "叠纸"
+url = "https://career.papegames.com/"
+pool = "domestic_major"
+keywords = ["游戏 AI", "图形渲染", "引擎", "内容生成"]
+regions = ["上海", "中国"]
+why_watch = "上海游戏公司覆盖图形渲染、引擎、内容生产和智能角色技术。"
+
+[[companies]]
+source_id = "sensetime-careers"
+company = "商汤"
+url = "https://hr.sensetime.com/"
+pool = "domestic_major"
+keywords = ["大模型", "计算机视觉", "多模态", "AI Infra"]
+regions = ["上海", "中国", "全球"]
+why_watch = "总部位于上海，聚焦大模型、视觉、多模态和 AI 基础设施。"
+
+[[companies]]
+source_id = "dji-careers"
+company = "大疆"
+url = "https://we.dji.com/"
+pool = "domestic_major"
+keywords = ["机器人", "自动驾驶", "计算机视觉", "嵌入式"]
+regions = ["深圳", "中国", "全球"]
+why_watch = "无人机和机器人产品提供视觉、控制、嵌入式与自主系统工程场景。"
+
+[[companies]]
+source_id = "vipshop-careers"
+company = "唯品会"
+url = "https://job.vip.com/"
+pool = "domestic_major"
+keywords = ["推荐", "搜索", "供应链", "数据智能"]
+regions = ["广州", "中国"]
+why_watch = "电商平台覆盖推荐、搜索、供应链优化和数据智能。"
+
+[[companies]]
+source_id = "hypergryph-careers"
+company = "鹰角"
+url = "https://career.hypergryph.com/"
+pool = "domestic_major"
+keywords = ["游戏 AI", "程序技术", "图形渲染", "数据"]
+regions = ["上海", "中国"]
+why_watch = "上海游戏团队提供程序技术、图形表现、智能内容和产品数据机会。"
+
+[[companies]]
+source_id = "lenovo-careers"
+company = "联想"
+url = "https://jobs.lenovo.com/"
+pool = "domestic_major"
+keywords = ["AI PC", "基础设施", "边缘计算", "大模型"]
+regions = ["中国", "全球"]
+why_watch = "全球设备和基础设施业务覆盖 AI PC、服务器、边缘计算和企业解决方案。"
+
+[[companies]]
 source_id = "microsoft-careers"
 company = "Microsoft"
 url = "https://careers.microsoft.com/"
@@ -295,6 +403,24 @@ market_cap_scope = "global_tech"
 market_cap_rank = 10
 market_cap_as_of = 2026-09-28
 market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "qualcomm-careers"
+company = "高通"
+url = "https://careers.qualcomm.com/careers"
+pool = "global_major"
+keywords = ["Edge AI", "NPU", "芯片", "无线通信"]
+regions = ["中国", "全球"]
+why_watch = "移动芯片、NPU、端侧 AI 和无线通信岗位体系完整。"
+
+[[companies]]
+source_id = "booking-careers"
+company = "Booking.com"
+url = "https://careers.booking.com/"
+pool = "global_major"
+keywords = ["旅行科技", "推荐", "搜索", "机器学习"]
+regions = ["全球"]
+why_watch = "全球旅行平台提供推荐、搜索、实验平台和机器学习工程场景。"
 
 [[companies]]
 source_id = "minimax-careers"

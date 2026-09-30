@@ -52,6 +52,18 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
         "中芯国际",
         "京东",
         "百度",
+        "携程",
+        "华为",
+        "米哈游",
+        "bilibili",
+        "得物",
+        "滴滴出行",
+        "叠纸",
+        "商汤",
+        "大疆",
+        "唯品会",
+        "鹰角",
+        "联想",
     }
     assert {source.company for source in global_major} == {
         "Microsoft",
@@ -65,6 +77,8 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
         "SpaceX",
         "Broadcom",
         "Tesla",
+        "高通",
+        "Booking.com",
     }
     assert len(focused) == 22
     assert {source.company for source in focused} == {
@@ -107,11 +121,11 @@ def test_company_catalog_toml_is_the_reviewable_source_of_truth() -> None:
     catalog = tomllib.loads(catalog_path.read_text(encoding="utf-8"))
 
     assert catalog["schema_version"] == 1
-    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 46
+    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 60
     assert [item["source_id"] for item in catalog["companies"]] == [
         source.source_id for source in MONITORED_JOB_SOURCES
     ]
-    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 46
+    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 60
 
     domestic_ranking = sorted(
         (source.market_cap_rank, source.company)

@@ -1,12 +1,12 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.42
+> 适用版本：0.2.43
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
 ## 1. 当前能力边界
 
-Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 46 个官方 Careers 入口。NVIDIA 已支持上海岗位详情、跨批次变化和独立 Inbox；其余来源仍以健康探针或核验快照为主。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚未提供自然语言工具调用、外部推送或执行投递。
+Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 60 个官方 Careers 入口。NVIDIA 已支持上海岗位详情、跨批次变化和独立 Inbox；其余来源仍以健康探针或核验快照为主。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚未提供自然语言工具调用、外部推送或执行投递。
 
 | 功能 | 当前状态 | 说明 |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 46 �
 | 自然语言对话 | 预览 | 可识别岗位/简历意图并导航；尚无联网工具、多轮记忆和开放式规划 |
 | 联网岗位和公司查询 | 部分可用 | NVIDIA Workday 官方列表已接入；其余公司尚无实时列表解析器 |
 | 首页 Top 6 推荐 | 可用 | 优先上海/明确远程和实习/校招，结合当天日期与本地偏好每日排序 |
-| 每周来源监控 | 可用 | 每周一 09:00 北京时间检查 46 个官方入口并上传 JSON artifact |
+| 每周来源监控 | 可用 | 每周一 09:00 北京时间检查 60 个官方入口并上传 JSON artifact |
 | 岗位订阅与变化推送 | 部分可用 | 已有 NVIDIA 变化事件和站内 Inbox；尚无保存搜索、自动摘要或外部推送 |
 | 岗位变化 Inbox | 可用 | 独立页面展示 NVIDIA 新增、更新、关闭和重开，支持收藏、忽略和待比较 |
 | 岗位/公司/薪资对比 | 部分可用 | 已有匹配与 gap，尚无公司和薪资证据源 |
@@ -79,7 +79,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.42"
+  "version": "0.2.43"
 }
 ```
 
@@ -122,7 +122,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 uv run --locked lina-monitor --output artifacts/weekly-monitor.json
 ```
 
-GitHub Actions 中的 `Lina Weekly Job Monitor` 每周一 01:00 UTC（北京时间 09:00）自动运行，也可手动触发。报告记录 Lina 名称、周次、46 个来源配置、公司池、地区、关注理由、来源状态和错误码。
+GitHub Actions 中的 `Lina Weekly Job Monitor` 每周一 01:00 UTC（北京时间 09:00）自动运行，也可手动触发。报告记录 Lina 名称、周次、60 个来源配置、公司池、地区、关注理由、来源状态和错误码。
 
 内部公司目录的来源健康每周自动更新，正式成员资格每月人工复核。公司分类、配额和关注理由不作为用户可见结论；用户只看到经过岗位级验证和排序的推荐结果。
 

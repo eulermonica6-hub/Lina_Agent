@@ -66,6 +66,7 @@
 | 058 | 2026-09-30 | 持续项目记忆与进度闭环 | 每次任务同步知识、总览、进度与下一步 | [持续项目记忆](iterations/058-continuous-project-memory.md) |
 | 059 | 2026-09-30 | NVIDIA 岗位变化检测 | 详情指纹、SQLite 批次与四类变化事件 | [NVIDIA 岗位变化检测](iterations/059-job-change-tracking.md) |
 | 060 | 2026-09-30 | 岗位变化 Inbox | 独立事件页、筛选、收藏、忽略和待比较 | [岗位变化 Inbox](iterations/060-job-change-inbox.md) |
+| 061 | 2026-09-30 | 用户指定大厂补充 | 15 家核对、14 家补充与官方入口验证 | [用户指定大厂补充](iterations/061-requested-major-companies.md) |
 
 ## 文档入口
 

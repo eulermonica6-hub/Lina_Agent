@@ -4,7 +4,7 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.42` 内部维护 46 家官方 Careers 来源；NVIDIA 已支持完整上海岗位详情、抓取批次和四类变化事件。独立岗位动态 Inbox 支持筛选、收藏、忽略和待比较，首页只显示入口与未处理数量。手动搜索可聚合快照和 NVIDIA Workday 实时职位。每次任务按仓库规范同步知识、项目总览、进度和下一步。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.43` 内部维护 60 家官方 Careers 来源；NVIDIA 已支持完整上海岗位详情、抓取批次和四类变化事件。独立岗位动态 Inbox 支持筛选、收藏、忽略和待比较，首页只显示入口与未处理数量。手动搜索可聚合快照和 NVIDIA Workday 实时职位。每次任务按仓库规范同步知识、项目总览、进度和下一步。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
 本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
@@ -13,7 +13,7 @@ Lina 的目标是让用户通过对话表达求职方向后，自动完成官方
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.42** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.43** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -147,7 +147,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 输入版本关联 | Snapshot v2 关联 metadata-only 文档引用和候选确认版本 |
 | Run 历史比较 | 不加载正文即可比较输入、确认、排名、分数、gap 和计划变化 |
 | 历史工作台 | 最近 Run、基线/目标选择和结构化 Diff，桌面/移动端可用 |
-| 公司覆盖与每周监控 | 内部维护 46 个官方入口；每周更新来源健康，不公开公司分层 |
+| 公司覆盖与每周监控 | 内部维护 60 个官方入口；每周更新来源健康，不公开公司分层 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 24 个 Playwright 测试覆盖首屏岗位、移动对话入口、筛选、简历初筛、页面拆分与历史 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -396,6 +396,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [持续项目记忆与进度闭环](docs/iterations/058-continuous-project-memory.md) | 每次任务同步知识、总览、进度与下一步 |
 | [NVIDIA 岗位变化检测](docs/iterations/059-job-change-tracking.md) | 详情指纹、SQLite 批次与四类变化事件 |
 | [岗位变化 Inbox](docs/iterations/060-job-change-inbox.md) | 独立事件页、筛选、收藏、忽略和待比较 |
+| [用户指定大厂补充](docs/iterations/061-requested-major-companies.md) | 15 家核对、14 家补充与官方入口验证 |
 
 ## 欢迎讨论
 

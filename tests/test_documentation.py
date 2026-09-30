@@ -69,6 +69,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/058-continuous-project-memory.md",
     "docs/iterations/059-job-change-tracking.md",
     "docs/iterations/060-job-change-inbox.md",
+    "docs/iterations/061-requested-major-companies.md",
 )
 
 
