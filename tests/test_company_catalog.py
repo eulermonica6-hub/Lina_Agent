@@ -44,6 +44,14 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
         "阿里巴巴",
         "蚂蚁集团",
         "小红书",
+        "拼多多",
+        "网易",
+        "小米",
+        "美团",
+        "快手",
+        "中芯国际",
+        "京东",
+        "百度",
     }
     assert {source.company for source in global_major} == {
         "Microsoft",
@@ -51,6 +59,12 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
         "Meltwater",
         "Apple",
         "NVIDIA",
+        "Alphabet / Google",
+        "TSMC",
+        "Meta",
+        "SpaceX",
+        "Broadcom",
+        "Tesla",
     }
     assert len(focused) == 22
     assert {source.company for source in focused} == {
@@ -93,11 +107,24 @@ def test_company_catalog_toml_is_the_reviewable_source_of_truth() -> None:
     catalog = tomllib.loads(catalog_path.read_text(encoding="utf-8"))
 
     assert catalog["schema_version"] == 1
-    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 32
+    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 46
     assert [item["source_id"] for item in catalog["companies"]] == [
         source.source_id for source in MONITORED_JOB_SOURCES
     ]
-    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 32
+    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 46
+
+    domestic_ranking = sorted(
+        (source.market_cap_rank, source.company)
+        for source in MONITORED_JOB_SOURCES
+        if source.market_cap_scope == "domestic_tech"
+    )
+    global_ranking = sorted(
+        (source.market_cap_rank, source.company)
+        for source in MONITORED_JOB_SOURCES
+        if source.market_cap_scope == "global_tech"
+    )
+    assert [rank for rank, _ in domestic_ranking] == list(range(1, 11))
+    assert [rank for rank, _ in global_ranking] == list(range(1, 11))
 
 
 @pytest.mark.parametrize(

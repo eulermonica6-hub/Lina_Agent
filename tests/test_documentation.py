@@ -6,6 +6,7 @@ IMPORTANT_DOCUMENTS = (
     "releaseNote.md",
     "docs/USER_GUIDE.md",
     "docs/COMPANY_SELECTION.md",
+    "docs/MARKET_CAP_TECH_REVIEW.md",
     "docs/PRODUCT_VISION.md",
     "docs/CODING_PLAN.md",
     "docs/AGENT_ARCHITECTURE.md",
@@ -60,6 +61,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/053-roomy-jobs-and-chat-prompts.md",
     "docs/iterations/054-six-job-recommendations.md",
     "docs/iterations/055-reviewable-company-catalog.md",
+    "docs/iterations/056-market-cap-company-expansion.md",
 )
 
 

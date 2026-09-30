@@ -22,6 +22,10 @@ class MonitoredJobSource(DomainModel):
     pool: CompanyPool = CompanyPool.DOMESTIC_MAJOR
     regions: tuple[str, ...] = ()
     why_watch: str = ""
+    market_cap_scope: Literal["domestic_tech", "global_tech"] | None = None
+    market_cap_rank: int | None = Field(default=None, ge=1, le=10)
+    market_cap_as_of: date | None = None
+    market_cap_source: str | None = Field(default=None, pattern=r"^https://")
 
 
 class WeeklyMonitoringRun(DomainModel):

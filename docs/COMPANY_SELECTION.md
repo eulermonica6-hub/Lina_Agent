@@ -1,9 +1,9 @@
 # Lina 公司与岗位清单准入标准
 
-> 适用版本：0.2.37
+> 适用版本：0.2.38
 > 用途：决定哪些公司进入国内大厂池、国外大厂池、探索池或待补证名单，以及岗位是否值得投递。
 
-当前 32 家正式公司统一维护在 [`company_catalog.toml`](../src/lina_agent/infrastructure/job_sources/company_catalog.toml)。人工审核或调整公司时只修改该文件；应用启动时会校验字段类型、URL、分组以及公司名和来源 ID 的唯一性。
+当前 46 家正式公司统一维护在 [`company_catalog.toml`](../src/lina_agent/infrastructure/job_sources/company_catalog.toml)。人工审核或调整公司时只修改该文件；应用启动时会校验字段类型、URL、分组以及公司名和来源 ID 的唯一性。市值 Top 10 的口径、来源和查漏补缺结果见 [市值榜审核](MARKET_CAP_TECH_REVIEW.md)。
 
 ## 1. 两级判断
 
@@ -22,11 +22,11 @@ Lina 不直接回答“这家公司值不值得投”。先判断公司是否值
 
 ### 国内大厂池
 
-在中国有成熟业务和完整岗位体系的平台型公司。当前包括腾讯、字节跳动、阿里巴巴、蚂蚁集团和小红书。
+在中国有成熟业务和完整岗位体系的平台型公司。除原有未上市大厂外，当前覆盖腾讯、阿里、拼多多、小米、美团、网易、京东、百度、快手和中芯国际等上市科技公司。
 
 ### 国外大厂池
 
-拥有全球化成熟业务和完整岗位体系的公司。当前包括 Microsoft、Amazon、Meltwater、Apple 和 NVIDIA。国内与国外大厂各自保留首页名额，但公司品牌不自动获得更高岗位匹配分。
+拥有全球化成熟业务和完整岗位体系的公司。当前覆盖 NVIDIA、Apple、Alphabet、Microsoft、Amazon、TSMC、Meta、SpaceX、Broadcom 和 Tesla 等市值榜公司。国内与国外大厂各自保留首页名额，但公司品牌不自动获得更高岗位匹配分。
 
 ### 探索池
 

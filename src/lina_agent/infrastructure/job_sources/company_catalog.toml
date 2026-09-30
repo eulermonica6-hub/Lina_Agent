@@ -8,6 +8,10 @@ pool = "domestic_major"
 keywords = ["Agent Memory", "RAG", "知识图谱", "评测", "向量检索"]
 regions = ["中国"]
 why_watch = "业务场景广，覆盖 Agent、内容、搜索与基础平台。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 1
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
 
 [[companies]]
 source_id = "bytedance-careers"
@@ -26,6 +30,10 @@ pool = "domestic_major"
 keywords = ["搜索推荐", "智能客服", "AI 应用"]
 regions = ["中国", "全球"]
 why_watch = "电商、云和企业服务提供多种 AI 落地场景。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 2
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://capital.com/en-int/markets/shares/largest-chinese-companies-by-market-cap"
 
 [[companies]]
 source_id = "ant-group-careers"
@@ -46,6 +54,110 @@ regions = ["中国"]
 why_watch = "内容社区场景连接推荐、搜索、Agent 和 AI 产品。"
 
 [[companies]]
+source_id = "pdd-careers"
+company = "拼多多"
+url = "https://careers.pddglobalhr.com/"
+pool = "domestic_major"
+keywords = ["大模型", "推荐", "搜索", "数据算法"]
+regions = ["中国", "全球"]
+why_watch = "电商与跨境业务具备大规模推荐、搜索和数据智能场景。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 3
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "netease-careers"
+company = "网易"
+url = "https://hr.163.com/"
+pool = "domestic_major"
+keywords = ["游戏 AI", "大模型", "推荐", "数据"]
+regions = ["中国", "全球"]
+why_watch = "游戏、内容与教育产品覆盖生成式 AI、推荐和数据工程。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 4
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "xiaomi-careers"
+company = "小米"
+url = "https://hr.xiaomi.com/"
+pool = "domestic_major"
+keywords = ["MiMo", "AI Agent", "自动驾驶", "端侧 AI"]
+regions = ["中国", "全球"]
+why_watch = "人车家生态连接大模型、端侧 AI、芯片、机器人和自动驾驶。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 5
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "meituan-careers"
+company = "美团"
+url = "https://zhaopin.meituan.com/"
+pool = "domestic_major"
+keywords = ["LongCat", "大模型", "推荐", "运筹优化"]
+regions = ["中国", "全球"]
+why_watch = "本地生活平台拥有推荐、配送优化、机器人和 LongCat 大模型岗位。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 6
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "kuaishou-careers"
+company = "快手"
+url = "https://zhaopin.kuaishou.cn/"
+pool = "domestic_major"
+keywords = ["可灵 AI", "推荐", "多模态", "大模型"]
+regions = ["中国", "全球"]
+why_watch = "短视频、直播和可灵 AI 覆盖推荐、多模态生成与大模型应用。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 7
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "smic-careers"
+company = "中芯国际"
+url = "https://hr.smics.com/"
+pool = "domestic_major"
+keywords = ["半导体", "制造智能", "EDA", "数据分析"]
+regions = ["中国"]
+why_watch = "晶圆制造提供半导体工程、制造智能和数据分析场景。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 8
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "jd-careers"
+company = "京东"
+url = "https://zhaopin.jd.com/"
+pool = "domestic_major"
+keywords = ["供应链 AI", "推荐", "物流算法", "大模型"]
+regions = ["中国", "全球"]
+why_watch = "零售、物流和供应链业务提供推荐、优化、机器人与大模型场景。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 9
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
+source_id = "baidu-careers"
+company = "百度"
+url = "https://talent.baidu.com/"
+pool = "domestic_major"
+keywords = ["文心大模型", "搜索", "自动驾驶", "AI Infra"]
+regions = ["中国", "全球"]
+why_watch = "搜索、文心大模型、智能云和自动驾驶形成完整 AI 岗位体系。"
+market_cap_scope = "domestic_tech"
+market_cap_rank = 10
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.marketcap.company/category/top-technology-consolidated-companies-by-market-cap/"
+
+[[companies]]
 source_id = "microsoft-careers"
 company = "Microsoft"
 url = "https://careers.microsoft.com/"
@@ -53,6 +165,10 @@ pool = "global_major"
 keywords = ["Applied Science", "Data Science", "AI Engineering"]
 regions = ["全球"]
 why_watch = "研究、云平台与企业 AI 岗位体系完整。"
+market_cap_scope = "global_tech"
+market_cap_rank = 4
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
 
 [[companies]]
 source_id = "amazon-shanghai"
@@ -62,6 +178,10 @@ pool = "global_major"
 keywords = ["OpenSearch", "SDE", "AI/ML"]
 regions = ["上海", "全球"]
 why_watch = "云、搜索与工程岗位可提供大规模系统经验。"
+market_cap_scope = "global_tech"
+market_cap_rank = 5
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
 
 [[companies]]
 source_id = "meltwater-careers"
@@ -80,6 +200,10 @@ pool = "global_major"
 keywords = ["Machine Learning", "LLM", "AI Tools", "Applied Research"]
 regions = ["全球"]
 why_watch = "硬件、系统与机器学习交叉岗位具备独特工程场景。"
+market_cap_scope = "global_tech"
+market_cap_rank = 2
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
 
 [[companies]]
 source_id = "nvidia-careers"
@@ -89,6 +213,88 @@ pool = "global_major"
 keywords = ["CUDA", "AI Infrastructure", "LLM", "Evaluation"]
 regions = ["全球"]
 why_watch = "GPU、推理系统和 AI 基础设施岗位与技术证据计划高度相关。"
+market_cap_scope = "global_tech"
+market_cap_rank = 1
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "alphabet-careers"
+company = "Alphabet / Google"
+url = "https://www.google.com/about/careers/applications/"
+pool = "global_major"
+keywords = ["Gemini", "DeepMind", "AI Infrastructure", "Search"]
+regions = ["全球"]
+why_watch = "搜索、Gemini、DeepMind、云和基础设施覆盖完整 AI 技术栈。"
+market_cap_scope = "global_tech"
+market_cap_rank = 3
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "tsmc-careers"
+company = "TSMC"
+url = "https://careers.tsmc.com/"
+pool = "global_major"
+keywords = ["Semiconductor", "AI", "Process Integration", "IC Design"]
+regions = ["台湾", "美国", "日本", "欧洲"]
+why_watch = "先进制程和芯片制造提供 AI 硬件、设计与制造工程机会。"
+market_cap_scope = "global_tech"
+market_cap_rank = 6
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "meta-careers"
+company = "Meta"
+url = "https://www.metacareers.com/"
+pool = "global_major"
+keywords = ["AI", "Llama", "Infrastructure", "Research"]
+regions = ["全球"]
+why_watch = "大规模推荐、Llama、AI 研究和基础设施岗位密集。"
+market_cap_scope = "global_tech"
+market_cap_rank = 7
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "spacex-careers"
+company = "SpaceX"
+url = "https://www.spacex.com/careers/"
+pool = "global_major"
+keywords = ["Software", "Autonomy", "Starlink", "Machine Learning"]
+regions = ["美国"]
+why_watch = "航天、Starlink 和自主系统提供高强度软件与基础设施工程场景。"
+market_cap_scope = "global_tech"
+market_cap_rank = 8
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "broadcom-careers"
+company = "Broadcom"
+url = "https://www.broadcom.com/company/careers"
+pool = "global_major"
+keywords = ["Semiconductor", "AI Infrastructure", "Networking", "VMware"]
+regions = ["全球"]
+why_watch = "芯片、网络和企业基础设施覆盖 AI 数据中心关键技术。"
+market_cap_scope = "global_tech"
+market_cap_rank = 9
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
+
+[[companies]]
+source_id = "tesla-careers"
+company = "Tesla"
+url = "https://www.tesla.com/careers"
+pool = "global_major"
+keywords = ["Autonomy", "Robotics", "AI", "Manufacturing"]
+regions = ["全球"]
+why_watch = "自动驾驶、机器人、制造智能和端到端 AI 工程场景集中。"
+market_cap_scope = "global_tech"
+market_cap_rank = 10
+market_cap_as_of = 2026-09-28
+market_cap_source = "https://www.statista.com/statistics/1350976/leading-tech-companies-worldwide-by-market-cap/"
 
 [[companies]]
 source_id = "minimax-careers"

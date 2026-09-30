@@ -1,6 +1,6 @@
 # Lina 岗位发现、订阅与推送设计
 
-> 状态：`JobLead`、32 家内部公司目录、live-only 推荐、每周调度、HTTP 健康探针和 artifact 已实现；实时岗位列表解析、跨周变化和推送尚未实现。
+> 状态：`JobLead`、46 家内部公司目录、live-only 推荐、每周调度、HTTP 健康探针和 artifact 已实现；实时岗位列表解析、跨周变化和推送尚未实现。
 > 下一切片：为一个可稳定读取职位列表与地点字段的官方来源实现真实解析器和 Fixture。
 
 ## 1. 目标
@@ -28,7 +28,7 @@ Lina 根据用户的即时搜索和持久化订阅检查公司官方招聘来源
 | Amazon | [Amazon 上海实习搜索](https://www.amazon.jobs/en/search?base_query=intern&loc_query=Shanghai%2C%20China) | OpenSearch、SDE、AI/ML |
 | Meltwater | [Meltwater Careers](https://www.meltwater.com/en/careers) | AI、Data、Product Analytics |
 
-国内大厂池包含腾讯、字节跳动、阿里巴巴、蚂蚁集团和小红书；国外大厂池包含 Microsoft、Amazon、Meltwater、Apple 和 NVIDIA。专注型 AI 探索池包含 MiniMax、Garena、Baseten、Cohere、Fireworks AI、Anyscale、LlamaIndex、Pinecone、Weaviate、ElevenLabs、LangChain、Together AI、Sierra、Scale AI、Lambda、Cartesia、Harvey、Vapi、WRITER、Unstructured、Glean 和 Arize AI。完整地区、方向和关注理由只保存在内部代码注册表，不通过公共 API 暴露。
+国内大厂池包含 13 家公司，覆盖腾讯、阿里、拼多多、小米、美团、网易、京东、百度、快手和中芯国际等上市科技公司，以及字节跳动、蚂蚁集团和小红书；国外大厂池包含 11 家公司，覆盖全球科技市值 Top 10 和 Meltwater。专注型 AI 探索池保持 22 家。完整名单、地区、方向和关注理由只保存在内部 TOML 注册表，不通过公共 API 暴露；市值榜口径见 [市值榜审核](MARKET_CAP_TECH_REVIEW.md)。
 
 公司来源健康每周自动更新；公司成员资格每月人工审查。主页不展示公司池或全部岗位，只展示 6 条已验证推荐。内部多样性配额、偏好公司、近期点击、地点、岗位类型和搜索方向共同影响排序，同分项按日期每日稳定轮换。
 

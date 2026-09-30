@@ -61,6 +61,7 @@
 | 053 | 2026-09-28 | 宽松岗位与快捷对话 | 两列岗位卡、公司 logo、折叠筛选和一键提示词 | [宽松岗位与快捷对话](iterations/053-roomy-jobs-and-chat-prompts.md) |
 | 054 | 2026-09-28 | 六岗位推荐配额 | 每日两列三行推荐与国内大厂、国外大厂、探索型 2+2+2 配额 | [六岗位推荐配额](iterations/054-six-job-recommendations.md) |
 | 055 | 2026-09-28 | 可审核公司清单 | TOML 单一数据源、强类型加载和唯一性校验 | [可审核公司清单](iterations/055-reviewable-company-catalog.md) |
+| 056 | 2026-09-28 | 科技市值榜扩容 | 国内外 Top 10 口径、14 家补充与排名元数据 | [科技市值榜扩容](iterations/056-market-cap-company-expansion.md) |
 
 ## 文档入口
 

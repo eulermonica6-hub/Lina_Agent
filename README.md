@@ -4,13 +4,14 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.37` 内部维护 32 家官方 Careers 来源，并于每周一检查来源健康。用户打开首页即可看到 6 个在 2026-09-28 重新核验过详情和投递入口的岗位，推荐在已核验候选集内每日轮换；宽松岗位卡展示公司 logo，筛选默认折叠。右侧 Lina 对话栏提供 3 条快捷提示，可调节宽度或主动收起。公司分层和配额属于内部召回策略，不向用户展示。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.38` 内部维护 46 家官方 Careers 来源，并于每周一检查来源健康。用户打开首页即可看到 6 个在 2026-09-28 重新核验过详情和投递入口的岗位，推荐在已核验候选集内每日轮换；宽松岗位卡展示公司 logo，筛选默认折叠。右侧 Lina 对话栏提供 3 条快捷提示，可调节宽度或主动收起。公司分层和配额属于内部召回策略，不向用户展示。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
+本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.37** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.38** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -144,7 +145,7 @@ Lina 不会把所有任务都交给 LLM，而是区分不同类型的工作：
 | 输入版本关联 | Snapshot v2 关联 metadata-only 文档引用和候选确认版本 |
 | Run 历史比较 | 不加载正文即可比较输入、确认、排名、分数、gap 和计划变化 |
 | 历史工作台 | 最近 Run、基线/目标选择和结构化 Diff，桌面/移动端可用 |
-| 公司覆盖与每周监控 | 内部维护 32 个官方入口；每周更新来源健康，不公开公司分层 |
+| 公司覆盖与每周监控 | 内部维护 46 个官方入口；每周更新来源健康，不公开公司分层 |
 | 硬条件逐项基线 | 18 项状态和证据指标为 1.0；确认后逐项已知率 1.0、hard MAE 0.0 |
 | 浏览器验收 | 24 个 Playwright 测试覆盖首屏岗位、移动对话入口、筛选、简历初筛、页面拆分与历史 |
 | 真实文件验收 | 7/7 DOCX 本地解析；29 个 JD 岗位解析，默认 28 个进入排序 |
@@ -388,6 +389,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [宽松岗位与快捷对话](docs/iterations/053-roomy-jobs-and-chat-prompts.md) | 两列岗位卡、公司 logo、折叠筛选和一键提示词 |
 | [六岗位推荐配额](docs/iterations/054-six-job-recommendations.md) | 每日两列三行推荐与国内大厂、国外大厂、探索型 2+2+2 配额 |
 | [可审核公司清单](docs/iterations/055-reviewable-company-catalog.md) | TOML 单一数据源、强类型加载和唯一性校验 |
+| [科技市值榜扩容](docs/iterations/056-market-cap-company-expansion.md) | 国内外 Top 10 口径、14 家补充与排名元数据 |
 
 ## 欢迎讨论
 

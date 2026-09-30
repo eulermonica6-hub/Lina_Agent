@@ -1,12 +1,12 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.37
+> 适用版本：0.2.38
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
 ## 1. 当前能力边界
 
-Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 32 个官方 Careers 入口。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚不能从全部入口解析实时岗位、生成变化推送或执行投递。
+Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 46 个官方 Careers 入口。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚不能从全部入口解析实时岗位、生成变化推送或执行投递。
 
 | 功能 | 当前状态 | 说明 |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 32 �
 | 自然语言对话 | 预览 | 可识别岗位/简历意图并导航；尚无联网工具、多轮记忆和开放式规划 |
 | 联网岗位和公司查询 | 不可用 | 尚无 Search Provider 或来源适配器 |
 | 首页 Top 6 推荐 | 可用 | 优先上海/明确远程和实习/校招，结合当天日期与本地偏好每日排序 |
-| 每周来源监控 | 可用 | 每周一 09:00 北京时间检查 32 个官方入口并上传 JSON artifact |
+| 每周来源监控 | 可用 | 每周一 09:00 北京时间检查 46 个官方入口并上传 JSON artifact |
 | 岗位订阅与变化推送 | 不可用 | 尚无岗位列表解析、跨周变化事件和通知 Inbox |
 | 岗位/公司/薪资对比 | 部分可用 | 已有匹配与 gap，尚无公司和薪资证据源 |
 | 简历优化与面试准备 | 不可用 | 规划为证据约束的生成工作流 |
@@ -78,7 +78,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.37"
+  "version": "0.2.38"
 }
 ```
 
@@ -121,7 +121,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 uv run --locked lina-monitor --output artifacts/weekly-monitor.json
 ```
 
-GitHub Actions 中的 `Lina Weekly Job Monitor` 每周一 01:00 UTC（北京时间 09:00）自动运行，也可手动触发。报告记录 Lina 名称、周次、32 个来源配置、公司池、地区、关注理由、来源状态和错误码。
+GitHub Actions 中的 `Lina Weekly Job Monitor` 每周一 01:00 UTC（北京时间 09:00）自动运行，也可手动触发。报告记录 Lina 名称、周次、46 个来源配置、公司池、地区、关注理由、来源状态和错误码。
 
 内部公司目录的来源健康每周自动更新，正式成员资格每月人工复核。公司分类、配额和关注理由不作为用户可见结论；用户只看到经过岗位级验证和排序的推荐结果。
 
