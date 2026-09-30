@@ -1,9 +1,9 @@
 # Lina 岗位发现、订阅与推送设计
 
-> 状态：`JobLead`、46 家内部公司目录、NVIDIA Workday 详情解析、SQLite 批次、四类变化事件、live-only 推荐、每周调度和 artifact 已实现；事件 Inbox 和推送尚未实现。
+> 状态：`JobLead`、NVIDIA Workday 详情解析、SQLite 批次、四类变化事件、独立 Inbox、live-only 推荐和每周 artifact 已实现；订阅与外部推送尚未实现。
 
 2026-09-30 的 46 源实测结果及公司成员自动轮换方案见 [公司清单健康与自动轮换计划](COMPANY_CATALOG_OPERATIONS.md)。
-> 下一切片：提供变化事件 Inbox API 与网页视图，并支持收藏、忽略和待比较状态。
+> 下一切片：让自然语言对话调用岗位搜索、Inbox 查询和岗位比较工具。
 
 ## 1. 目标
 

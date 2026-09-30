@@ -5,7 +5,12 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
-from lina_agent.domain.job_changes import JobCaptureBatch, JobChangeEvent, JobListingState
+from lina_agent.domain.job_changes import (
+    JobCaptureBatch,
+    JobChangeEvent,
+    JobInboxState,
+    JobListingState,
+)
 from lina_agent.domain.models import CandidateProfile, JobPosting
 
 
@@ -88,6 +93,7 @@ class InMemoryJobChangeRepository:
         self._states: dict[str, JobListingState] = {}
         self._batches: list[JobCaptureBatch] = []
         self._events: list[JobChangeEvent] = []
+        self._inbox_states: dict[UUID, JobInboxState] = {}
 
     async def list_states(self, source_id: str) -> list[JobListingState]:
         return [
@@ -112,7 +118,16 @@ class InMemoryJobChangeRepository:
             batch.model_copy(deep=True) for batch in self._batches if batch.source_id == source_id
         ]
 
-    async def list_events(self, source_id: str) -> list[JobChangeEvent]:
+    async def list_events(self, source_id: str | None = None) -> list[JobChangeEvent]:
         return [
-            event.model_copy(deep=True) for event in self._events if event.source_id == source_id
+            event.model_copy(deep=True)
+            for event in self._events
+            if source_id is None or event.source_id == source_id
         ]
+
+    async def get_inbox_state(self, event_id: UUID) -> JobInboxState | None:
+        state = self._inbox_states.get(event_id)
+        return state.model_copy(deep=True) if state is not None else None
+
+    async def save_inbox_state(self, state: JobInboxState) -> None:
+        self._inbox_states[state.event_id] = state.model_copy(deep=True)

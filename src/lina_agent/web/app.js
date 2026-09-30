@@ -56,6 +56,7 @@ const elements = {
     opportunityCompany: document.querySelector("#opportunity-company"),
     opportunityLocation: document.querySelector("#opportunity-location"),
     opportunityJobType: document.querySelector("#opportunity-job-type"),
+    inboxCount: document.querySelector("#inbox-count"),
     agentUseFeed: document.querySelector("#agent-use-feed"),
     agentJobs: document.querySelector("#agent-jobs"),
     chatToggle: document.querySelector("#chat-toggle"),
@@ -383,6 +384,15 @@ async function loadOpportunities() {
     } finally {
         elements.refreshOpportunities.disabled = false;
         elements.refreshOpportunities.textContent = "刷新";
+    }
+}
+
+async function loadInboxCount() {
+    try {
+        const events = await getJson("/inbox/events?status=unhandled");
+        elements.inboxCount.textContent = String(events.length);
+    } catch {
+        elements.inboxCount.textContent = "–";
     }
 }
 
@@ -1043,3 +1053,4 @@ elements.jobForm.addEventListener("input", (event) => {
 updateFeedMatchMode();
 initializeChatPanel();
 loadOpportunities();
+loadInboxCount();

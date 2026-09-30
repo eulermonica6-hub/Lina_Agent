@@ -130,6 +130,17 @@ a {
     gap: 18px;
 }
 
+.inbox-link span {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    color: var(--surface);
+    background: var(--green);
+    display: inline-grid;
+    place-items: center;
+    font-size: 10px;
+}
+
 .home-only,
 .workbench-only {
     display: none;
@@ -1291,6 +1302,172 @@ footer {
     font-size: 11px;
 }
 
+.inbox-header-label {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.inbox-main {
+    padding-bottom: 72px;
+}
+
+.inbox-intro {
+    padding: 56px 0 34px;
+    border-bottom: 4px solid var(--ink);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 28px;
+}
+
+.inbox-intro h1 {
+    font-size: 48px;
+}
+
+.inbox-intro p:not(.section-index) {
+    margin: 12px 0 0;
+    color: var(--muted);
+}
+
+.inbox-total {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.inbox-toolbar {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) minmax(180px, 260px) auto;
+    align-items: end;
+    gap: 18px;
+}
+
+.inbox-toolbar label {
+    display: grid;
+    gap: 7px;
+}
+
+.inbox-toolbar label span {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.inbox-toolbar select {
+    min-height: 42px;
+    padding: 8px 10px;
+}
+
+.inbox-toolbar .extract-action {
+    min-height: 42px;
+}
+
+.inbox-feedback {
+    min-height: 20px;
+    margin: 18px 0 0;
+    color: var(--red);
+    font-size: 12px;
+}
+
+.inbox-list {
+    display: grid;
+    gap: 16px;
+}
+
+.inbox-item {
+    padding: 24px 26px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 28px;
+}
+
+.inbox-item-heading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.inbox-item-heading time,
+.inbox-item-meta {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.inbox-kind {
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.inbox-kind-new,
+.inbox-kind-reopened {
+    color: var(--green);
+    background: #e7f1d2;
+}
+
+.inbox-kind-updated {
+    color: #72530d;
+    background: #f9e8b7;
+}
+
+.inbox-kind-closed {
+    color: var(--red);
+    background: #f4ddd7;
+}
+
+.inbox-item h2 {
+    margin: 2px 0 0;
+    font-family: Georgia, "Songti SC", serif;
+    font-size: 21px;
+}
+
+.inbox-item-meta {
+    margin: 0;
+}
+
+.inbox-item-actions {
+    grid-column: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.inbox-flag {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.inbox-flag input {
+    accent-color: var(--green);
+}
+
+.inbox-item .opportunity-link {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    align-self: center;
+}
+
+.inbox-empty {
+    margin: 0;
+    padding: 64px 24px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+}
+
 @media (min-width: 721px) {
     .home-page.chat-open .opportunity-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1516,6 +1693,49 @@ footer {
 
     .chat-resize-handle {
         display: none;
+    }
+
+    .inbox-page .topbar {
+        grid-template-columns: auto 1fr;
+    }
+
+    .inbox-page .inbox-header-label {
+        display: none;
+    }
+
+    .inbox-page .topnav {
+        gap: 12px;
+    }
+
+    .inbox-intro {
+        padding: 32px 0 24px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .inbox-intro h1 {
+        font-size: 36px;
+    }
+
+    .inbox-toolbar {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .inbox-toolbar .extract-action {
+        grid-column: 1 / -1;
+    }
+
+    .inbox-item {
+        padding: 20px;
+        grid-template-columns: 1fr;
+    }
+
+    .inbox-item .opportunity-link {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
     }
 }
 

@@ -3,6 +3,7 @@ from typing import cast
 from fastapi import Request
 
 from lina_agent.application.job_discovery import JobDiscoveryService
+from lina_agent.application.job_inbox import JobInboxService
 from lina_agent.application.repositories import (
     AgentRunSnapshotRepository,
     CandidateConfirmationVersionRepository,
@@ -43,3 +44,7 @@ def get_job_search_service(request: Request) -> JobDiscoveryService:
 
 def get_job_recommendation_service(request: Request) -> JobDiscoveryService:
     return cast(JobDiscoveryService, request.app.state.job_recommendation_service)
+
+
+def get_job_inbox_service(request: Request) -> JobInboxService:
+    return cast(JobInboxService, request.app.state.job_inbox_service)

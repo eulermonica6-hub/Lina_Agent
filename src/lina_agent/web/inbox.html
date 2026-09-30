@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Lina 岗位变化 Inbox">
+    <title>岗位动态 · Lina</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=19">
+    <script src="/assets/inbox.js?v=1" defer></script>
+</head>
+
+<body class="inbox-page">
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Lina 首页">
+            <span class="brand-mark">L</span>
+            <span>Lina</span>
+            <span class="brand-version">v{{APP_VERSION}}</span>
+        </a>
+        <p class="inbox-header-label">岗位动态</p>
+        <nav class="topnav" aria-label="主要导航">
+            <a class="api-link" href="/">机会首页</a>
+            <a class="api-link" href="/workbench">决策工具</a>
+        </nav>
+    </header>
+
+    <main class="inbox-main">
+        <section class="inbox-intro" aria-labelledby="inbox-title">
+            <div>
+                <p class="section-index">JOB CHANGE INBOX</p>
+                <h1 id="inbox-title">岗位动态</h1>
+                <p>查看 NVIDIA 上海岗位的新增、更新、关闭和重新开放。</p>
+            </div>
+            <span class="inbox-total" id="inbox-total" aria-live="polite">正在加载</span>
+        </section>
+
+        <section class="inbox-toolbar" aria-label="岗位动态筛选">
+            <label>
+                <span>事件</span>
+                <select id="inbox-kind">
+                    <option value="">全部事件</option>
+                    <option value="new">新增</option>
+                    <option value="updated">更新</option>
+                    <option value="closed">关闭</option>
+                    <option value="reopened">重新开放</option>
+                </select>
+            </label>
+            <label>
+                <span>状态</span>
+                <select id="inbox-status">
+                    <option value="unhandled">未处理</option>
+                    <option value="saved">已收藏</option>
+                    <option value="compare_later">待比较</option>
+                    <option value="ignored">已忽略</option>
+                    <option value="all">全部</option>
+                </select>
+            </label>
+            <button class="extract-action" id="inbox-refresh" type="button">刷新</button>
+        </section>
+
+        <p class="inbox-feedback" id="inbox-feedback" aria-live="polite"></p>
+        <div class="inbox-list" id="inbox-list"></div>
+    </main>
+</body>
+
+</html>

@@ -59,3 +59,24 @@ class JobCaptureResult(DomainModel):
     batch: JobCaptureBatch
     states: tuple[JobListingState, ...]
     events: tuple[JobChangeEvent, ...]
+
+
+class JobInboxState(DomainModel):
+    event_id: UUID
+    saved: bool = False
+    ignored: bool = False
+    compare_later: bool = False
+    updated_at: datetime
+
+
+class JobInboxItem(DomainModel):
+    event_id: UUID
+    source_id: str = Field(min_length=1)
+    external_id: str = Field(min_length=1)
+    kind: JobChangeKind
+    occurred_at: datetime
+    title: str = Field(min_length=1)
+    source_url: str = Field(pattern=r"^https://")
+    saved: bool = False
+    ignored: bool = False
+    compare_later: bool = False

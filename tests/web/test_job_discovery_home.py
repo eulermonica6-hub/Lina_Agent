@@ -80,6 +80,8 @@ def test_home_loads_opportunity_snapshots_and_opens_chat(page: Page, live_server
     expect(page.locator("#profile-form")).to_be_hidden()
     expect(page.locator("#run-history")).to_be_hidden()
     expect(page.locator("a[href='/workbench']")).to_be_visible()
+    expect(page.locator("a[href='/inbox']")).to_be_visible()
+    expect(page.locator("#inbox-count")).to_have_text("0")
     expect(page.locator("#opportunity-list article").first).to_be_in_viewport()
     expect(page.locator("#chat-toggle")).to_contain_text("和 Lina 对话")
     expect(page.locator(".topbar #chat-toggle")).to_be_visible()

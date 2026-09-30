@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.41
+> 适用版本：0.2.42
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -105,6 +105,9 @@ flowchart LR
 | `POST /opportunities/search` | 关键词、公司、地点、类型、limit | 聚合核验快照与 NVIDIA Workday 实时来源并去重 | `JobDiscoveryResult` | 无；开发/生产访问 NVIDIA 官方接口 |
 | `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
 | `POST /opportunities/recommended` | 公司/方向/地点/类型/近期偏好、周次 | 过滤 live 岗位并执行内部多样性配额 | `JobDiscoveryResult` | 无；内部池字段不序列化 |
+| `GET /inbox/events` | 事件类型、处理状态 | 查询不可变变化事件并合并用户状态 | `JobInboxItem[]` | 无；读取无副作用 |
+| `PATCH /inbox/events/{id}` | 收藏、忽略、待比较布尔值 | 更新独立 Inbox 状态 | `JobInboxItem` | 写本地 SQLite Inbox 状态 |
+| `GET /inbox` | 无 | 渲染独立岗位变化 Inbox | HTML/CSS/JS | 无 |
 | `GET /workbench` | 无 | 渲染结构化画像、单 JD 决策和历史审计工具 | HTML/CSS/JS | 无 |
 | `lina-monitor` | 可选周一日期、输出路径 | 并行检查官方入口并汇总来源健康 | `WeeklyMonitoringRun` JSON | 写指定报告文件或 stdout |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |

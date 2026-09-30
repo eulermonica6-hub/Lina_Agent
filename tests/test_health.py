@@ -20,7 +20,7 @@ def test_health_check_reports_service_metadata() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "Lina Test",
-        "version": "0.2.41",
+        "version": "0.2.42",
     }
 
 
@@ -36,12 +36,12 @@ def test_root_serves_mvp_workbench() -> None:
 
     assert response.status_code == 200
     assert "Lina 求职 Agent" in response.text
-    assert 'class="brand-version">v0.2.41</span>' in response.text
+    assert 'class="brand-version">v0.2.42</span>' in response.text
     assert "{{APP_VERSION}}" not in response.text
     assert "从描述提取硬条件" in response.text
     assert "开始新一轮" in response.text
-    assert 'href="/assets/styles.css?v=18"' in response.text
-    assert 'src="/assets/app.js?v=20"' in response.text
+    assert 'href="/assets/styles.css?v=19"' in response.text
+    assert 'src="/assets/app.js?v=21"' in response.text
 
 
 def test_workbench_route_uses_workbench_page_mode() -> None:
@@ -57,3 +57,19 @@ def test_workbench_route_uses_workbench_page_mode() -> None:
     assert response.status_code == 200
     assert '<body class="workbench-page">' in response.text
     assert "Lina 求职决策工具" in response.text
+
+
+def test_inbox_route_serves_dedicated_page() -> None:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+
+    async def request_inbox() -> Response:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            return await client.get("/inbox")
+
+    response = asyncio.run(request_inbox())
+
+    assert response.status_code == 200
+    assert '<body class="inbox-page">' in response.text
+    assert "岗位动态" in response.text
+    assert 'src="/assets/inbox.js?v=1"' in response.text

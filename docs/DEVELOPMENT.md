@@ -66,7 +66,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 ## 版本发布流程
 
-当前版本为 `0.2.41`。版本号按可验收用户能力和响应契约变化递增。
+当前版本为 `0.2.42`。版本号按可验收用户能力和响应契约变化递增。
 
 重大更新推送前必须：
 
@@ -97,7 +97,7 @@ uv run --extra dev --locked pytest --browser chromium --tracing=retain-on-failur
 
 > 状态：已完成第一版。实现位于 `src/lina_agent/domain/matching.py`，测试位于 `tests/domain/test_matching.py`。
 
-Repository、统一文档摄取、双 Gold 套件、SQLite、Snapshot/Diff、`JobLead`、46 家公司目录、NVIDIA Workday 详情指纹与变化检测、live-only Top 6 和每周健康监控已完成。下一步实现变化事件 Inbox。
+Repository、统一文档摄取、双 Gold 套件、SQLite、Snapshot/Diff、`JobLead`、NVIDIA 变化检测、Inbox 和 live-only Top 6 已完成。下一步实现自然语言工具对话第一阶段。
 
 ### 目标
 

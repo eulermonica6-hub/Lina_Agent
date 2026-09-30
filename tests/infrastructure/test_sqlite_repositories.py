@@ -13,6 +13,7 @@ from lina_agent.application.agent_run_snapshot import (
 )
 from lina_agent.application.career_agent import AgentRole, AgentRunState, AgentStepStatus
 from lina_agent.application.job_change_tracking import JobChangeTrackingService
+from lina_agent.application.job_inbox import JobInboxFilter, JobInboxService
 from lina_agent.application.persistence_models import (
     DocumentKind,
     create_confirmation_version,
@@ -108,7 +109,7 @@ async def test_version_one_database_migrates_to_versioned_reference_schema(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-    assert version == (4,)
+    assert version == (5,)
     assert {
         "candidate_profiles",
         "job_postings",
@@ -118,6 +119,7 @@ async def test_version_one_database_migrates_to_versioned_reference_schema(
         "job_capture_batches",
         "job_listing_states",
         "job_change_events",
+        "job_inbox_states",
     } <= tables
 
 
@@ -153,7 +155,19 @@ async def test_job_changes_persist_across_repository_instances(tmp_path: Path) -
     assert len(await repository.list_batches("nvidia-careers")) == 2
     assert len(await repository.list_states("nvidia-careers")) == 3
     assert len(await repository.list_events("nvidia-careers")) == 3
+    assert len(await repository.list_events()) == 3
     assert await repository.list_batches("other-source") == []
+
+    event_id = changed.events[0].event_id
+    await JobInboxService(repository, clock=lambda: change_time).update_state(
+        event_id,
+        saved=True,
+        compare_later=True,
+    )
+    restored_inbox = JobInboxService(SQLiteJobChangeRepository(database_path))
+    saved_items = await restored_inbox.list_items(state_filter=JobInboxFilter.SAVED)
+    assert [item.event_id for item in saved_items] == [event_id]
+    assert saved_items[0].compare_later is True
 
 
 @pytest.mark.asyncio

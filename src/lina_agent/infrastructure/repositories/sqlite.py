@@ -1,5 +1,6 @@
 import asyncio
 import sqlite3
+import threading
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -11,7 +12,12 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
-from lina_agent.domain.job_changes import JobCaptureBatch, JobChangeEvent, JobListingState
+from lina_agent.domain.job_changes import (
+    JobCaptureBatch,
+    JobChangeEvent,
+    JobInboxState,
+    JobListingState,
+)
 from lina_agent.domain.models import CandidateProfile, DomainModel, JobPosting
 
 TableName = Literal[
@@ -23,6 +29,7 @@ TableName = Literal[
     "job_capture_batches",
     "job_listing_states",
     "job_change_events",
+    "job_inbox_states",
 ]
 _SCHEMA_TABLES: tuple[TableName, ...] = (
     "candidate_profiles",
@@ -33,8 +40,34 @@ _SCHEMA_TABLES: tuple[TableName, ...] = (
     "job_capture_batches",
     "job_listing_states",
     "job_change_events",
+    "job_inbox_states",
 )
-_SCHEMA_VERSION = 4
+_SCHEMA_VERSION = 5
+_DATABASE_LOCK = threading.RLock()
+
+
+@contextmanager
+def _database_connection(database_path: Path) -> Generator[sqlite3.Connection, None, None]:
+    with _DATABASE_LOCK:
+        database_path.parent.mkdir(parents=True, exist_ok=True)
+        connection = sqlite3.connect(database_path, timeout=5)
+        try:
+            connection.execute("PRAGMA busy_timeout = 5000")
+            connection.execute("PRAGMA journal_mode = WAL")
+            for table in _SCHEMA_TABLES:
+                connection.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {table} (
+                        id TEXT PRIMARY KEY,
+                        payload TEXT NOT NULL
+                    )
+                    """
+                )
+            connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
+            yield connection
+            connection.commit()
+        finally:
+            connection.close()
 
 
 class _SQLiteJsonStore[ModelT: DomainModel]:
@@ -90,25 +123,8 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
 
     @contextmanager
     def _connection(self) -> Generator[sqlite3.Connection, None, None]:
-        self._database_path.parent.mkdir(parents=True, exist_ok=True)
-        connection = sqlite3.connect(self._database_path, timeout=5)
-        try:
-            connection.execute("PRAGMA busy_timeout = 5000")
-            connection.execute("PRAGMA journal_mode = WAL")
-            for table in _SCHEMA_TABLES:
-                connection.execute(
-                    f"""
-                    CREATE TABLE IF NOT EXISTS {table} (
-                        id TEXT PRIMARY KEY,
-                        payload TEXT NOT NULL
-                    )
-                    """
-                )
-            connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
+        with _database_connection(self._database_path) as connection:
             yield connection
-            connection.commit()
-        finally:
-            connection.close()
 
 
 class SQLiteCandidateProfileRepository:
@@ -199,6 +215,11 @@ class SQLiteCandidateConfirmationVersionRepository:
 class SQLiteJobChangeRepository:
     def __init__(self, database_path: Path) -> None:
         self._database_path = database_path
+        self._inbox_store = _SQLiteJsonStore(
+            database_path,
+            "job_inbox_states",
+            JobInboxState,
+        )
 
     async def list_states(self, source_id: str) -> list[JobListingState]:
         payloads = await asyncio.to_thread(
@@ -224,13 +245,19 @@ class SQLiteJobChangeRepository:
         )
         return [JobCaptureBatch.model_validate_json(payload) for payload in payloads]
 
-    async def list_events(self, source_id: str) -> list[JobChangeEvent]:
+    async def list_events(self, source_id: str | None = None) -> list[JobChangeEvent]:
         payloads = await asyncio.to_thread(
             self._list_payloads_sync,
             "job_change_events",
             source_id,
         )
         return [JobChangeEvent.model_validate_json(payload) for payload in payloads]
+
+    async def get_inbox_state(self, event_id: UUID) -> JobInboxState | None:
+        return await self._inbox_store.get(event_id)
+
+    async def save_inbox_state(self, state: JobInboxState) -> None:
+        await self._inbox_store.save(state.event_id, state)
 
     def _save_capture_sync(
         self,
@@ -256,36 +283,26 @@ class SQLiteJobChangeRepository:
                 ((str(event.event_id), event.model_dump_json()) for event in events),
             )
 
-    def _list_payloads_sync(self, table: TableName, source_id: str) -> list[str]:
+    def _list_payloads_sync(
+        self,
+        table: TableName,
+        source_id: str | None,
+    ) -> list[str]:
         with self._connection() as connection:
-            rows = connection.execute(
-                f"""
-                SELECT payload FROM {table}
-                WHERE json_extract(payload, '$.source_id') = ?
-                ORDER BY rowid
-                """,
-                (source_id,),
-            ).fetchall()
+            if source_id is None:
+                rows = connection.execute(f"SELECT payload FROM {table} ORDER BY rowid").fetchall()
+            else:
+                rows = connection.execute(
+                    f"""
+                    SELECT payload FROM {table}
+                    WHERE json_extract(payload, '$.source_id') = ?
+                    ORDER BY rowid
+                    """,
+                    (source_id,),
+                ).fetchall()
         return [str(row[0]) for row in rows]
 
     @contextmanager
     def _connection(self) -> Generator[sqlite3.Connection, None, None]:
-        self._database_path.parent.mkdir(parents=True, exist_ok=True)
-        connection = sqlite3.connect(self._database_path, timeout=5)
-        try:
-            connection.execute("PRAGMA busy_timeout = 5000")
-            connection.execute("PRAGMA journal_mode = WAL")
-            for table in _SCHEMA_TABLES:
-                connection.execute(
-                    f"""
-                    CREATE TABLE IF NOT EXISTS {table} (
-                        id TEXT PRIMARY KEY,
-                        payload TEXT NOT NULL
-                    )
-                    """
-                )
-            connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
+        with _database_connection(self._database_path) as connection:
             yield connection
-            connection.commit()
-        finally:
-            connection.close()

@@ -9,6 +9,7 @@ from lina_agent.application.persistence_models import (
 from lina_agent.domain.job_changes import (
     JobCaptureBatch,
     JobChangeEvent,
+    JobInboxState,
     JobListingState,
 )
 from lina_agent.domain.models import CandidateProfile, JobPosting
@@ -62,4 +63,8 @@ class JobChangeRepository(Protocol):
 
     async def list_batches(self, source_id: str) -> list[JobCaptureBatch]: ...
 
-    async def list_events(self, source_id: str) -> list[JobChangeEvent]: ...
+    async def list_events(self, source_id: str | None = None) -> list[JobChangeEvent]: ...
+
+    async def get_inbox_state(self, event_id: UUID) -> JobInboxState | None: ...
+
+    async def save_inbox_state(self, state: JobInboxState) -> None: ...

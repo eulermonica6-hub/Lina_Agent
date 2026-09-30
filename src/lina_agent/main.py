@@ -5,13 +5,15 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
-from lina_agent.api.routes import agent, discovery, health, jobs, matches, profiles
+from lina_agent.api.routes import agent, discovery, health, inbox, jobs, matches, profiles
 from lina_agent.application.job_discovery import JobDiscoveryService
+from lina_agent.application.job_inbox import JobInboxService
 from lina_agent.application.repositories import (
     AgentRunSnapshotRepository,
     CandidateConfirmationVersionRepository,
     CandidateProfileRepository,
     DocumentReferenceRepository,
+    JobChangeRepository,
     JobPostingRepository,
 )
 from lina_agent.config import Settings, get_settings
@@ -22,6 +24,7 @@ from lina_agent.infrastructure.repositories.memory import (
     InMemoryCandidateConfirmationVersionRepository,
     InMemoryCandidateProfileRepository,
     InMemoryDocumentReferenceRepository,
+    InMemoryJobChangeRepository,
     InMemoryJobPostingRepository,
 )
 from lina_agent.infrastructure.repositories.sqlite import (
@@ -29,11 +32,13 @@ from lina_agent.infrastructure.repositories.sqlite import (
     SQLiteCandidateConfirmationVersionRepository,
     SQLiteCandidateProfileRepository,
     SQLiteDocumentReferenceRepository,
+    SQLiteJobChangeRepository,
     SQLiteJobPostingRepository,
 )
 
 WEB_DIRECTORY = Path(__file__).parent / "web"
 WORKBENCH_TEMPLATE = (WEB_DIRECTORY / "index.html").read_text(encoding="utf-8")
+INBOX_TEMPLATE = (WEB_DIRECTORY / "inbox.html").read_text(encoding="utf-8")
 
 
 def _render_page(page_mode: str) -> HTMLResponse:
@@ -49,6 +54,10 @@ async def serve_workbench() -> HTMLResponse:
     return _render_page("workbench-page")
 
 
+async def serve_inbox() -> HTMLResponse:
+    return HTMLResponse(INBOX_TEMPLATE.replace("{{APP_VERSION}}", __version__))
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
     (
@@ -57,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         agent_run_repository,
         document_reference_repository,
         confirmation_version_repository,
+        job_change_repository,
     ) = _create_repositories(app_settings)
 
     def settings_override() -> Settings:
@@ -72,6 +82,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.agent_run_repository = agent_run_repository
     app.state.document_reference_repository = document_reference_repository
     app.state.confirmation_version_repository = confirmation_version_repository
+    app.state.job_change_repository = job_change_repository
+    app.state.job_inbox_service = JobInboxService(job_change_repository)
     snapshot_source = VerifiedSnapshotJobSource()
     app.state.job_recommendation_service = JobDiscoveryService((snapshot_source,))
     search_sources = (snapshot_source,)
@@ -85,9 +97,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(matches.router)
     app.include_router(agent.router)
     app.include_router(discovery.router)
+    app.include_router(inbox.router)
     app.mount("/assets", StaticFiles(directory=WEB_DIRECTORY), name="assets")
     app.add_api_route("/", serve_home, methods=["GET"], include_in_schema=False)
     app.add_api_route("/workbench", serve_workbench, methods=["GET"], include_in_schema=False)
+    app.add_api_route("/inbox", serve_inbox, methods=["GET"], include_in_schema=False)
     return app
 
 
@@ -99,6 +113,7 @@ def _create_repositories(
     AgentRunSnapshotRepository,
     DocumentReferenceRepository,
     CandidateConfirmationVersionRepository,
+    JobChangeRepository,
 ]:
     if settings.environment == "test" or settings.database_path is None:
         return (
@@ -107,6 +122,7 @@ def _create_repositories(
             InMemoryAgentRunSnapshotRepository(),
             InMemoryDocumentReferenceRepository(),
             InMemoryCandidateConfirmationVersionRepository(),
+            InMemoryJobChangeRepository(),
         )
     return (
         SQLiteCandidateProfileRepository(settings.database_path),
@@ -114,6 +130,7 @@ def _create_repositories(
         SQLiteAgentRunSnapshotRepository(settings.database_path),
         SQLiteDocumentReferenceRepository(settings.database_path),
         SQLiteCandidateConfirmationVersionRepository(settings.database_path),
+        SQLiteJobChangeRepository(settings.database_path),
     )
 
 
