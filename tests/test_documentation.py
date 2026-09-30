@@ -3,7 +3,9 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parents[1]
 IMPORTANT_DOCUMENTS = (
+    ".github/copilot-instructions.md",
     "releaseNote.md",
+    "docs/PROJECT_STATUS.md",
     "docs/USER_GUIDE.md",
     "docs/COMPANY_SELECTION.md",
     "docs/COMPANY_CATALOG_OPERATIONS.md",
@@ -64,6 +66,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/055-reviewable-company-catalog.md",
     "docs/iterations/056-market-cap-company-expansion.md",
     "docs/iterations/057-nvidia-live-job-source.md",
+    "docs/iterations/058-continuous-project-memory.md",
 )
 
 
@@ -73,6 +76,23 @@ def test_readme_links_every_important_document() -> None:
     for relative_path in IMPORTANT_DOCUMENTS:
         assert (PROJECT_ROOT / relative_path).is_file(), relative_path
         assert f"]({relative_path})" in readme, relative_path
+
+
+def test_project_workflow_requires_four_completion_artifacts() -> None:
+    instructions = (PROJECT_ROOT / ".github/copilot-instructions.md").read_text(encoding="utf-8")
+    status = (PROJECT_ROOT / "docs/PROJECT_STATUS.md").read_text(encoding="utf-8")
+
+    for heading in ("知识沉淀", "项目总览", "进度报告", "下一步提示"):
+        assert heading in instructions
+    for heading in (
+        "项目总览检查",
+        "最近完成",
+        "验证结果",
+        "当前能力边界",
+        "风险与阻塞",
+        "下一里程碑",
+    ):
+        assert heading in status
 
 
 def test_anonymized_resume_has_no_obvious_contact_details() -> None:

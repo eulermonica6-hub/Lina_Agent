@@ -4,15 +4,16 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.39` 内部维护 46 家官方 Careers 来源，并于每周一检查来源健康；NVIDIA 已接入首个实时官方岗位列表解析器。用户打开首页即可看到 6 个已复核岗位，推荐在已核验候选集内每日轮换；手动搜索可聚合快照和 NVIDIA Workday 实时职位。公司分层和配额属于内部召回策略，不向用户展示。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.40` 内部维护 46 家官方 Careers 来源，并于每周一检查来源健康；NVIDIA 已接入首个实时官方岗位列表解析器。用户打开首页即可看到 6 个已复核岗位，推荐在已核验候选集内每日轮换；手动搜索可聚合快照和 NVIDIA Workday 实时职位。每次任务按仓库规范同步知识、项目总览、进度和下一步。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
 本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
 公司入口健康、生命周期和自动轮换方案见 [公司清单运营计划](docs/COMPANY_CATALOG_OPERATIONS.md)。
+当前进度、验证结果和唯一下一步见 [项目状态](docs/PROJECT_STATUS.md)；历史知识见 [开发知识库](docs/KNOWLEDGE_BASE.md)，路线见 [Coding Plan](docs/CODING_PLAN.md)，每次任务的沉淀规则见 [Copilot 工作规范](.github/copilot-instructions.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.39** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.40** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -392,6 +393,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [可审核公司清单](docs/iterations/055-reviewable-company-catalog.md) | TOML 单一数据源、强类型加载和唯一性校验 |
 | [科技市值榜扩容](docs/iterations/056-market-cap-company-expansion.md) | 国内外 Top 10 口径、14 家补充与排名元数据 |
 | [NVIDIA 实时岗位解析器](docs/iterations/057-nvidia-live-job-source.md) | Workday 分页、字段规范化、离线 Fixture 和手动搜索接入 |
+| [持续项目记忆与进度闭环](docs/iterations/058-continuous-project-memory.md) | 每次任务同步知识、总览、进度与下一步 |
 
 ## 欢迎讨论
 

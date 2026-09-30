@@ -63,12 +63,14 @@
 | 055 | 2026-09-28 | 可审核公司清单 | TOML 单一数据源、强类型加载和唯一性校验 | [可审核公司清单](iterations/055-reviewable-company-catalog.md) |
 | 056 | 2026-09-28 | 科技市值榜扩容 | 国内外 Top 10 口径、14 家补充与排名元数据 | [科技市值榜扩容](iterations/056-market-cap-company-expansion.md) |
 | 057 | 2026-09-30 | NVIDIA 实时岗位解析器 | Workday 分页、字段规范化、离线 Fixture 和手动搜索接入 | [NVIDIA 实时岗位解析器](iterations/057-nvidia-live-job-source.md) |
+| 058 | 2026-09-30 | 持续项目记忆与进度闭环 | 每次任务同步知识、总览、进度与下一步 | [持续项目记忆](iterations/058-continuous-project-memory.md) |
 
 ## 文档入口
 
 | 读者 | 首选文档 | 用途 |
 | --- | --- | --- |
 | 第一次使用 Lina | [当前版本使用手册](USER_GUIDE.md) | 安装、启动、操作、API、隐私和故障处理 |
+| 了解当前进度 | [项目状态](PROJECT_STATUS.md) | 最近完成、验证、能力边界、风险和唯一下一步 |
 | 理解最终产品目标 | [产品愿景与边界](PRODUCT_VISION.md) | 目标体验、自治等级、保留资产、新增领域和成功指标 |
 | 浏览项目概况 | [项目 README](../README.md) | 当前能力、目标、技术路线和文档导航 |
 | 参与开发 | [开发指南](DEVELOPMENT.md) | 环境、测试驱动流程和质量门禁 |
