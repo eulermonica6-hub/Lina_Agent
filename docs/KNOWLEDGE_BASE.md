@@ -64,6 +64,7 @@
 | 056 | 2026-09-28 | 科技市值榜扩容 | 国内外 Top 10 口径、14 家补充与排名元数据 | [科技市值榜扩容](iterations/056-market-cap-company-expansion.md) |
 | 057 | 2026-09-30 | NVIDIA 实时岗位解析器 | Workday 分页、字段规范化、离线 Fixture 和手动搜索接入 | [NVIDIA 实时岗位解析器](iterations/057-nvidia-live-job-source.md) |
 | 058 | 2026-09-30 | 持续项目记忆与进度闭环 | 每次任务同步知识、总览、进度与下一步 | [持续项目记忆](iterations/058-continuous-project-memory.md) |
+| 059 | 2026-09-30 | NVIDIA 岗位变化检测 | 详情指纹、SQLite 批次与四类变化事件 | [NVIDIA 岗位变化检测](iterations/059-job-change-tracking.md) |
 
 ## 文档入口
 

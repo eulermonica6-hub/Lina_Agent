@@ -1,12 +1,12 @@
 # Lina 当前版本使用手册
 
-> 适用版本：0.2.40
+> 适用版本：0.2.41
 > 使用方式：本地文件 Agent、单用户 Web 工作台或 HTTP API
 > 数据存储：结构化画像、岗位与脱敏 Agent Run Snapshot 默认保存到本地 SQLite
 
 ## 1. 当前能力边界
 
-Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 46 个官方 Careers 入口。NVIDIA 已支持上海岗位的实时官方列表搜索；其余来源仍以健康探针或核验快照为主。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚不能生成变化推送或执行投递。
+Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 46 个官方 Careers 入口。NVIDIA 已支持上海岗位详情、跨批次指纹和变化事件；其余来源仍以健康探针或核验快照为主。公司分层仅用于内部召回，不在用户界面或公共 API 中展示。Lina 尚未提供变化 Inbox、外部推送或执行投递。
 
 | 功能 | 当前状态 | 说明 |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 {
   "status": "ok",
   "service": "Lina Career Agent",
-  "version": "0.2.40"
+  "version": "0.2.41"
 }
 ```
 

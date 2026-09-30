@@ -1,7 +1,9 @@
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 
+from lina_agent.application.job_change_tracking import JobChangeTrackingService
 from lina_agent.application.job_discovery import JobDiscoveryService, JobSourceAdapter
+from lina_agent.domain.job_changes import JobCaptureResult
 from lina_agent.domain.job_discovery import JobSearchRequest, JobSourceStatus
 from lina_agent.domain.weekly_monitoring import (
     MonitoredJobSource,
@@ -23,10 +25,14 @@ class WeeklyMonitoringService:
         sources: tuple[JobSourceAdapter, ...],
         *,
         monitored_sources: tuple[MonitoredJobSource, ...] = (),
+        change_tracker: JobChangeTrackingService | None = None,
+        tracked_source_ids: tuple[str, ...] = (),
         clock: Callable[[], datetime] | None = None,
     ) -> None:
         self._discovery = JobDiscoveryService(sources)
         self._monitored_sources = monitored_sources
+        self._change_tracker = change_tracker
+        self._tracked_source_ids = frozenset(tracked_source_ids)
         self._clock = clock or (lambda: datetime.now(UTC))
 
     @property
@@ -47,6 +53,21 @@ class WeeklyMonitoringService:
         else:
             run_status = MonitoringRunStatus.PARTIAL
 
+        capture_results: list[JobCaptureResult] = []
+        if self._change_tracker is not None:
+            for source in result.sources:
+                if (
+                    source.source_id in self._tracked_source_ids
+                    and source.status is JobSourceStatus.SUCCESS
+                ):
+                    capture_results.append(
+                        await self._change_tracker.record_capture(
+                            source.source_id,
+                            source.leads,
+                            source.fetched_at,
+                        )
+                    )
+
         return WeeklyMonitoringRun(
             run_id=f"lina-weekly:{effective_week_start.isoformat()}",
             week_start=effective_week_start,
@@ -56,4 +77,6 @@ class WeeklyMonitoringService:
             monitored_sources=self._monitored_sources,
             sources=result.sources,
             leads=result.leads,
+            capture_batches=tuple(item.batch for item in capture_results),
+            change_events=tuple(event for item in capture_results for event in item.events),
         )

@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from lina_agent.domain.job_changes import JobCaptureBatch, JobChangeEvent
 from lina_agent.domain.job_discovery import CompanyPool, JobLead, JobSourceResult
 from lina_agent.domain.models import DomainModel
 
@@ -38,3 +39,5 @@ class WeeklyMonitoringRun(DomainModel):
     monitored_sources: tuple[MonitoredJobSource, ...] = ()
     sources: tuple[JobSourceResult, ...]
     leads: tuple[JobLead, ...]
+    capture_batches: tuple[JobCaptureBatch, ...] = ()
+    change_events: tuple[JobChangeEvent, ...] = ()

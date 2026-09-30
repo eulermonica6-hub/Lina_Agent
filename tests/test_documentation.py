@@ -67,6 +67,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/056-market-cap-company-expansion.md",
     "docs/iterations/057-nvidia-live-job-source.md",
     "docs/iterations/058-continuous-project-memory.md",
+    "docs/iterations/059-job-change-tracking.md",
 )
 
 

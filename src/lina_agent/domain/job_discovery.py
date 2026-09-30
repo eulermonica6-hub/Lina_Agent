@@ -51,6 +51,12 @@ class JobLead(DomainModel):
     captured_at: datetime
     verification_status: JobVerificationStatus
     highlights: tuple[str, ...] = ()
+    normalized_description: str = Field(default="", exclude=True)
+    content_fingerprint: str | None = Field(
+        default=None,
+        exclude=True,
+        pattern=r"^[0-9a-f]{64}$",
+    )
 
 
 class JobSearchRequest(DomainModel):

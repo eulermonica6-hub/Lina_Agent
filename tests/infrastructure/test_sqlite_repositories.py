@@ -12,12 +12,15 @@ from lina_agent.application.agent_run_snapshot import (
     AgentStepSnapshot,
 )
 from lina_agent.application.career_agent import AgentRole, AgentRunState, AgentStepStatus
+from lina_agent.application.job_change_tracking import JobChangeTrackingService
 from lina_agent.application.persistence_models import (
     DocumentKind,
     create_confirmation_version,
     create_document_reference,
 )
 from lina_agent.domain.career_matching import CandidateAvailabilityConfirmation
+from lina_agent.domain.job_changes import JobChangeKind
+from lina_agent.domain.job_discovery import JobLead, JobType, JobVerificationStatus
 from lina_agent.domain.models import CandidateProfile, EducationLevel, JobPosting
 from lina_agent.infrastructure.document_loader import LocalDocumentLoader
 from lina_agent.infrastructure.repositories.sqlite import (
@@ -25,6 +28,7 @@ from lina_agent.infrastructure.repositories.sqlite import (
     SQLiteCandidateConfirmationVersionRepository,
     SQLiteCandidateProfileRepository,
     SQLiteDocumentReferenceRepository,
+    SQLiteJobChangeRepository,
     SQLiteJobPostingRepository,
 )
 
@@ -104,14 +108,52 @@ async def test_version_one_database_migrates_to_versioned_reference_schema(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-    assert version == (3,)
+    assert version == (4,)
     assert {
         "candidate_profiles",
         "job_postings",
         "agent_run_snapshots",
         "document_references",
         "candidate_confirmation_versions",
+        "job_capture_batches",
+        "job_listing_states",
+        "job_change_events",
     } <= tables
+
+
+@pytest.mark.asyncio
+async def test_job_changes_persist_across_repository_instances(tmp_path: Path) -> None:
+    database_path = tmp_path / "lina.db"
+    baseline_time = datetime(2026, 9, 30, tzinfo=UTC)
+    change_time = baseline_time + timedelta(days=1)
+    first_tracker = JobChangeTrackingService(SQLiteJobChangeRepository(database_path))
+
+    baseline = await first_tracker.record_capture(
+        "nvidia-careers",
+        (_job_lead("JR1"), _job_lead("JR2")),
+        baseline_time,
+    )
+    second_tracker = JobChangeTrackingService(SQLiteJobChangeRepository(database_path))
+    changed = await second_tracker.record_capture(
+        "nvidia-careers",
+        (
+            _job_lead("JR1", description="Updated description"),
+            _job_lead("JR3"),
+        ),
+        change_time,
+    )
+
+    assert baseline.events == ()
+    assert {event.kind for event in changed.events} == {
+        JobChangeKind.NEW,
+        JobChangeKind.UPDATED,
+        JobChangeKind.CLOSED,
+    }
+    repository = SQLiteJobChangeRepository(database_path)
+    assert len(await repository.list_batches("nvidia-careers")) == 2
+    assert len(await repository.list_states("nvidia-careers")) == 3
+    assert len(await repository.list_events("nvidia-careers")) == 3
+    assert await repository.list_batches("other-source") == []
 
 
 @pytest.mark.asyncio
@@ -153,6 +195,24 @@ def _snapshot(created_at: datetime) -> AgentRunSnapshot:
             ),
         ),
         warning_count=0,
+    )
+
+
+def _job_lead(external_id: str, description: str = "Original description") -> JobLead:
+    return JobLead(
+        lead_id=f"nvidia-careers:{external_id}",
+        deduplication_key=f"nvidia:{external_id}",
+        source_id="nvidia-careers",
+        external_id=external_id,
+        company="NVIDIA",
+        title="AI Intern",
+        job_type=JobType.INTERNSHIP,
+        locations=("上海",),
+        direction="AI / Machine Learning",
+        source_url=f"https://example.com/{external_id}",
+        captured_at=datetime(2026, 9, 30, tzinfo=UTC),
+        verification_status=JobVerificationStatus.LIVE,
+        normalized_description=description,
     )
 
 

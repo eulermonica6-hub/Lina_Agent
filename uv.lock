@@ -601,7 +601,7 @@ wheels = [
 
 [[package]]
 name = "lina-career-agent"
-version = "0.2.40"
+version = "0.2.41"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },

@@ -6,6 +6,11 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
+from lina_agent.domain.job_changes import (
+    JobCaptureBatch,
+    JobChangeEvent,
+    JobListingState,
+)
 from lina_agent.domain.models import CandidateProfile, JobPosting
 
 
@@ -43,3 +48,18 @@ class CandidateConfirmationVersionRepository(Protocol):
     async def save(self, version: CandidateConfirmationVersion) -> None: ...
 
     async def get(self, version_id: UUID) -> CandidateConfirmationVersion | None: ...
+
+
+class JobChangeRepository(Protocol):
+    async def list_states(self, source_id: str) -> list[JobListingState]: ...
+
+    async def save_capture(
+        self,
+        batch: JobCaptureBatch,
+        states: tuple[JobListingState, ...],
+        events: tuple[JobChangeEvent, ...],
+    ) -> None: ...
+
+    async def list_batches(self, source_id: str) -> list[JobCaptureBatch]: ...
+
+    async def list_events(self, source_id: str) -> list[JobChangeEvent]: ...

@@ -5,25 +5,40 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
+from lina_agent.application.job_change_tracking import JobChangeTrackingService
 from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
+from lina_agent.config import Settings, get_settings
 from lina_agent.domain.weekly_monitoring import WeeklyMonitoringRun
 from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
 from lina_agent.infrastructure.job_sources.official_probe import OfficialCareersPageProbe
 from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
+from lina_agent.infrastructure.repositories.memory import InMemoryJobChangeRepository
+from lina_agent.infrastructure.repositories.sqlite import SQLiteJobChangeRepository
 
 
 class MonitoringRunner(Protocol):
     async def run(self, week_start: date | None = None) -> WeeklyMonitoringRun: ...
 
 
-def build_monitoring_service() -> WeeklyMonitoringService:
+def build_monitoring_service(settings: Settings | None = None) -> WeeklyMonitoringService:
+    app_settings = settings or get_settings()
     sources = tuple(
-        NvidiaWorkdayJobSource()
+        NvidiaWorkdayJobSource(full_capture=True)
         if source.source_id == "nvidia-careers"
         else OfficialCareersPageProbe(source)
         for source in MONITORED_JOB_SOURCES
     )
-    return WeeklyMonitoringService(sources, monitored_sources=MONITORED_JOB_SOURCES)
+    repository = (
+        InMemoryJobChangeRepository()
+        if app_settings.database_path is None
+        else SQLiteJobChangeRepository(app_settings.database_path)
+    )
+    return WeeklyMonitoringService(
+        sources,
+        monitored_sources=MONITORED_JOB_SOURCES,
+        change_tracker=JobChangeTrackingService(repository),
+        tracked_source_ids=("nvidia-careers",),
+    )
 
 
 def main(

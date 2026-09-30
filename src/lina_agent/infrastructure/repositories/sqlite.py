@@ -11,6 +11,7 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
+from lina_agent.domain.job_changes import JobCaptureBatch, JobChangeEvent, JobListingState
 from lina_agent.domain.models import CandidateProfile, DomainModel, JobPosting
 
 TableName = Literal[
@@ -19,6 +20,9 @@ TableName = Literal[
     "agent_run_snapshots",
     "document_references",
     "candidate_confirmation_versions",
+    "job_capture_batches",
+    "job_listing_states",
+    "job_change_events",
 ]
 _SCHEMA_TABLES: tuple[TableName, ...] = (
     "candidate_profiles",
@@ -26,8 +30,11 @@ _SCHEMA_TABLES: tuple[TableName, ...] = (
     "agent_run_snapshots",
     "document_references",
     "candidate_confirmation_versions",
+    "job_capture_batches",
+    "job_listing_states",
+    "job_change_events",
 )
-_SCHEMA_VERSION = 3
+_SCHEMA_VERSION = 4
 
 
 class _SQLiteJsonStore[ModelT: DomainModel]:
@@ -36,13 +43,13 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
         self._table = table
         self._model_type = model_type
 
-    async def save(self, entity_id: UUID, entity: ModelT) -> None:
+    async def save(self, entity_id: UUID | str, entity: ModelT) -> None:
         await asyncio.to_thread(self._save_sync, entity_id, entity.model_dump_json(), True)
 
-    async def save_if_absent(self, entity_id: UUID, entity: ModelT) -> None:
+    async def save_if_absent(self, entity_id: UUID | str, entity: ModelT) -> None:
         await asyncio.to_thread(self._save_sync, entity_id, entity.model_dump_json(), False)
 
-    async def get(self, entity_id: UUID) -> ModelT | None:
+    async def get(self, entity_id: UUID | str) -> ModelT | None:
         payload = await asyncio.to_thread(self._get_sync, entity_id)
         return self._model_type.model_validate_json(payload) if payload is not None else None
 
@@ -50,7 +57,7 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
         payloads = await asyncio.to_thread(self._list_sync)
         return [self._model_type.model_validate_json(payload) for payload in payloads]
 
-    def _save_sync(self, entity_id: UUID, payload: str, overwrite: bool) -> None:
+    def _save_sync(self, entity_id: UUID | str, payload: str, overwrite: bool) -> None:
         conflict_clause = (
             "ON CONFLICT(id) DO UPDATE SET payload = excluded.payload"
             if overwrite
@@ -66,7 +73,7 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
                 (str(entity_id), payload),
             )
 
-    def _get_sync(self, entity_id: UUID) -> str | None:
+    def _get_sync(self, entity_id: UUID | str) -> str | None:
         with self._connection() as connection:
             row = connection.execute(
                 f"SELECT payload FROM {self._table} WHERE id = ?",
@@ -187,3 +194,98 @@ class SQLiteCandidateConfirmationVersionRepository:
 
     async def get(self, version_id: UUID) -> CandidateConfirmationVersion | None:
         return await self._store.get(version_id)
+
+
+class SQLiteJobChangeRepository:
+    def __init__(self, database_path: Path) -> None:
+        self._database_path = database_path
+
+    async def list_states(self, source_id: str) -> list[JobListingState]:
+        payloads = await asyncio.to_thread(
+            self._list_payloads_sync,
+            "job_listing_states",
+            source_id,
+        )
+        return [JobListingState.model_validate_json(payload) for payload in payloads]
+
+    async def save_capture(
+        self,
+        batch: JobCaptureBatch,
+        states: tuple[JobListingState, ...],
+        events: tuple[JobChangeEvent, ...],
+    ) -> None:
+        await asyncio.to_thread(self._save_capture_sync, batch, states, events)
+
+    async def list_batches(self, source_id: str) -> list[JobCaptureBatch]:
+        payloads = await asyncio.to_thread(
+            self._list_payloads_sync,
+            "job_capture_batches",
+            source_id,
+        )
+        return [JobCaptureBatch.model_validate_json(payload) for payload in payloads]
+
+    async def list_events(self, source_id: str) -> list[JobChangeEvent]:
+        payloads = await asyncio.to_thread(
+            self._list_payloads_sync,
+            "job_change_events",
+            source_id,
+        )
+        return [JobChangeEvent.model_validate_json(payload) for payload in payloads]
+
+    def _save_capture_sync(
+        self,
+        batch: JobCaptureBatch,
+        states: tuple[JobListingState, ...],
+        events: tuple[JobChangeEvent, ...],
+    ) -> None:
+        with self._connection() as connection:
+            connection.execute(
+                "INSERT INTO job_capture_batches (id, payload) VALUES (?, ?)",
+                (str(batch.batch_id), batch.model_dump_json()),
+            )
+            connection.executemany(
+                """
+                INSERT INTO job_listing_states (id, payload)
+                VALUES (?, ?)
+                ON CONFLICT(id) DO UPDATE SET payload = excluded.payload
+                """,
+                ((state.state_key, state.model_dump_json()) for state in states),
+            )
+            connection.executemany(
+                "INSERT INTO job_change_events (id, payload) VALUES (?, ?)",
+                ((str(event.event_id), event.model_dump_json()) for event in events),
+            )
+
+    def _list_payloads_sync(self, table: TableName, source_id: str) -> list[str]:
+        with self._connection() as connection:
+            rows = connection.execute(
+                f"""
+                SELECT payload FROM {table}
+                WHERE json_extract(payload, '$.source_id') = ?
+                ORDER BY rowid
+                """,
+                (source_id,),
+            ).fetchall()
+        return [str(row[0]) for row in rows]
+
+    @contextmanager
+    def _connection(self) -> Generator[sqlite3.Connection, None, None]:
+        self._database_path.parent.mkdir(parents=True, exist_ok=True)
+        connection = sqlite3.connect(self._database_path, timeout=5)
+        try:
+            connection.execute("PRAGMA busy_timeout = 5000")
+            connection.execute("PRAGMA journal_mode = WAL")
+            for table in _SCHEMA_TABLES:
+                connection.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {table} (
+                        id TEXT PRIMARY KEY,
+                        payload TEXT NOT NULL
+                    )
+                    """
+                )
+            connection.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
+            yield connection
+            connection.commit()
+        finally:
+            connection.close()
