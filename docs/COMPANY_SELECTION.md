@@ -4,6 +4,7 @@
 > 用途：决定哪些公司进入国内大厂池、国外大厂池、探索池或待补证名单，以及岗位是否值得投递。
 
 当前 46 家正式公司统一维护在 [`company_catalog.toml`](../src/lina_agent/infrastructure/job_sources/company_catalog.toml)。人工审核或调整公司时只修改该文件；应用启动时会校验字段类型、URL、分组以及公司名和来源 ID 的唯一性。市值 Top 10 的口径、来源和查漏补缺结果见 [市值榜审核](MARKET_CAP_TECH_REVIEW.md)。
+入口健康、降级条件和自动轮换审批流程见 [公司清单运营计划](COMPANY_CATALOG_OPERATIONS.md)。
 
 ## 1. 两级判断
 

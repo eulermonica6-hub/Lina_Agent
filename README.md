@@ -8,6 +8,7 @@ Lina 的目标是让用户通过对话表达求职方向后，自动完成官方
 
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
 本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
+公司入口健康、生命周期和自动轮换方案见 [公司清单运营计划](docs/COMPANY_CATALOG_OPERATIONS.md)。
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
