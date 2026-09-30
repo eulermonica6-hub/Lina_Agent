@@ -29,6 +29,10 @@ class WeeklyMonitoringService:
         self._monitored_sources = monitored_sources
         self._clock = clock or (lambda: datetime.now(UTC))
 
+    @property
+    def source_ids(self) -> tuple[str, ...]:
+        return self._discovery.source_ids
+
     async def run(self, week_start: date | None = None) -> WeeklyMonitoringRun:
         started_at = self._clock()
         effective_week_start = week_start or (

@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.38
+> 适用版本：0.2.39
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -102,7 +102,7 @@ flowchart LR
 | `POST /matches` | 候选人 UUID + 岗位 UUID | 加载实体并执行硬条件规则 | `HardConstraintResult` | 无 |
 | `POST /agent/runs` | 两个 Base64 文档、Top-K、开关 | 运行文件 Agent | `CareerAgentRun` | 写脱敏 Snapshot；可选外部 LLM 调用 |
 | `GET /opportunities` | 无 | 返回 6 条已复核推荐岗位 | `OpportunityFeed` | 无；不访问公网 |
-| `POST /opportunities/search` | 关键词、公司、地点、limit | 调用所有来源并跨来源去重 | `JobDiscoveryResult` | 无；当前仅快照适配器 |
+| `POST /opportunities/search` | 关键词、公司、地点、类型、limit | 聚合核验快照与 NVIDIA Workday 实时来源并去重 | `JobDiscoveryResult` | 无；开发/生产访问 NVIDIA 官方接口 |
 | `POST /assistant/messages` | 单条自然语言消息 | 类型化预览意图路由 | `AssistantMessageResponse` | 无；无会话记忆或 LLM 调用 |
 | `POST /opportunities/recommended` | 公司/方向/地点/类型/近期偏好、周次 | 过滤 live 岗位并执行内部多样性配额 | `JobDiscoveryResult` | 无；内部池字段不序列化 |
 | `GET /workbench` | 无 | 渲染结构化画像、单 JD 决策和历史审计工具 | HTML/CSS/JS | 无 |

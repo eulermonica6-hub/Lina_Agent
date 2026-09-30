@@ -7,6 +7,7 @@ from typing import Protocol
 
 from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
 from lina_agent.domain.weekly_monitoring import WeeklyMonitoringRun
+from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
 from lina_agent.infrastructure.job_sources.official_probe import OfficialCareersPageProbe
 from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
 
@@ -16,7 +17,12 @@ class MonitoringRunner(Protocol):
 
 
 def build_monitoring_service() -> WeeklyMonitoringService:
-    sources = tuple(OfficialCareersPageProbe(source) for source in MONITORED_JOB_SOURCES)
+    sources = tuple(
+        NvidiaWorkdayJobSource()
+        if source.source_id == "nvidia-careers"
+        else OfficialCareersPageProbe(source)
+        for source in MONITORED_JOB_SOURCES
+    )
     return WeeklyMonitoringService(sources, monitored_sources=MONITORED_JOB_SOURCES)
 
 

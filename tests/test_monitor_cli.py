@@ -44,4 +44,7 @@ def test_monitor_cli_prints_json_and_builds_default_service(
 
     output = capsys.readouterr().out
     assert '"agent_name": "Lina"' in output
-    assert isinstance(build_monitoring_service(), WeeklyMonitoringService)
+    service = build_monitoring_service()
+    assert isinstance(service, WeeklyMonitoringService)
+    assert service.source_ids.count("nvidia-careers") == 1
+    assert "nvidia-careers" in service.source_ids

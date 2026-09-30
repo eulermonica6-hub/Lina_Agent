@@ -1,9 +1,13 @@
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from lina_agent.api.dependencies import (
+    get_job_recommendation_service,
+    get_job_search_service,
+)
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.domain.job_discovery import (
     JobDiscoveryResult,
@@ -11,12 +15,14 @@ from lina_agent.domain.job_discovery import (
     JobRecommendationRequest,
     JobSearchRequest,
 )
-from lina_agent.infrastructure.job_sources.verified_snapshot import (
-    VerifiedSnapshotJobSource,
-)
 
 router = APIRouter(tags=["job discovery"])
-_discovery_service = JobDiscoveryService((VerifiedSnapshotJobSource(),))
+
+JobSearchService = Annotated[JobDiscoveryService, Depends(get_job_search_service)]
+JobRecommendationService = Annotated[
+    JobDiscoveryService,
+    Depends(get_job_recommendation_service),
+]
 
 
 class OpportunitySnapshot(BaseModel):
@@ -63,8 +69,8 @@ def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
 
 
 @router.get("/opportunities", response_model=OpportunityFeed)
-async def list_opportunities() -> OpportunityFeed:
-    result = await _discovery_service.recommend(JobRecommendationRequest())
+async def list_opportunities(service: JobRecommendationService) -> OpportunityFeed:
+    result = await service.recommend(JobRecommendationRequest())
     data_as_of = max(lead.captured_at.date() for lead in result.leads)
     return OpportunityFeed(
         data_as_of=data_as_of,
@@ -75,15 +81,19 @@ async def list_opportunities() -> OpportunityFeed:
 
 
 @router.post("/opportunities/search", response_model=JobDiscoveryResult)
-async def search_opportunities(request: JobSearchRequest) -> JobDiscoveryResult:
-    return await _discovery_service.search(request)
+async def search_opportunities(
+    request: JobSearchRequest,
+    service: JobSearchService,
+) -> JobDiscoveryResult:
+    return await service.search(request)
 
 
 @router.post("/opportunities/recommended", response_model=JobDiscoveryResult)
 async def recommend_opportunities(
     request: JobRecommendationRequest,
+    service: JobRecommendationService,
 ) -> JobDiscoveryResult:
-    return await _discovery_service.recommend(request)
+    return await service.recommend(request)
 
 
 @router.post("/assistant/messages", response_model=AssistantMessageResponse)

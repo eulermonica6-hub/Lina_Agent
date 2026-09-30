@@ -35,6 +35,22 @@ def test_opportunity_feed_exposes_dated_official_snapshots() -> None:
     assert all("company_pool" not in item for item in payload["opportunities"])
 
 
+def test_live_job_source_is_wired_outside_test_environment() -> None:
+    test_app = create_app(Settings(app_name="Lina Test", environment="test", database_path=None))
+    development_app = create_app(
+        Settings(app_name="Lina Dev", environment="development", database_path=None)
+    )
+
+    assert test_app.state.job_search_service.source_ids == ("verified-snapshot-2026-09-28",)
+    assert development_app.state.job_search_service.source_ids == (
+        "verified-snapshot-2026-09-28",
+        "nvidia-careers",
+    )
+    assert development_app.state.job_recommendation_service.source_ids == (
+        "verified-snapshot-2026-09-28",
+    )
+
+
 def test_assistant_preview_routes_job_and_resume_intents() -> None:
     jobs = _request("POST", "/assistant/messages", {"message": "帮我找 AI Agent 实习"})
     resume = _request("POST", "/assistant/messages", {"message": "怎么上传简历匹配?"})

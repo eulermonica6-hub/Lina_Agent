@@ -62,6 +62,7 @@
 | 054 | 2026-09-28 | 六岗位推荐配额 | 每日两列三行推荐与国内大厂、国外大厂、探索型 2+2+2 配额 | [六岗位推荐配额](iterations/054-six-job-recommendations.md) |
 | 055 | 2026-09-28 | 可审核公司清单 | TOML 单一数据源、强类型加载和唯一性校验 | [可审核公司清单](iterations/055-reviewable-company-catalog.md) |
 | 056 | 2026-09-28 | 科技市值榜扩容 | 国内外 Top 10 口径、14 家补充与排名元数据 | [科技市值榜扩容](iterations/056-market-cap-company-expansion.md) |
+| 057 | 2026-09-30 | NVIDIA 实时岗位解析器 | Workday 分页、字段规范化、离线 Fixture 和手动搜索接入 | [NVIDIA 实时岗位解析器](iterations/057-nvidia-live-job-source.md) |
 
 ## 文档入口
 

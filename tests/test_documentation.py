@@ -63,6 +63,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/054-six-job-recommendations.md",
     "docs/iterations/055-reviewable-company-catalog.md",
     "docs/iterations/056-market-cap-company-expansion.md",
+    "docs/iterations/057-nvidia-live-job-source.md",
 )
 
 

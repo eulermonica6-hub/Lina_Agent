@@ -23,6 +23,10 @@ class JobDiscoveryService:
     def __init__(self, sources: tuple[JobSourceAdapter, ...]) -> None:
         self._sources = sources
 
+    @property
+    def source_ids(self) -> tuple[str, ...]:
+        return tuple(source.source_id for source in self._sources)
+
     async def search(self, request: JobSearchRequest) -> JobDiscoveryResult:
         source_results = tuple([await source.search(request) for source in self._sources])
         unique_leads: dict[str, JobLead] = {}

@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
 from lina_agent.api.routes import agent, discovery, health, jobs, matches, profiles
+from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.application.repositories import (
     AgentRunSnapshotRepository,
     CandidateConfirmationVersionRepository,
@@ -14,6 +15,8 @@ from lina_agent.application.repositories import (
     JobPostingRepository,
 )
 from lina_agent.config import Settings, get_settings
+from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
+from lina_agent.infrastructure.job_sources.verified_snapshot import VerifiedSnapshotJobSource
 from lina_agent.infrastructure.repositories.memory import (
     InMemoryAgentRunSnapshotRepository,
     InMemoryCandidateConfirmationVersionRepository,
@@ -69,6 +72,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.agent_run_repository = agent_run_repository
     app.state.document_reference_repository = document_reference_repository
     app.state.confirmation_version_repository = confirmation_version_repository
+    snapshot_source = VerifiedSnapshotJobSource()
+    app.state.job_recommendation_service = JobDiscoveryService((snapshot_source,))
+    search_sources = (snapshot_source,)
+    if app_settings.environment != "test":
+        search_sources = (*search_sources, NvidiaWorkdayJobSource())
+    app.state.job_search_service = JobDiscoveryService(search_sources)
     app.dependency_overrides[get_settings] = settings_override
     app.include_router(health.router)
     app.include_router(profiles.router)
