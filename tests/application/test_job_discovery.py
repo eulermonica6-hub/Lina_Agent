@@ -2,6 +2,7 @@ import asyncio
 from datetime import UTC, date, datetime
 
 from lina_agent.application.job_discovery import JobDiscoveryService, JobSourceAdapter
+from lina_agent.domain.job_applications import JobApplicationRecord
 from lina_agent.domain.job_discovery import (
     JobDiscoveryResult,
     JobLead,
@@ -13,6 +14,7 @@ from lina_agent.domain.job_discovery import (
     JobVerificationStatus,
 )
 from lina_agent.domain.weekly_monitoring import CompanyPool
+from lina_agent.infrastructure.repositories.memory import InMemoryJobApplicationRepository
 
 _CAPTURED_AT = datetime(2026, 9, 14, tzinfo=UTC)
 
@@ -259,3 +261,43 @@ def test_homepage_recommendations_exclude_non_live_jobs() -> None:
     result = asyncio.run(service.recommend(JobRecommendationRequest()))
 
     assert [lead.lead_id for lead in result.leads] == ["live"]
+
+
+def test_recommendations_exclude_applied_jobs_but_search_keeps_them() -> None:
+    applied = _lead("applied", company="Applied Company")
+    source = JobSourceResult(
+        source_id="source-a",
+        status=JobSourceStatus.SUCCESS,
+        fetched_at=_CAPTURED_AT,
+        leads=(applied, _lead("available", company="Available Company")),
+    )
+    repository = InMemoryJobApplicationRepository()
+    service = JobDiscoveryService(
+        (FakeSource("source-a", source),),
+        application_repository=repository,
+    )
+
+    async def exercise() -> None:
+        await repository.save(
+            JobApplicationRecord(
+                source_id=applied.source_id,
+                external_id=applied.external_id,
+                company=applied.company,
+                title=applied.title,
+                source_url=applied.source_url,
+                applied_at=_CAPTURED_AT,
+            )
+        )
+        recommendation = await service.recommend(JobRecommendationRequest())
+        search = await service.search(JobSearchRequest())
+        assert [lead.external_id for lead in recommendation.leads] == ["available"]
+        assert {lead.external_id for lead in search.leads} == {"applied", "available"}
+
+        assert await repository.delete(applied.application_key) is True
+        assert await repository.delete(applied.application_key) is False
+        restored = await service.recommend(
+            JobRecommendationRequest(preferred_companies=("Applied Company",))
+        )
+        assert restored.leads[0].external_id == "applied"
+
+    asyncio.run(exercise())

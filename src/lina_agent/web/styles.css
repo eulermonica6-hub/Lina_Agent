@@ -495,11 +495,39 @@ h1 {
 }
 
 .opportunity-link {
-    margin-top: auto;
     color: var(--green);
     font-size: 12px;
     font-weight: 800;
     text-underline-offset: 4px;
+}
+
+.opportunity-actions {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.opportunity-apply-action {
+    padding: 0;
+    color: var(--muted);
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.opportunity-apply-action[aria-pressed="true"] {
+    color: var(--green);
+    border-color: var(--green);
+}
+
+.opportunity-apply-action:disabled {
+    cursor: wait;
+    opacity: 0.55;
 }
 
 .legacy-actions {

@@ -10,6 +10,7 @@ from lina_agent.application.repositories import (
     CandidateConfirmationVersionRepository,
     CandidateProfileRepository,
     DocumentReferenceRepository,
+    JobApplicationRepository,
     JobPostingRepository,
 )
 
@@ -55,4 +56,11 @@ def get_conversational_assistant(request: Request) -> ConversationalAssistantSer
     return cast(
         ConversationalAssistantService,
         request.app.state.conversational_assistant,
+    )
+
+
+def get_job_application_repository(request: Request) -> JobApplicationRepository:
+    return cast(
+        JobApplicationRepository,
+        request.app.state.job_application_repository,
     )

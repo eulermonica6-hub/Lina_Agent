@@ -58,6 +58,10 @@ class JobLead(DomainModel):
         pattern=r"^[0-9a-f]{64}$",
     )
 
+    @property
+    def application_key(self) -> str:
+        return f"{self.source_id}:{self.external_id}"
+
 
 class JobSearchRequest(DomainModel):
     query: str | None = Field(default=None, min_length=1)

@@ -68,6 +68,7 @@
 | 060 | 2026-09-30 | 岗位变化 Inbox | 独立事件页、筛选、收藏、忽略和待比较 | [岗位变化 Inbox](iterations/060-job-change-inbox.md) |
 | 061 | 2026-09-30 | 用户指定大厂补充 | 15 家核对、14 家补充与官方入口验证 | [用户指定大厂补充](iterations/061-requested-major-companies.md) |
 | 062 | 2026-10-01 | 自然语言工具对话 | 搜索、动态、比较和主动追问 | [自然语言工具对话](iterations/062-natural-language-tool-dialogue.md) |
+| 063 | 2026-10-01 | 已投递岗位推荐排除 | 标记、撤销、持久化和推荐过滤 | [已投递岗位推荐排除](iterations/063-applied-job-exclusion.md) |
 
 ## 文档入口
 

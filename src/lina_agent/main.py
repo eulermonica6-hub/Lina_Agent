@@ -5,7 +5,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
-from lina_agent.api.routes import agent, discovery, health, inbox, jobs, matches, profiles
+from lina_agent.api.routes import (
+    agent,
+    applications,
+    discovery,
+    health,
+    inbox,
+    jobs,
+    matches,
+    profiles,
+)
 from lina_agent.application.conversational_assistant import ConversationalAssistantService
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.application.job_inbox import JobInboxService
@@ -14,6 +23,7 @@ from lina_agent.application.repositories import (
     CandidateConfirmationVersionRepository,
     CandidateProfileRepository,
     DocumentReferenceRepository,
+    JobApplicationRepository,
     JobChangeRepository,
     JobPostingRepository,
 )
@@ -26,6 +36,7 @@ from lina_agent.infrastructure.repositories.memory import (
     InMemoryCandidateConfirmationVersionRepository,
     InMemoryCandidateProfileRepository,
     InMemoryDocumentReferenceRepository,
+    InMemoryJobApplicationRepository,
     InMemoryJobChangeRepository,
     InMemoryJobPostingRepository,
 )
@@ -34,6 +45,7 @@ from lina_agent.infrastructure.repositories.sqlite import (
     SQLiteCandidateConfirmationVersionRepository,
     SQLiteCandidateProfileRepository,
     SQLiteDocumentReferenceRepository,
+    SQLiteJobApplicationRepository,
     SQLiteJobChangeRepository,
     SQLiteJobPostingRepository,
 )
@@ -69,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         document_reference_repository,
         confirmation_version_repository,
         job_change_repository,
+        job_application_repository,
     ) = _create_repositories(app_settings)
 
     def settings_override() -> Settings:
@@ -85,9 +98,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.document_reference_repository = document_reference_repository
     app.state.confirmation_version_repository = confirmation_version_repository
     app.state.job_change_repository = job_change_repository
+    app.state.job_application_repository = job_application_repository
     app.state.job_inbox_service = JobInboxService(job_change_repository)
     snapshot_source = VerifiedSnapshotJobSource()
-    app.state.job_recommendation_service = JobDiscoveryService((snapshot_source,))
+    app.state.job_recommendation_service = JobDiscoveryService(
+        (snapshot_source,),
+        application_repository=job_application_repository,
+    )
     search_sources = (snapshot_source,)
     if app_settings.environment != "test":
         search_sources = (*search_sources, NvidiaWorkdayJobSource())
@@ -106,6 +123,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(agent.router)
     app.include_router(discovery.router)
     app.include_router(inbox.router)
+    app.include_router(applications.router)
     app.mount("/assets", StaticFiles(directory=WEB_DIRECTORY), name="assets")
     app.add_api_route("/", serve_home, methods=["GET"], include_in_schema=False)
     app.add_api_route("/workbench", serve_workbench, methods=["GET"], include_in_schema=False)
@@ -122,6 +140,7 @@ def _create_repositories(
     DocumentReferenceRepository,
     CandidateConfirmationVersionRepository,
     JobChangeRepository,
+    JobApplicationRepository,
 ]:
     if settings.environment == "test" or settings.database_path is None:
         return (
@@ -131,6 +150,7 @@ def _create_repositories(
             InMemoryDocumentReferenceRepository(),
             InMemoryCandidateConfirmationVersionRepository(),
             InMemoryJobChangeRepository(),
+            InMemoryJobApplicationRepository(),
         )
     return (
         SQLiteCandidateProfileRepository(settings.database_path),
@@ -139,6 +159,7 @@ def _create_repositories(
         SQLiteDocumentReferenceRepository(settings.database_path),
         SQLiteCandidateConfirmationVersionRepository(settings.database_path),
         SQLiteJobChangeRepository(settings.database_path),
+        SQLiteJobApplicationRepository(settings.database_path),
     )
 
 

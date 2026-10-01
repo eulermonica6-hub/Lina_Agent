@@ -2,6 +2,7 @@ import hashlib
 from datetime import date
 from typing import Protocol
 
+from lina_agent.application.repositories import JobApplicationRepository
 from lina_agent.domain.job_discovery import (
     CompanyPool,
     JobDiscoveryResult,
@@ -20,8 +21,14 @@ class JobSourceAdapter(Protocol):
 
 
 class JobDiscoveryService:
-    def __init__(self, sources: tuple[JobSourceAdapter, ...]) -> None:
+    def __init__(
+        self,
+        sources: tuple[JobSourceAdapter, ...],
+        *,
+        application_repository: JobApplicationRepository | None = None,
+    ) -> None:
         self._sources = sources
+        self._application_repository = application_repository
 
     @property
     def source_ids(self) -> tuple[str, ...]:
@@ -57,10 +64,16 @@ class JobDiscoveryService:
 
     async def recommend(self, request: JobRecommendationRequest) -> JobDiscoveryResult:
         discovery = await self.search(JobSearchRequest(max_results=100))
+        applied_keys: set[str] = (
+            {record.application_key for record in await self._application_repository.list_all()}
+            if self._application_repository is not None
+            else set()
+        )
         eligible_leads = tuple(
             lead
             for lead in discovery.leads
             if lead.verification_status is JobVerificationStatus.LIVE
+            and lead.application_key not in applied_keys
         )
         rotation_date = request.rotation_date or request.week_start or date.today()
         preferred_companies = {value.casefold() for value in request.preferred_companies}

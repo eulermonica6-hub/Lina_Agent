@@ -5,6 +5,7 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
+from lina_agent.domain.job_applications import JobApplicationRecord
 from lina_agent.domain.job_changes import (
     JobCaptureBatch,
     JobChangeEvent,
@@ -131,3 +132,17 @@ class InMemoryJobChangeRepository:
 
     async def save_inbox_state(self, state: JobInboxState) -> None:
         self._inbox_states[state.event_id] = state.model_copy(deep=True)
+
+
+class InMemoryJobApplicationRepository:
+    def __init__(self) -> None:
+        self._records: dict[str, JobApplicationRecord] = {}
+
+    async def save(self, record: JobApplicationRecord) -> None:
+        self._records[record.application_key] = record.model_copy(deep=True)
+
+    async def delete(self, application_key: str) -> bool:
+        return self._records.pop(application_key, None) is not None
+
+    async def list_all(self) -> list[JobApplicationRecord]:
+        return [record.model_copy(deep=True) for record in self._records.values()]

@@ -295,6 +295,85 @@ def test_manual_search_filters_feed_and_reports_source_health(
     expect(page.locator("#opportunity-freshness")).to_contain_text("1 个来源正常")
 
 
+def test_applied_job_leaves_recommendations_but_remains_searchable(
+    page: Page,
+    live_server_url: str,
+) -> None:
+    applied_keys: set[str] = set()
+    applied_lead = cast(dict[str, Any], _RECOMMENDATION_RESPONSE["leads"][0])
+    application_key = f"{applied_lead['source_id']}:{applied_lead['external_id']}"
+
+    def recommend(route: Route) -> None:
+        leads = [
+            lead
+            for lead in cast(list[dict[str, Any]], _RECOMMENDATION_RESPONSE["leads"])
+            if f"{lead['source_id']}:{lead['external_id']}" not in applied_keys
+        ]
+        route.fulfill(json={"sources": [], "leads": leads})
+
+    def applications(route: Route) -> None:
+        if route.request.method == "POST":
+            payload = cast(dict[str, Any], route.request.post_data_json)
+            applied_keys.add(f"{payload['source_id']}:{payload['external_id']}")
+            route.fulfill(json={**payload, "applied_at": "2026-10-01T00:00:00Z"})
+            return
+        if route.request.method == "DELETE":
+            applied_keys.clear()
+            route.fulfill(status=204)
+            return
+        records: list[dict[str, Any]] = []
+        if application_key in applied_keys:
+            records.append(
+                {
+                    "source_id": applied_lead["source_id"],
+                    "external_id": applied_lead["external_id"],
+                    "company": applied_lead["company"],
+                    "title": applied_lead["title"],
+                    "source_url": applied_lead["source_url"],
+                    "applied_at": "2026-10-01T00:00:00Z",
+                }
+            )
+        route.fulfill(json=records)
+
+    page.route("**/opportunities/recommended", recommend)
+    page.route("**/applications**", applications)
+    page.route(
+        "**/opportunities/search",
+        lambda route: route.fulfill(
+            json={
+                "sources": [
+                    {
+                        "source_id": applied_lead["source_id"],
+                        "status": "success",
+                        "fetched_at": "2026-09-28T00:00:00Z",
+                        "leads": [applied_lead],
+                        "error_code": None,
+                    }
+                ],
+                "leads": [applied_lead],
+            }
+        ),
+    )
+    page.goto(live_server_url)
+
+    first = page.locator("#opportunity-list article").first
+    applied_title = cast(str, applied_lead["title"])
+    expect(first).to_contain_text(applied_title)
+    first.get_by_role("button", name="标记已投递").click()
+    expect(page.locator("#opportunity-list")).not_to_contain_text(applied_title)
+    assert application_key in applied_keys
+
+    page.locator("#opportunity-filters summary").click()
+    page.locator("#opportunity-query").fill("Agent")
+    page.locator("#opportunity-search-form button[type='submit']").click()
+    expect(page.locator("#opportunity-list")).to_contain_text(applied_title)
+    undo = page.get_by_role("button", name="撤销已投递")
+    expect(undo).to_be_visible()
+    undo.click()
+    expect(page.get_by_role("button", name="标记已投递")).to_be_visible()
+    assert applied_keys == set()
+
+
 def test_home_does_not_expose_internal_company_pools(
     page: Page,
     live_server_url: str,

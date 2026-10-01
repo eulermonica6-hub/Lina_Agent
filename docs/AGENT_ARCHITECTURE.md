@@ -1,6 +1,6 @@
 # Lina Agent 工程架构与数据流基线
 
-> 适用版本：0.2.44
+> 适用版本：0.2.45
 > 核心实现基线：`9782913`（`Build verifiable multi-node agent core`）
 > 文档目的：明确当前真实代码边界、输入输出、数据传输方向和后续收敛顺序，不把路线图写成已实现能力。
 
@@ -107,7 +107,12 @@ flowchart LR
 | `POST /opportunities/recommended` | 公司/方向/地点/类型/近期偏好、周次 | 过滤 live 岗位并执行内部多样性配额 | `JobDiscoveryResult` | 无；内部池字段不序列化 |
 | `GET /inbox/events` | 事件类型、处理状态 | 查询不可变变化事件并合并用户状态 | `JobInboxItem[]` | 无；读取无副作用 |
 | `PATCH /inbox/events/{id}` | 收藏、忽略、待比较布尔值 | 更新独立 Inbox 状态 | `JobInboxItem` | 写本地 SQLite Inbox 状态 |
+| `GET /applications` | 无 | 查询已投递岗位 | `JobApplicationRecord[]` | 无 |
+| `POST /applications` | 岗位来源、ID、标题、公司、URL | 标记岗位已投递 | `JobApplicationRecord` | 写本地 SQLite 投递记录 |
+| `DELETE /applications/{source}/{id}` | 来源和岗位 ID | 撤销已投递 | 204 | 删除本地投递记录 |
 | `GET /inbox` | 无 | 渲染独立岗位变化 Inbox | HTML/CSS/JS | 无 |
+
+当前对话链是确定性工具路由，不调用外部模型，因此不要求 API key。LLM 仍只用于用户显式开启的结构化行动计划。
 | `GET /workbench` | 无 | 渲染结构化画像、单 JD 决策和历史审计工具 | HTML/CSS/JS | 无 |
 | `lina-monitor` | 可选周一日期、输出路径 | 并行检查官方入口并汇总来源健康 | `WeeklyMonitoringRun` JSON | 写指定报告文件或 stdout |
 | `GET /agent/runs/{run_id}` | Run UUID | 加载脱敏历史 | `AgentRunSnapshot` | 无 |

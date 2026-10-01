@@ -12,6 +12,7 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
+from lina_agent.domain.job_applications import JobApplicationRecord
 from lina_agent.domain.job_changes import (
     JobCaptureBatch,
     JobChangeEvent,
@@ -30,6 +31,7 @@ TableName = Literal[
     "job_listing_states",
     "job_change_events",
     "job_inbox_states",
+    "job_applications",
 ]
 _SCHEMA_TABLES: tuple[TableName, ...] = (
     "candidate_profiles",
@@ -41,8 +43,9 @@ _SCHEMA_TABLES: tuple[TableName, ...] = (
     "job_listing_states",
     "job_change_events",
     "job_inbox_states",
+    "job_applications",
 )
-_SCHEMA_VERSION = 5
+_SCHEMA_VERSION = 6
 _DATABASE_LOCK = threading.RLock()
 
 
@@ -90,6 +93,9 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
         payloads = await asyncio.to_thread(self._list_sync)
         return [self._model_type.model_validate_json(payload) for payload in payloads]
 
+    async def delete(self, entity_id: UUID | str) -> bool:
+        return await asyncio.to_thread(self._delete_sync, entity_id)
+
     def _save_sync(self, entity_id: UUID | str, payload: str, overwrite: bool) -> None:
         conflict_clause = (
             "ON CONFLICT(id) DO UPDATE SET payload = excluded.payload"
@@ -120,6 +126,14 @@ class _SQLiteJsonStore[ModelT: DomainModel]:
                 f"SELECT payload FROM {self._table} ORDER BY rowid"
             ).fetchall()
         return [str(row[0]) for row in rows]
+
+    def _delete_sync(self, entity_id: UUID | str) -> bool:
+        with self._connection() as connection:
+            cursor = connection.execute(
+                f"DELETE FROM {self._table} WHERE id = ?",
+                (str(entity_id),),
+            )
+        return cursor.rowcount > 0
 
     @contextmanager
     def _connection(self) -> Generator[sqlite3.Connection, None, None]:
@@ -306,3 +320,21 @@ class SQLiteJobChangeRepository:
     def _connection(self) -> Generator[sqlite3.Connection, None, None]:
         with _database_connection(self._database_path) as connection:
             yield connection
+
+
+class SQLiteJobApplicationRepository:
+    def __init__(self, database_path: Path) -> None:
+        self._store = _SQLiteJsonStore(
+            database_path,
+            "job_applications",
+            JobApplicationRecord,
+        )
+
+    async def save(self, record: JobApplicationRecord) -> None:
+        await self._store.save(record.application_key, record)
+
+    async def delete(self, application_key: str) -> bool:
+        return await self._store.delete(application_key)
+
+    async def list_all(self) -> list[JobApplicationRecord]:
+        return await self._store.list_all()

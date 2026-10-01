@@ -6,6 +6,7 @@ from lina_agent.application.persistence_models import (
     CandidateConfirmationVersion,
     DocumentReference,
 )
+from lina_agent.domain.job_applications import JobApplicationRecord
 from lina_agent.domain.job_changes import (
     JobCaptureBatch,
     JobChangeEvent,
@@ -68,3 +69,11 @@ class JobChangeRepository(Protocol):
     async def get_inbox_state(self, event_id: UUID) -> JobInboxState | None: ...
 
     async def save_inbox_state(self, state: JobInboxState) -> None: ...
+
+
+class JobApplicationRepository(Protocol):
+    async def save(self, record: JobApplicationRecord) -> None: ...
+
+    async def delete(self, application_key: str) -> bool: ...
+
+    async def list_all(self) -> list[JobApplicationRecord]: ...

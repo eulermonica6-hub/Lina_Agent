@@ -4,7 +4,7 @@
 
 Lina 的目标是让用户通过对话表达求职方向后，自动完成官方岗位检索、持续监控、个性化匹配、岗位与薪资调查、职业规划、面试准备和投递跟踪。涉及发送或投递的外部操作必须由用户最终确认。
 
-当前 `0.2.44` 内部维护 60 家官方 Careers 来源；右侧 Lina 对话可自然语言调用岗位搜索、岗位动态和岗位比较工具，并在地点、类型或方向缺失时主动追问。NVIDIA 已支持完整上海岗位详情与变化事件，独立 Inbox 支持收藏、忽略和待比较。每次任务按仓库规范同步知识、项目总览、进度和下一步。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
+当前 `0.2.45` 内部维护 60 家官方 Careers 来源；推荐岗位可标记已投递，之后从首页和对话默认推荐中排除，手动搜索仍可回看和撤销。右侧 Lina 对话使用确定性意图解析调用搜索、动态和比较工具，不需要模型 API key。每次任务按仓库规范同步知识、项目总览、进度和下一步。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
 本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
@@ -13,7 +13,7 @@ Lina 的目标是让用户通过对话表达求职方向后，自动完成官方
 
 ![Lina 产品概览](docs/assets/lina-workbench.png)
 
-当前版本：**0.2.44** · [查看发布记录](releaseNote.md)
+当前版本：**0.2.45** · [查看发布记录](releaseNote.md)
 
 ## Lina 的工程价值
 
@@ -398,6 +398,7 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [岗位变化 Inbox](docs/iterations/060-job-change-inbox.md) | 独立事件页、筛选、收藏、忽略和待比较 |
 | [用户指定大厂补充](docs/iterations/061-requested-major-companies.md) | 15 家核对、14 家补充与官方入口验证 |
 | [自然语言工具对话](docs/iterations/062-natural-language-tool-dialogue.md) | 搜索、动态、比较和主动追问 |
+| [已投递岗位推荐排除](docs/iterations/063-applied-job-exclusion.md) | 标记、撤销、持久化和推荐过滤 |
 
 ## 欢迎讨论
 

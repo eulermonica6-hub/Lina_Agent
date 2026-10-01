@@ -8,6 +8,9 @@ const state = {
     agentRevision: 0,
     historyRuns: [],
     opportunities: [],
+    currentOpportunityFeed: null,
+    opportunityMode: "recommended",
+    appliedJobKeys: new Set(),
 };
 
 const elements = {
@@ -227,6 +230,14 @@ async function getJson(path) {
     return response.json();
 }
 
+async function deleteRequest(path) {
+    const response = await fetch(path, { method: "DELETE" });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail || `请求失败 (${response.status})`);
+    }
+}
+
 function formatRunLabel(run) {
     const timestamp = new Date(run.created_at).toLocaleString("zh-CN", {
         month: "2-digit",
@@ -278,6 +289,7 @@ function createCompanyIdentity(companyName) {
 
 function renderOpportunities(feed) {
     state.opportunities = feed.opportunities;
+    state.currentOpportunityFeed = feed;
     elements.opportunityList.replaceChildren();
     elements.opportunityCount.textContent = `${feed.opportunities.length} 个岗位`;
     elements.opportunityFreshness.textContent = `已复核推荐 · ${feed.data_as_of} · ${feed.source_note}`;
@@ -308,12 +320,51 @@ function renderOpportunities(feed) {
         link.rel = "noreferrer";
         link.textContent = "打开官网复核";
         link.addEventListener("click", () => rememberValue("linaRecentCompanies", opportunity.company));
-        card.append(heading, title, meta, highlights, link);
+        const actions = document.createElement("div");
+        actions.className = "opportunity-actions";
+        const applicationKey = `${opportunity.source_id}:${opportunity.opportunity_id}`;
+        const applied = state.appliedJobKeys.has(applicationKey);
+        const applyAction = document.createElement("button");
+        applyAction.className = "opportunity-apply-action";
+        applyAction.type = "button";
+        applyAction.textContent = applied ? "撤销已投递" : "标记已投递";
+        applyAction.setAttribute("aria-pressed", String(applied));
+        applyAction.addEventListener("click", async () => {
+            applyAction.disabled = true;
+            try {
+                if (applied) {
+                    await deleteRequest(
+                        `/applications/${encodeURIComponent(opportunity.source_id)}/${encodeURIComponent(opportunity.opportunity_id)}`,
+                    );
+                } else {
+                    await postJson("/applications", {
+                        source_id: opportunity.source_id,
+                        external_id: opportunity.opportunity_id,
+                        company: opportunity.company,
+                        title: opportunity.title,
+                        source_url: opportunity.source_url,
+                    });
+                }
+                await loadApplications();
+                if (!applied && state.opportunityMode === "recommended") {
+                    await loadOpportunities();
+                } else {
+                    renderOpportunities(state.currentOpportunityFeed);
+                }
+            } catch (error) {
+                elements.opportunityFreshness.textContent = error.message;
+            } finally {
+                applyAction.disabled = false;
+            }
+        });
+        actions.append(link, applyAction);
+        card.append(heading, title, meta, highlights, actions);
         elements.opportunityList.append(card);
     });
 }
 
 function renderOpportunitySearch(result) {
+    state.opportunityMode = "search";
     const successfulSources = result.sources.filter((source) => source.status === "success").length;
     const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
     renderOpportunities({
@@ -321,6 +372,7 @@ function renderOpportunitySearch(result) {
         source_note: `${successfulSources} 个来源正常，${result.sources.length - successfulSources} 个来源异常`,
         opportunities: result.leads.map((lead) => ({
             opportunity_id: lead.external_id,
+            source_id: lead.source_id,
             company: lead.company,
             title: lead.title,
             location: lead.locations.join("、"),
@@ -348,7 +400,19 @@ function rememberValue(key, value) {
     localStorage.setItem(key, JSON.stringify([value, ...values].slice(0, 8)));
 }
 
+async function loadApplications() {
+    try {
+        const applications = await getJson("/applications");
+        state.appliedJobKeys = new Set(
+            applications.map((item) => `${item.source_id}:${item.external_id}`),
+        );
+    } catch {
+        state.appliedJobKeys = new Set();
+    }
+}
+
 async function loadOpportunities() {
+    state.opportunityMode = "recommended";
     elements.refreshOpportunities.disabled = true;
     elements.refreshOpportunities.textContent = "加载中...";
     try {
@@ -366,6 +430,7 @@ async function loadOpportunities() {
             source_note: "每日轮换 · 已验证详情和投递入口 · 申请前请再次确认",
             opportunities: result.leads.map((lead) => ({
                 opportunity_id: lead.external_id,
+                source_id: lead.source_id,
                 company: lead.company,
                 title: lead.title,
                 location: lead.locations.join("、"),
@@ -1085,5 +1150,5 @@ elements.jobForm.addEventListener("input", (event) => {
 
 updateFeedMatchMode();
 initializeChatPanel();
-loadOpportunities();
+loadApplications().then(loadOpportunities);
 loadInboxCount();

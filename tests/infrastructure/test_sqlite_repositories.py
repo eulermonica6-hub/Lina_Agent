@@ -20,6 +20,7 @@ from lina_agent.application.persistence_models import (
     create_document_reference,
 )
 from lina_agent.domain.career_matching import CandidateAvailabilityConfirmation
+from lina_agent.domain.job_applications import JobApplicationRecord
 from lina_agent.domain.job_changes import JobChangeKind
 from lina_agent.domain.job_discovery import JobLead, JobType, JobVerificationStatus
 from lina_agent.domain.models import CandidateProfile, EducationLevel, JobPosting
@@ -29,6 +30,7 @@ from lina_agent.infrastructure.repositories.sqlite import (
     SQLiteCandidateConfirmationVersionRepository,
     SQLiteCandidateProfileRepository,
     SQLiteDocumentReferenceRepository,
+    SQLiteJobApplicationRepository,
     SQLiteJobChangeRepository,
     SQLiteJobPostingRepository,
 )
@@ -109,7 +111,7 @@ async def test_version_one_database_migrates_to_versioned_reference_schema(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-    assert version == (5,)
+    assert version == (6,)
     assert {
         "candidate_profiles",
         "job_postings",
@@ -120,6 +122,7 @@ async def test_version_one_database_migrates_to_versioned_reference_schema(
         "job_listing_states",
         "job_change_events",
         "job_inbox_states",
+        "job_applications",
     } <= tables
 
 
@@ -168,6 +171,28 @@ async def test_job_changes_persist_across_repository_instances(tmp_path: Path) -
     saved_items = await restored_inbox.list_items(state_filter=JobInboxFilter.SAVED)
     assert [item.event_id for item in saved_items] == [event_id]
     assert saved_items[0].compare_later is True
+
+
+@pytest.mark.asyncio
+async def test_job_application_persists_and_can_be_removed(tmp_path: Path) -> None:
+    database_path = tmp_path / "lina.db"
+    record = JobApplicationRecord(
+        source_id="verified-snapshot-2026-09-28",
+        external_id="job-1",
+        company="Example",
+        title="AI Intern",
+        source_url="https://example.com/job-1",
+        applied_at=datetime(2026, 10, 1, tzinfo=UTC),
+    )
+
+    await SQLiteJobApplicationRepository(database_path).save(record)
+    restored = await SQLiteJobApplicationRepository(database_path).list_all()
+
+    assert restored == [record]
+    repository = SQLiteJobApplicationRepository(database_path)
+    assert await repository.delete(record.application_key) is True
+    assert await repository.delete(record.application_key) is False
+    assert await repository.list_all() == []
 
 
 @pytest.mark.asyncio
