@@ -1,3 +1,3 @@
 """Lina Career Agent package."""
 
-__version__ = "0.2.43"
+__version__ = "0.2.44"

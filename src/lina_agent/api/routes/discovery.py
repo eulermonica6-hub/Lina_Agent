@@ -5,8 +5,13 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from lina_agent.api.dependencies import (
+    get_conversational_assistant,
     get_job_recommendation_service,
     get_job_search_service,
+)
+from lina_agent.application.conversational_assistant import (
+    AssistantResponse,
+    ConversationalAssistantService,
 )
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.domain.job_discovery import (
@@ -22,6 +27,10 @@ JobSearchService = Annotated[JobDiscoveryService, Depends(get_job_search_service
 JobRecommendationService = Annotated[
     JobDiscoveryService,
     Depends(get_job_recommendation_service),
+]
+ConversationalAssistant = Annotated[
+    ConversationalAssistantService,
+    Depends(get_conversational_assistant),
 ]
 
 
@@ -46,12 +55,6 @@ class OpportunityFeed(BaseModel):
 
 class AssistantMessageRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
-
-
-class AssistantMessageResponse(BaseModel):
-    answer: str
-    mode: Literal["typed_preview"] = "typed_preview"
-    suggested_action: Literal["view_opportunities", "upload_resume", "none"]
 
 
 def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
@@ -96,28 +99,9 @@ async def recommend_opportunities(
     return await service.recommend(request)
 
 
-@router.post("/assistant/messages", response_model=AssistantMessageResponse)
+@router.post("/assistant/messages", response_model=AssistantResponse)
 async def create_assistant_message(
     request: AssistantMessageRequest,
-) -> AssistantMessageResponse:
-    normalized = request.message.casefold()
-    if any(keyword in normalized for keyword in ("简历", "resume", "匹配")):
-        return AssistantMessageResponse(
-            answer=(
-                "可以。打开“简历匹配”区域上传 TXT、Markdown 或 DOCX 简历，"
-                "我会用当前岗位快照做证据化初筛。"
-            ),
-            suggested_action="upload_resume",
-        )
-    if any(keyword in normalized for keyword in ("岗位", "实习", "工作", "job", "agent")):
-        return AssistantMessageResponse(
-            answer=(
-                "我已加载 2026-09-28 复核过详情和投递入口的岗位。"
-                "申请前仍建议再次打开官网确认，也可以上传简历进行匹配。"
-            ),
-            suggested_action="view_opportunities",
-        )
-    return AssistantMessageResponse(
-        answer="当前对话是类型化预览，可帮你查看岗位快照或定位简历匹配入口；尚未联网自主搜索，也没有多轮记忆。",
-        suggested_action="none",
-    )
+    assistant: ConversationalAssistant,
+) -> AssistantResponse:
+    return await assistant.respond(request.message)

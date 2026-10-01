@@ -162,8 +162,24 @@ def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_
         route.fulfill(
             json={
                 "answer": "我已加载 2 条官方核验快照。",
-                "mode": "typed_preview",
+                "mode": "tool_execution",
                 "suggested_action": "view_opportunities",
+                "tool": "job_search",
+                "missing_fields": [],
+                "opportunities": [
+                    {
+                        "external_id": "minimax-agent",
+                        "company": "MiniMax",
+                        "title": "Agent 研发实习生-AI Infra",
+                        "locations": ["上海"],
+                        "direction": "AI Infra",
+                        "source_url": "https://example.com/minimax",
+                        "source_id": "verified-snapshot-2026-09-28",
+                        "source_status": "success",
+                        "highlights": ["Python", "Agent"],
+                    }
+                ],
+                "inbox_items": [],
             }
         )
 
@@ -174,6 +190,12 @@ def test_chat_sends_message_and_routes_suggested_action(page: Page, live_server_
 
     expect(page.locator("#chat-log")).to_contain_text("帮我找上海的 Agent 实习")
     expect(page.locator("#chat-log")).to_contain_text("我已加载 2 条官方核验快照")
+    expect(page.locator(".chat-tool-results")).to_contain_text(
+        "MiniMax · Agent 研发实习生-AI Infra"
+    )
+    expect(page.locator(".chat-tool-results")).to_contain_text(
+        "verified-snapshot-2026-09-28 · success"
+    )
     expect(page.locator("#opportunities")).to_be_in_viewport()
 
 

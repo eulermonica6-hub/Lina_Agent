@@ -25,11 +25,10 @@ def test_opportunity_feed_exposes_dated_official_snapshots() -> None:
     assert payload["data_as_of"] == "2026-09-28"
     assert payload["freshness"] == "verified_recommendations"
     assert len(payload["opportunities"]) == 6
-    assert {item["company"] for item in payload["opportunities"]} >= {
-        "MiniMax",
-        "字节跳动",
-        "Apple",
-    }
+    companies = [item["company"] for item in payload["opportunities"]]
+    assert sum(company in {"字节跳动", "小红书"} for company in companies) == 2
+    assert sum(company in {"Apple", "NVIDIA"} for company in companies) == 2
+    assert sum(company in {"MiniMax", "Unstructured"} for company in companies) == 2
     assert all(item["source_url"].startswith("https://") for item in payload["opportunities"])
     assert all(item["verification_status"] == "live" for item in payload["opportunities"])
     assert all("company_pool" not in item for item in payload["opportunities"])
@@ -51,20 +50,34 @@ def test_live_job_source_is_wired_outside_test_environment() -> None:
     )
 
 
-def test_assistant_preview_routes_job_and_resume_intents() -> None:
-    jobs = _request("POST", "/assistant/messages", {"message": "帮我找 AI Agent 实习"})
+def test_assistant_calls_tools_and_routes_guidance() -> None:
+    jobs = _request(
+        "POST",
+        "/assistant/messages",
+        {"message": "帮我找上海 Agent 实习"},
+    )
+    clarification = _request("POST", "/assistant/messages", {"message": "帮我找岗位"})
+    comparison = _request("POST", "/assistant/messages", {"message": "比较岗位"})
     resume = _request("POST", "/assistant/messages", {"message": "怎么上传简历匹配?"})
     other = _request("POST", "/assistant/messages", {"message": "你好"})
 
     assert jobs.status_code == 200
+    assert jobs.json()["mode"] == "tool_execution"
+    assert jobs.json()["tool"] == "job_search"
     assert jobs.json()["suggested_action"] == "view_opportunities"
-    assert "复核过详情和投递入口" in jobs.json()["answer"]
-    assert jobs.json()["mode"] == "typed_preview"
+    assert jobs.json()["opportunities"]
+    assert all(item["source_url"].startswith("https://") for item in jobs.json()["opportunities"])
+    assert all(item["source_status"] == "success" for item in jobs.json()["opportunities"])
+    assert clarification.json()["mode"] == "clarification"
+    assert clarification.json()["missing_fields"] == ["location", "job_type", "direction"]
+    assert comparison.json()["mode"] == "tool_execution"
+    assert comparison.json()["tool"] == "job_compare"
+    assert "unknown" in comparison.json()["answer"]
     assert resume.status_code == 200
     assert resume.json()["suggested_action"] == "upload_resume"
     assert other.status_code == 200
     assert other.json()["suggested_action"] == "none"
-    assert "尚未联网自主搜索" in other.json()["answer"]
+    assert "搜索岗位" in other.json()["answer"]
 
 
 def test_manual_opportunity_search_returns_leads_and_source_health() -> None:

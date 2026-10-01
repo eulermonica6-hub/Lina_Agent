@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from lina_agent import __version__
 from lina_agent.api.routes import agent, discovery, health, inbox, jobs, matches, profiles
+from lina_agent.application.conversational_assistant import ConversationalAssistantService
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.application.job_inbox import JobInboxService
 from lina_agent.application.repositories import (
@@ -18,6 +19,7 @@ from lina_agent.application.repositories import (
 )
 from lina_agent.config import Settings, get_settings
 from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
+from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
 from lina_agent.infrastructure.job_sources.verified_snapshot import VerifiedSnapshotJobSource
 from lina_agent.infrastructure.repositories.memory import (
     InMemoryAgentRunSnapshotRepository,
@@ -90,6 +92,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if app_settings.environment != "test":
         search_sources = (*search_sources, NvidiaWorkdayJobSource())
     app.state.job_search_service = JobDiscoveryService(search_sources)
+    app.state.conversational_assistant = ConversationalAssistantService(
+        app.state.job_search_service,
+        app.state.job_recommendation_service,
+        app.state.job_inbox_service,
+        company_names=tuple(source.company for source in MONITORED_JOB_SOURCES),
+    )
     app.dependency_overrides[get_settings] = settings_override
     app.include_router(health.router)
     app.include_router(profiles.router)

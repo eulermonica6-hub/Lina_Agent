@@ -461,6 +461,38 @@ function appendChatMessage(text, role) {
     elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
 }
 
+function appendChatToolResults(response) {
+    if (!response.opportunities?.length && !response.inbox_items?.length) return;
+    const results = document.createElement("div");
+    results.className = "chat-tool-results";
+    response.opportunities?.forEach((opportunity) => {
+        const link = document.createElement("a");
+        link.href = opportunity.source_url;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.textContent = `${opportunity.company} · ${opportunity.title}`;
+        const source = document.createElement("span");
+        source.textContent = `${opportunity.source_id} · ${opportunity.source_status}`;
+        results.append(link, source);
+    });
+    response.inbox_items?.forEach((item) => {
+        const link = document.createElement("a");
+        link.href = item.source_url;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.textContent = `${item.kind} · ${item.title}`;
+        results.append(link);
+    });
+    if (response.suggested_action === "view_inbox") {
+        const inboxLink = document.createElement("a");
+        inboxLink.href = "/inbox";
+        inboxLink.textContent = "打开岗位动态";
+        results.append(inboxLink);
+    }
+    elements.chatLog.append(results);
+    elements.chatLog.scrollTop = elements.chatLog.scrollHeight;
+}
+
 function renderHistory(runs) {
     state.historyRuns = runs;
     elements.historyList.replaceChildren();
@@ -859,6 +891,7 @@ async function sendChatMessage(message) {
     try {
         const response = await postJson("/assistant/messages", { message });
         appendChatMessage(response.answer, "assistant");
+        appendChatToolResults(response);
         if (response.suggested_action === "view_opportunities") {
             document.querySelector("#opportunities").scrollIntoView({ behavior: "smooth" });
         } else if (response.suggested_action === "upload_resume") {

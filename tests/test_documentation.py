@@ -70,6 +70,7 @@ IMPORTANT_DOCUMENTS = (
     "docs/iterations/059-job-change-tracking.md",
     "docs/iterations/060-job-change-inbox.md",
     "docs/iterations/061-requested-major-companies.md",
+    "docs/iterations/062-natural-language-tool-dialogue.md",
 )
 
 

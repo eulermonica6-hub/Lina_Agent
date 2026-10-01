@@ -1266,6 +1266,27 @@ body.chat-resizing {
     background: var(--green);
 }
 
+.chat-tool-results {
+    margin: 0 0 16px;
+    border-top: 1px solid var(--line);
+    display: grid;
+}
+
+.chat-tool-results a {
+    padding: 10px 0 4px;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.chat-tool-results span {
+    padding-bottom: 8px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    font-size: 10px;
+}
+
 .chat-form {
     padding: 20px;
     border-top: 1px solid var(--line);
