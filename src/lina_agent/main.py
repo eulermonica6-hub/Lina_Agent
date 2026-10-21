@@ -14,6 +14,7 @@ from lina_agent.api.routes import (
     jobs,
     matches,
     profiles,
+    sandbox,
 )
 from lina_agent.application.conversational_assistant import ConversationalAssistantService
 from lina_agent.application.job_discovery import JobDiscoveryService
@@ -124,6 +125,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(discovery.router)
     app.include_router(inbox.router)
     app.include_router(applications.router)
+    app.include_router(sandbox.router)
     app.mount("/assets", StaticFiles(directory=WEB_DIRECTORY), name="assets")
     app.add_api_route("/", serve_home, methods=["GET"], include_in_schema=False)
     app.add_api_route("/workbench", serve_workbench, methods=["GET"], include_in_schema=False)
