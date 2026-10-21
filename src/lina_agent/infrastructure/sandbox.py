@@ -167,7 +167,7 @@ class RepairLoop:
             validate_source(candidate)
         current = source
         attempts: list[RepairAttempt] = []
-        for attempt_number in range(1, self.max_attempts + 1):
+        for attempt_number in range(1, self.max_attempts + 1):  # pragma: no branch
             result = self.sandbox.execute(current)
             attempts.append(RepairAttempt(attempt=attempt_number, result=result))
             if result.success:
