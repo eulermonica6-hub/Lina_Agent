@@ -47,7 +47,7 @@ asyncio_mode = "strict"
 markers = [
     "browser: end-to-end tests that require a Playwright browser",
 ]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 
 [tool.coverage.run]
