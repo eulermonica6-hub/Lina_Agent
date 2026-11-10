@@ -19,6 +19,8 @@ Lina 适合作为求职 Agent、可解释推荐系统和人机协作工作流的
 
 当前版本是求职决策辅助内核，不是无人值守的自动投递系统：跨请求多轮记忆、外部推送、简历优化和受控投递仍属于后续工作。完整目标见 [产品愿景](docs/PRODUCT_VISION.md)，当前可用边界见 [使用手册](docs/USER_GUIDE.md)。
 
+功能清单、操作步骤、技术实现和岗位数据实时性边界见 [功能、操作与技术说明](docs/FUNCTIONS_OPERATION_AND_TECHNICAL_GUIDE.md)。
+
 公司清单集中维护在 [`company_catalog.toml`](src/lina_agent/infrastructure/job_sources/company_catalog.toml)，便于人工审核名称、分组、官方入口、地区、关键词和关注理由。
 本轮国内外科技公司 Top 10、榜单口径与补充结果见 [市值榜审核](docs/MARKET_CAP_TECH_REVIEW.md)。
 公司入口健康、生命周期和自动轮换方案见 [公司清单运营计划](docs/COMPANY_CATALOG_OPERATIONS.md)。
