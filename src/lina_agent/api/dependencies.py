@@ -14,6 +14,7 @@ from lina_agent.application.repositories import (
     JobChangeRepository,
     JobPostingRepository,
 )
+from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
 
 
 def get_candidate_repository(request: Request) -> CandidateProfileRepository:
@@ -55,6 +56,10 @@ def get_job_inbox_service(request: Request) -> JobInboxService:
 
 def get_job_change_repository(request: Request) -> JobChangeRepository:
     return cast(JobChangeRepository, request.app.state.job_change_repository)
+
+
+def get_job_monitoring_service(request: Request) -> WeeklyMonitoringService:
+    return cast(WeeklyMonitoringService, request.app.state.job_monitoring_service)
 
 
 def get_conversational_assistant(request: Request) -> ConversationalAssistantService:

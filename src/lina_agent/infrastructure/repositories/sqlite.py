@@ -193,7 +193,14 @@ class SQLiteAgentRunSnapshotRepository:
 
     async def list_recent(self, limit: int) -> list[AgentRunSnapshot]:
         snapshots = await self._store.list_all()
-        return sorted(snapshots, key=lambda snapshot: snapshot.created_at, reverse=True)[:limit]
+        return [
+            snapshot
+            for _, snapshot in sorted(
+                enumerate(snapshots),
+                key=lambda item: (item[1].created_at, item[0]),
+                reverse=True,
+            )[:limit]
+        ]
 
 
 class SQLiteDocumentReferenceRepository:

@@ -292,7 +292,12 @@ function renderOpportunities(feed) {
     state.currentOpportunityFeed = feed;
     elements.opportunityList.replaceChildren();
     elements.opportunityCount.textContent = `${feed.opportunities.length} 个岗位`;
-    elements.opportunityFreshness.textContent = `已复核推荐 · ${feed.data_as_of} · ${feed.source_note}`;
+    const freshnessLabel =
+        feed.freshness === "live_and_verified" ? "实时+已复核推荐" : "已复核推荐";
+    elements.opportunityFreshness.textContent =
+        `${freshnessLabel} · 检查于 ${feed.data_as_of} ` +
+        `(${new Date(feed.last_checked_at).toLocaleString("zh-CN")}) · ` +
+        feed.source_note;
 
     feed.opportunities.forEach((opportunity) => {
         const card = document.createElement("article");
@@ -424,10 +429,22 @@ async function loadOpportunities() {
             preferred_job_types: ["internship", "campus"],
             limit: 6,
         });
+        const successfulSources = result.sources.filter((source) => source.status === "success");
+        const latestSourceTime = successfulSources
+            .map((source) => source.fetched_at)
+            .sort()
+            .at(-1);
+        const hasLiveSource = successfulSources.some(
+            (source) => source.source_id === "nvidia-careers",
+        );
         const capturedDates = result.leads.map((lead) => lead.captured_at.slice(0, 10));
         renderOpportunities({
             data_as_of: capturedDates.sort().at(-1),
-            source_note: "每日轮换 · 已验证详情和投递入口 · 申请前请再次确认",
+            last_checked_at: latestSourceTime || `${capturedDates.sort().at(-1)}T00:00:00Z`,
+            freshness: hasLiveSource ? "live_and_verified" : "verified_recommendations",
+            source_note: hasLiveSource
+                ? "每日轮换 · 已合并 NVIDIA 官方实时岗位与经复核快照 · 申请前请再次确认"
+                : "每日轮换 · 当前仅有经复核快照 · 申请前请再次确认",
             opportunities: result.leads.map((lead) => ({
                 opportunity_id: lead.external_id,
                 source_id: lead.source_id,

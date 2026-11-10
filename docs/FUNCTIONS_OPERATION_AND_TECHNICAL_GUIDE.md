@@ -99,9 +99,11 @@ Content-Type: application/json
 
 ### 2.5 岗位变化 Inbox
 
-打开 `/inbox` 查看已记录的岗位新增、更新、关闭和重开事件。可对事件执行收藏、忽略或标记待比较等操作。
+打开 `/inbox` 查看已记录的岗位新增、更新、关闭和重开事件。页面同时显示最近检查时间、当前开放岗位数和累计事件数；点击“立即检查 NVIDIA”会执行一次官方来源检查并写入变化基线。可对事件执行收藏、忽略或标记待比较等操作。
 
 - `GET /inbox/events`
+- `GET /inbox/events/status`
+- `POST /inbox/events/refresh`
 - `PATCH /inbox/events/{event_id}`
 
 当前变化跟踪重点是 NVIDIA 官方来源；外部推送、邮件通知和完整公司范围的实时变化订阅尚未实现。

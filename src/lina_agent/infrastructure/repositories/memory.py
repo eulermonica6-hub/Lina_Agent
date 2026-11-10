@@ -58,11 +58,11 @@ class InMemoryAgentRunSnapshotRepository:
 
     async def list_recent(self, limit: int) -> list[AgentRunSnapshot]:
         snapshots = sorted(
-            self._snapshots.values(),
-            key=lambda snapshot: snapshot.created_at,
+            enumerate(self._snapshots.values()),
+            key=lambda item: (item[1].created_at, item[0]),
             reverse=True,
         )[:limit]
-        return [snapshot.model_copy(deep=True) for snapshot in snapshots]
+        return [snapshot.model_copy(deep=True) for _, snapshot in snapshots]
 
 
 class InMemoryDocumentReferenceRepository:

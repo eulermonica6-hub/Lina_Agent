@@ -140,3 +140,59 @@ def test_inbox_status_reports_baseline_and_open_job_count() -> None:
             assert status.json()["baseline_ready"] is True
 
     asyncio.run(exercise())
+
+
+def test_inbox_refresh_route_returns_source_result() -> None:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+
+    class FakeMonitoringService:
+        async def run(self) -> object:
+            from types import SimpleNamespace
+
+            return SimpleNamespace(
+                sources=(
+                    SimpleNamespace(
+                        source_id="nvidia-careers",
+                        status=type("Status", (), {"value": "success"})(),
+                        fetched_at=_NOW,
+                        leads=(object(), object()),
+                    ),
+                ),
+                change_events=(object(),),
+            )
+
+    app.state.job_monitoring_service = FakeMonitoringService()
+
+    async def exercise() -> None:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/inbox/events/refresh")
+            assert response.status_code == 200
+            assert response.json() == {
+                "status": "success",
+                "checked_at": _NOW.isoformat().replace("+00:00", "Z"),
+                "current_job_count": 2,
+                "new_event_count": 1,
+            }
+
+    asyncio.run(exercise())
+
+
+def test_inbox_refresh_route_rejects_missing_nvidia_result() -> None:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+
+    class EmptyMonitoringService:
+        async def run(self) -> object:
+            from types import SimpleNamespace
+
+            return SimpleNamespace(sources=(), change_events=())
+
+    app.state.job_monitoring_service = EmptyMonitoringService()
+
+    async def exercise() -> None:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/inbox/events/refresh")
+            assert response.status_code == 502
+
+    asyncio.run(exercise())

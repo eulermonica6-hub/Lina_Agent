@@ -5,9 +5,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, model_validator
 
-from lina_agent.api.dependencies import get_job_change_repository, get_job_inbox_service
+from lina_agent.api.dependencies import (
+    get_job_change_repository,
+    get_job_inbox_service,
+    get_job_monitoring_service,
+)
 from lina_agent.application.job_inbox import JobInboxFilter, JobInboxService
 from lina_agent.application.repositories import JobChangeRepository
+from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
 from lina_agent.domain.job_changes import JobChangeKind, JobInboxItem
 
 router = APIRouter(prefix="/inbox/events", tags=["job inbox"])
@@ -15,6 +20,10 @@ JobInboxServiceDependency = Annotated[JobInboxService, Depends(get_job_inbox_ser
 JobChangeRepositoryDependency = Annotated[
     JobChangeRepository,
     Depends(get_job_change_repository),
+]
+JobMonitoringServiceDependency = Annotated[
+    WeeklyMonitoringService,
+    Depends(get_job_monitoring_service),
 ]
 _SOURCE_ID = "nvidia-careers"
 
@@ -42,6 +51,13 @@ class JobMonitoringStatus(BaseModel):
     baseline_ready: bool
 
 
+class JobMonitoringRefreshResponse(BaseModel):
+    status: str
+    checked_at: datetime
+    current_job_count: int
+    new_event_count: int
+
+
 @router.get("/status", response_model=JobMonitoringStatus)
 async def get_job_monitoring_status(
     repository: JobChangeRepositoryDependency,
@@ -60,6 +76,25 @@ async def get_job_monitoring_status(
         event_count=len(events),
         latest_event_at=latest_event.occurred_at if latest_event else None,
         baseline_ready=bool(batches),
+    )
+
+
+@router.post("/refresh", response_model=JobMonitoringRefreshResponse)
+async def refresh_job_monitoring(
+    monitoring_service: JobMonitoringServiceDependency,
+) -> JobMonitoringRefreshResponse:
+    run = await monitoring_service.run()
+    source = next(
+        (source for source in run.sources if source.source_id == _SOURCE_ID),
+        None,
+    )
+    if source is None:
+        raise HTTPException(status_code=502, detail="NVIDIA source result unavailable")
+    return JobMonitoringRefreshResponse(
+        status=source.status.value,
+        checked_at=source.fetched_at,
+        current_job_count=len(source.leads),
+        new_event_count=len(run.change_events),
     )
 
 

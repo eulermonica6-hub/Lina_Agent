@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends
@@ -48,7 +48,8 @@ class OpportunitySnapshot(BaseModel):
 
 class OpportunityFeed(BaseModel):
     data_as_of: date
-    freshness: Literal["verified_recommendations"]
+    freshness: Literal["live_and_verified", "verified_recommendations"]
+    last_checked_at: datetime
     source_note: str
     opportunities: tuple[OpportunitySnapshot, ...]
 
@@ -74,11 +75,31 @@ def _to_opportunity(lead: JobLead) -> OpportunitySnapshot:
 @router.get("/opportunities", response_model=OpportunityFeed)
 async def list_opportunities(service: JobRecommendationService) -> OpportunityFeed:
     result = await service.recommend(JobRecommendationRequest())
-    data_as_of = max(lead.captured_at.date() for lead in result.leads)
+    successful_sources = tuple(
+        source for source in result.sources if source.status.value == "success"
+    )
+    latest_source_time = max(
+        (source.fetched_at for source in successful_sources),
+        default=max(
+            (lead.captured_at for lead in result.leads),
+            default=datetime.now(UTC),
+        ),
+    )
+    data_as_of = latest_source_time.date()
+    freshness = (
+        "live_and_verified"
+        if any(source.source_id == "nvidia-careers" for source in successful_sources)
+        else "verified_recommendations"
+    )
     return OpportunityFeed(
         data_as_of=data_as_of,
-        freshness="verified_recommendations",
-        source_note="2026-09-28 已复核官方详情与投递入口；申请前仍应再次确认。",
+        freshness=freshness,
+        last_checked_at=latest_source_time,
+        source_note=(
+            "已合并 NVIDIA 官方实时岗位与经复核快照；申请前仍应打开官方链接确认。"
+            if freshness == "live_and_verified"
+            else "当前仅有经复核快照；申请前仍应打开官方链接确认。"
+        ),
         opportunities=tuple(_to_opportunity(lead) for lead in result.leads),
     )
 

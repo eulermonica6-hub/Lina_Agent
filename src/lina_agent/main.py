@@ -17,6 +17,7 @@ from lina_agent.api.routes import (
     sandbox,
 )
 from lina_agent.application.conversational_assistant import ConversationalAssistantService
+from lina_agent.application.job_change_tracking import JobChangeTrackingService
 from lina_agent.application.job_discovery import JobDiscoveryService
 from lina_agent.application.job_inbox import JobInboxService
 from lina_agent.application.repositories import (
@@ -28,6 +29,7 @@ from lina_agent.application.repositories import (
     JobChangeRepository,
     JobPostingRepository,
 )
+from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
 from lina_agent.config import Settings, get_settings
 from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
 from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
@@ -102,14 +104,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.job_application_repository = job_application_repository
     app.state.job_inbox_service = JobInboxService(job_change_repository)
     snapshot_source = VerifiedSnapshotJobSource()
-    app.state.job_recommendation_service = JobDiscoveryService(
-        (snapshot_source,),
-        application_repository=job_application_repository,
-    )
     search_sources = (snapshot_source,)
     if app_settings.environment != "test":
         search_sources = (*search_sources, NvidiaWorkdayJobSource())
+    app.state.job_recommendation_service = JobDiscoveryService(
+        search_sources,
+        application_repository=job_application_repository,
+    )
     app.state.job_search_service = JobDiscoveryService(search_sources)
+    nvidia_source = NvidiaWorkdayJobSource(full_capture=True)
+    app.state.job_monitoring_service = WeeklyMonitoringService(
+        (nvidia_source,),
+        change_tracker=JobChangeTrackingService(job_change_repository),
+        tracked_source_ids=("nvidia-careers",),
+    )
     app.state.conversational_assistant = ConversationalAssistantService(
         app.state.job_search_service,
         app.state.job_recommendation_service,

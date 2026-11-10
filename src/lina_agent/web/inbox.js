@@ -125,6 +125,20 @@ async function loadInbox() {
     }
 }
 
+async function refreshMonitoring() {
+    elements.refresh.disabled = true;
+    elements.feedback.textContent = "正在检查 NVIDIA 官方岗位…";
+    try {
+        const result = await requestJson("/inbox/events/refresh", { method: "POST" });
+        elements.feedback.textContent =
+            `检查完成：${result.current_job_count} 个开放岗位，新增 ${result.new_event_count} 条动态。`;
+        await loadInbox();
+    } catch (error) {
+        elements.feedback.textContent = `检查失败：${error.message}`;
+        elements.refresh.disabled = false;
+    }
+}
+
 function renderMonitorStatus(status) {
     if (!status.baseline_ready) {
         elements.monitorStatus.textContent = "尚未完成首次检查，请运行 Lina weekly monitor。";
@@ -140,5 +154,5 @@ function renderMonitorStatus(status) {
 
 elements.kind.addEventListener("change", loadInbox);
 elements.status.addEventListener("change", loadInbox);
-elements.refresh.addEventListener("click", loadInbox);
+elements.refresh.addEventListener("click", refreshMonitoring);
 loadInbox();
