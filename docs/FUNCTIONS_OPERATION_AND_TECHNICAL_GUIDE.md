@@ -106,7 +106,7 @@ Content-Type: application/json
 
 当前变化跟踪重点是 NVIDIA 官方来源；外部推送、邮件通知和完整公司范围的实时变化订阅尚未实现。
 
-### 2.6 每周来源监控
+### 2.6 来源监控
 
 手动生成来源健康报告：
 
@@ -114,7 +114,7 @@ Content-Type: application/json
 uv run --locked lina-monitor --output artifacts/weekly-monitor.json
 ```
 
-GitHub Actions 每周一 01:00 UTC（北京时间 09:00）运行一次，检查官方入口可访问性并上传 JSON artifact。它是来源健康监控，不等同于所有公司岗位的实时采集，也不会读取个人简历。
+GitHub Actions 每天 01:00 UTC（北京时间 09:00）运行一次，检查官方入口可访问性并上传 JSON artifact。它是来源健康监控，不等同于所有公司岗位的实时采集，也不会读取个人简历。
 
 ### 2.7 沙箱执行与修复循环
 
@@ -206,7 +206,7 @@ uv run --locked pytest --no-cov
 
 - `GET /opportunities` 首页推荐包含 2026-09-28 固定快照。
 - 其他公司没有统一实时列表解析器。
-- 每周监控每周运行一次，不是持续监听。
+- 每日监控每天运行一次，不是持续监听。
 - Inbox 只会记录已接入来源实际产生的变化。
 - 岗位关闭、页面变化或投递资格必须点击官方链接再次确认。
 
@@ -218,4 +218,3 @@ uv run --locked pytest --no-cov
 2. 点击岗位官方详情页。
 3. 检查岗位仍可申请、地点、截止时间和资格要求。
 4. 再标记已投递或进入后续材料准备。
-

@@ -45,6 +45,20 @@ def test_inbox_page_filters_and_updates_independent_flags(
     updates: list[dict[str, bool]] = []
 
     def inbox(route: Route) -> None:
+        if route.request.url.endswith("/inbox/events/status"):
+            route.fulfill(
+                json={
+                    "source_id": "nvidia-careers",
+                    "source_name": "NVIDIA Careers",
+                    "last_checked_at": "2026-09-30T10:01:00Z",
+                    "current_job_count": 40,
+                    "capture_count": 2,
+                    "event_count": 2,
+                    "latest_event_at": "2026-09-30T10:01:00Z",
+                    "baseline_ready": True,
+                }
+            )
+            return
         if route.request.method == "PATCH":
             event_id = route.request.url.rsplit("/", 1)[-1]
             payload = cast(dict[str, bool], route.request.post_data_json)

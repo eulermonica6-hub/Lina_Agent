@@ -11,6 +11,7 @@ from lina_agent.application.repositories import (
     CandidateProfileRepository,
     DocumentReferenceRepository,
     JobApplicationRepository,
+    JobChangeRepository,
     JobPostingRepository,
 )
 
@@ -50,6 +51,10 @@ def get_job_recommendation_service(request: Request) -> JobDiscoveryService:
 
 def get_job_inbox_service(request: Request) -> JobInboxService:
     return cast(JobInboxService, request.app.state.job_inbox_service)
+
+
+def get_job_change_repository(request: Request) -> JobChangeRepository:
+    return cast(JobChangeRepository, request.app.state.job_change_repository)
 
 
 def get_conversational_assistant(request: Request) -> ConversationalAssistantService:

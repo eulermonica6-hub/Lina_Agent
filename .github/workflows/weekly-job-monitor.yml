@@ -2,7 +2,7 @@ name: Lina Weekly Job Monitor
 
 on:
   schedule:
-    - cron: "0 1 * * 1"
+    - cron: "0 1 * * *"
   workflow_dispatch:
 
 permissions:

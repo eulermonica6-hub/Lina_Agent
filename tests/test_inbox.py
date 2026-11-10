@@ -5,7 +5,13 @@ from uuid import uuid4
 from httpx import ASGITransport, AsyncClient
 
 from lina_agent.config import Settings
-from lina_agent.domain.job_changes import JobCaptureBatch, JobChangeEvent, JobChangeKind
+from lina_agent.domain.job_changes import (
+    JobCaptureBatch,
+    JobChangeEvent,
+    JobChangeKind,
+    JobListingState,
+)
+from lina_agent.domain.job_discovery import JobType
 from lina_agent.main import create_app
 
 _NOW = datetime(2026, 9, 30, 10, 0, tzinfo=UTC)
@@ -92,5 +98,45 @@ def test_inbox_api_rejects_empty_updates_and_unknown_events() -> None:
             )
             assert empty.status_code == 422
             assert missing.status_code == 404
+
+    asyncio.run(exercise())
+
+
+def test_inbox_status_reports_baseline_and_open_job_count() -> None:
+    app = create_app(Settings(app_name="Lina Test", environment="test"))
+    batch = JobCaptureBatch(
+        source_id="nvidia-careers",
+        captured_at=_NOW,
+        job_count=2,
+        baseline=True,
+    )
+    state = JobListingState(
+        source_id="nvidia-careers",
+        external_id="JR1",
+        title="AI Intern",
+        locations=("上海",),
+        job_type=JobType.INTERNSHIP,
+        direction="AI",
+        source_url="https://example.com/JR1",
+        content_fingerprint="a" * 64,
+        first_seen_at=_NOW,
+        last_seen_at=_NOW,
+        is_open=True,
+    )
+    closed = state.model_copy(update={"external_id": "JR2", "is_open": False})
+
+    async def exercise() -> None:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            empty = await client.get("/inbox/events/status")
+            assert empty.json()["baseline_ready"] is False
+            await app.state.job_change_repository.save_capture(batch, (state, closed), ())
+            status = await client.get("/inbox/events/status")
+            assert status.status_code == 200
+            assert status.json()["source_name"] == "NVIDIA Careers"
+            assert status.json()["current_job_count"] == 1
+            assert status.json()["capture_count"] == 1
+            assert status.json()["event_count"] == 0
+            assert status.json()["baseline_ready"] is True
 
     asyncio.run(exercise())

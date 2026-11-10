@@ -1,15 +1,22 @@
+from datetime import datetime
 from typing import Annotated, Self
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, model_validator
 
-from lina_agent.api.dependencies import get_job_inbox_service
+from lina_agent.api.dependencies import get_job_change_repository, get_job_inbox_service
 from lina_agent.application.job_inbox import JobInboxFilter, JobInboxService
+from lina_agent.application.repositories import JobChangeRepository
 from lina_agent.domain.job_changes import JobChangeKind, JobInboxItem
 
 router = APIRouter(prefix="/inbox/events", tags=["job inbox"])
 JobInboxServiceDependency = Annotated[JobInboxService, Depends(get_job_inbox_service)]
+JobChangeRepositoryDependency = Annotated[
+    JobChangeRepository,
+    Depends(get_job_change_repository),
+]
+_SOURCE_ID = "nvidia-careers"
 
 
 class JobInboxStateUpdate(BaseModel):
@@ -22,6 +29,38 @@ class JobInboxStateUpdate(BaseModel):
         if self.saved is None and self.ignored is None and self.compare_later is None:
             raise ValueError("At least one inbox state field is required")
         return self
+
+
+class JobMonitoringStatus(BaseModel):
+    source_id: str
+    source_name: str
+    last_checked_at: datetime | None
+    current_job_count: int
+    capture_count: int
+    event_count: int
+    latest_event_at: datetime | None
+    baseline_ready: bool
+
+
+@router.get("/status", response_model=JobMonitoringStatus)
+async def get_job_monitoring_status(
+    repository: JobChangeRepositoryDependency,
+) -> JobMonitoringStatus:
+    batches = await repository.list_batches(_SOURCE_ID)
+    states = await repository.list_states(_SOURCE_ID)
+    events = await repository.list_events(_SOURCE_ID)
+    latest_batch = max(batches, key=lambda batch: batch.captured_at, default=None)
+    latest_event = max(events, key=lambda event: event.occurred_at, default=None)
+    return JobMonitoringStatus(
+        source_id=_SOURCE_ID,
+        source_name="NVIDIA Careers",
+        last_checked_at=latest_batch.captured_at if latest_batch else None,
+        current_job_count=sum(state.is_open for state in states),
+        capture_count=len(batches),
+        event_count=len(events),
+        latest_event_at=latest_event.occurred_at if latest_event else None,
+        baseline_ready=bool(batches),
+    )
 
 
 @router.get("", response_model=tuple[JobInboxItem, ...])

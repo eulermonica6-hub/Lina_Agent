@@ -5,6 +5,7 @@ const elements = {
     feedback: document.querySelector("#inbox-feedback"),
     list: document.querySelector("#inbox-list"),
     total: document.querySelector("#inbox-total"),
+    monitorStatus: document.querySelector("#monitor-status"),
 };
 
 const kindLabels = {
@@ -109,7 +110,12 @@ async function loadInbox() {
     const parameters = new URLSearchParams({ status: elements.status.value });
     if (elements.kind.value) parameters.set("kind", elements.kind.value);
     try {
-        renderInbox(await requestJson(`/inbox/events?${parameters}`));
+        const [items, status] = await Promise.all([
+            requestJson(`/inbox/events?${parameters}`),
+            requestJson("/inbox/events/status"),
+        ]);
+        renderInbox(items);
+        renderMonitorStatus(status);
     } catch (error) {
         elements.total.textContent = "加载失败";
         elements.feedback.textContent = error.message;
@@ -117,6 +123,19 @@ async function loadInbox() {
     } finally {
         elements.refresh.disabled = false;
     }
+}
+
+function renderMonitorStatus(status) {
+    if (!status.baseline_ready) {
+        elements.monitorStatus.textContent = "尚未完成首次检查，请运行 Lina weekly monitor。";
+        return;
+    }
+    const checkedAt = new Date(status.last_checked_at).toLocaleString("zh-CN");
+    const eventText = status.event_count
+        ? `累计 ${status.event_count} 条变化`
+        : "两次检查之间尚未发现变化";
+    elements.monitorStatus.textContent =
+        `${status.source_name}：最近检查 ${checkedAt}，当前 ${status.current_job_count} 个开放岗位；${eventText}。`;
 }
 
 elements.kind.addEventListener("change", loadInbox);
