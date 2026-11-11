@@ -20,6 +20,8 @@
 | `docs/MVP_IMPLEMENTATION.md` | MVP 当时的实现与复盘 | 历史记录原则上冻结，只补当前路线导航 |
 | `docs/JOB_MONITORING.md` | 岗位发现、订阅、变化检测与推送契约 | 搜索来源、监控、调度、Inbox 或通知设计变化 |
 | `docs/DATA_ANNOTATION.md` | 数据匿名化、标注和复核规范 | 数据 Schema、标签语义或隐私流程变化 |
+| `docs/FUTURE_INTERFACES.md` | 稳定端口、预留字段、计划中方向与扩展检查清单 | 新端口、新字段、新来源或扩展方向变化 |
+| `docs/FEATURE_CASE_STUDY.md` | 当前闭环功能、匿名案例跑通结果与修复记录 | 用户可见闭环、示例输入或修复记录变化 |
 | `docs/evaluations/JD_PARSER_BASELINE.md` | 已测量的解析指标与失败分析 | 数据集、解析器或指标结果变化 |
 | `docs/evaluations/CAREER_MATCHING_BASELINE.md` | 技能、匹配、引用和 Top-K 排序基线 | Gold、词表、权重、排序特征或指标变化 |
 

@@ -37,7 +37,7 @@ class DocumentReadError(DocumentLoadError):
 
 
 class LocalDocumentLoader:
-    """Load UTF-8 text, Markdown, and text-bearing DOCX files into one evidence model."""
+    """Load UTF-8 text, Markdown, DOCX, and text-bearing PDF files into one evidence model."""
 
     def load(self, path: Path) -> IngestedDocument:
         try:
@@ -54,6 +54,8 @@ class LocalDocumentLoader:
             return self._load_text(source_name, content, DocumentFormat.TEXT)
         if suffix == ".docx":
             return self._load_docx(source_name, content)
+        if suffix == ".pdf":
+            return self._load_pdf(source_name, content)
         raise UnsupportedDocumentTypeError(f"不支持的文档类型：{suffix or '无扩展名'}")
 
     def _load_text(
@@ -89,6 +91,24 @@ class LocalDocumentLoader:
             if (text := self._word_paragraph_text(paragraph))
         )
         return self._build_document(source_name, content, DocumentFormat.DOCX, values)
+
+    def _load_pdf(self, source_name: str, content: bytes) -> IngestedDocument:
+        from pypdf import PdfReader
+
+        try:
+            reader = PdfReader(BytesIO(content))
+            pages = "".join(page.extract_text() or "" for page in reader.pages)
+        except Exception as error:  # pypdf raises multiple parse errors for non-PDF bytes
+            raise DocumentReadError(f"{source_name} 不是可解析的 PDF 文档") from error
+        normalized = pages.replace("\r\n", "\n").replace("\r", "\n")
+        values = tuple(
+            (DocumentBlockKind.PARAGRAPH, line.strip())
+            for line in normalized.split("\n")
+            if line.strip()
+        )
+        if not values:
+            raise EmptyDocumentError(f"{source_name} 中没有可读取的文本")
+        return self._build_document(source_name, content, DocumentFormat.PDF, values)
 
     @staticmethod
     def _contains_nested_paragraph(paragraph: ElementTree.Element) -> bool:

@@ -31,6 +31,7 @@ from lina_agent.application.repositories import (
 )
 from lina_agent.application.weekly_monitoring import WeeklyMonitoringService
 from lina_agent.config import Settings, get_settings
+from lina_agent.infrastructure.job_sources.ashby import AshbyJobSource
 from lina_agent.infrastructure.job_sources.nvidia_workday import NvidiaWorkdayJobSource
 from lina_agent.infrastructure.job_sources.registry import MONITORED_JOB_SOURCES
 from lina_agent.infrastructure.job_sources.verified_snapshot import VerifiedSnapshotJobSource
@@ -106,7 +107,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     snapshot_source = VerifiedSnapshotJobSource()
     search_sources = (snapshot_source,)
     if app_settings.environment != "test":
-        search_sources = (*search_sources, NvidiaWorkdayJobSource())
+        search_sources = (
+            *search_sources,
+            NvidiaWorkdayJobSource(),
+            AshbyJobSource(source_id="notion-careers", company="Notion", org="notion"),
+            AshbyJobSource(source_id="linear-careers", company="Linear", org="linear"),
+            AshbyJobSource(source_id="persona-careers", company="Persona", org="persona"),
+        )
     app.state.job_recommendation_service = JobDiscoveryService(
         search_sources,
         application_repository=job_application_repository,

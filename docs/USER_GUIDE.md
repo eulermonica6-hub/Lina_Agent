@@ -15,16 +15,16 @@ Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 60 �
 | 岗位保存 | 可用 | 默认保存到本地 SQLite |
 | 硬条件匹配 | 可用 | 判断毕业年份、学历、经验和地点 |
 | 匿名示例 | 可用 | 用于快速体验和验证 |
-| 本地简历/JD Agent | 可用 | 读取 TXT、Markdown、DOCX，输出证据 Top-K 和 Trace |
+| 本地简历/JD Agent | 可用 | 读取 TXT、Markdown、DOCX、PDF，输出证据 Top-K 和 Trace |
 | 浏览器文件 Agent | 可用 | 上传简历与 Markdown JD 目录，运行后展示结果并刷新脱敏历史 |
 | 首页岗位 Feed | 可用（已复核推荐） | 展示 2026-09-28 已验证详情和投递入口的 6 个岗位，申请前仍需复核 |
-| 手动岗位搜索 | 可用（快照 + NVIDIA 实时） | 按关键词、公司、地点和岗位类型聚合搜索；NVIDIA 当前限定上海范围 |
+| 手动岗位搜索 | 可用（快照 + NVIDIA/Ashby 实时） | 按关键词、公司、地点和岗位类型聚合搜索；NVIDIA 当前限定上海范围，Ashby 来源为远程/全球优先 |
 | 只上传简历初筛 | 可用 | 默认用首页岗位摘要生成 JD 目录；不是完整 JD 匹配 |
 | 智能行动计划 | 可选 | CLI `--use-llm` 或 API `use_llm=true` 显式启用 |
 | 多岗位能力缺口 | 可用 | 聚合 Top-K 的硬性/优先缺口、影响岗位与证据优势 |
 | 计划复核与降级 | 可用 | 无证据技能被拒绝；模型失败时保留确定性分析 |
 | 自然语言工具对话 | 可用（单轮） | 可搜索岗位、查询动态、比较岗位并主动追问；尚无跨请求多轮记忆 |
-| 联网岗位和公司查询 | 部分可用 | NVIDIA Workday 官方列表已接入；其余公司尚无实时列表解析器 |
+| 联网岗位和公司查询 | 部分可用 | NVIDIA Workday 与 Ashby（Notion/Linear/Persona）官方列表已接入；其余公司尚无实时列表解析器 |
 | 首页 Top 6 推荐 | 可用 | 优先上海/明确远程和实习/校招，结合当天日期与本地偏好每日排序 |
 | 已投递岗位 | 可用 | 推荐卡可标记；首页和对话推荐排除，手动搜索可回看并撤销 |
 | 来源监控 | 可用 | 每天 09:00 北京时间检查已接入来源并上传 JSON artifact；Inbox 展示最近检查状态 |
@@ -34,7 +34,7 @@ Lina 当前是完整求职 Agent 的可信决策内核，并能每周监控 60 �
 | 简历优化与面试准备 | 不可用 | 规划为证据约束的生成工作流 |
 | 一键投递 | 不可用 | 未来仅在逐次预览和用户确认后辅助提交 |
 | DOCX 简历解析 | 可用 | 支持正文、表格和文本框中的文字 |
-| PDF/OCR | 不可用 | 尚不处理 PDF、扫描件和图片内文字 |
+| PDF 简历解析 | 可用 | 文本型 PDF；扫描件 OCR 和图片内文字仍不可用 |
 | 官方 JD 离线摄取 | 开发工具 | 人工运行脚本，输出仅保存到 Git 忽略的私有目录 |
 | 结构化数据持久化 | 可用 | 画像和岗位默认保存到 `data/lina.db`，重启后可恢复 |
 | Agent Run Snapshot | 可用 | 保存请求确认、分数、技能/gap 摘要、步骤状态和计划，不保存原文 evidence |
@@ -109,7 +109,7 @@ uv run --extra dev --locked uvicorn lina_agent.main:app --app-dir src --reload -
 
 ### 3.1 浏览器运行文件 Agent
 
-1. 在“上传简历匹配岗位”选择 TXT、Markdown 或 DOCX 简历。默认使用首页岗位快照；取消勾选后可上传自己的 Markdown JD 目录。
+1. 在“上传简历匹配岗位”选择 TXT、Markdown、DOCX 或 PDF 简历。默认使用首页岗位快照；取消勾选后可上传自己的 Markdown JD 目录。
 2. 设置 Top-K。自动决策信号与 LLM 行动计划默认关闭，需要时显式开启。
 3. 开启自动信号后，可填写到岗天数、实习月数和六类方向偏好；空字段不会提交，`0.0` 会保留。
 4. 点击“运行文件 Agent”。完成后页面展示 Top 匹配、优先 gap 和 warning，并自动刷新运行历史。
@@ -322,7 +322,7 @@ curl -X POST http://127.0.0.1:8000/matches \
 
 ### 5.5 文件 Agent API
 
-`POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
+`POST /agent/runs` 接收两个 Base64 文档：`resume` 支持 TXT/Markdown/DOCX/PDF，`job_catalog` 使用结构化 Markdown。响应包含候选人技能证据、Top-K、聚合能力缺口、步骤 Trace 和警告。为避免服务端任意路径读取，API 不接受本地文件路径；请求 Schema 可在 `/docs` 直接查看和试用。
 
 成功运行后，Lina 将脱敏 Snapshot 保存到 SQLite。`GET /agent/runs/{run_id}` 查询单条，`GET /agent/runs?limit=20` 查询最近记录。Snapshot 不包含 Base64 输入、原文 evidence、offset 或源文件名，因此不能替代调用方保存的完整即时响应。
 

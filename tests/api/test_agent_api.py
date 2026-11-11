@@ -310,7 +310,7 @@ async def test_agent_api_returns_actionable_document_error(
     agent_client: AsyncClient,
 ) -> None:
     request = {
-        "resume": _encoded("resume.pdf", "not supported"),
+        "resume": _encoded("resume.png", "not supported"),
         "job_catalog": _encoded("jobs.md", "普通文本"),
     }
 

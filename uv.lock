@@ -601,12 +601,13 @@ wheels = [
 
 [[package]]
 name = "lina-career-agent"
-version = "0.2.45"
+version = "0.2.46"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic-settings" },
+    { name = "pypdf" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -634,6 +635,7 @@ requires-dist = [
     { name = "numpy", marker = "extra == 'inference'", specifier = ">=2,<3" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3,<5.0" },
     { name = "pydantic-settings", specifier = ">=2.10,<3.0" },
+    { name = "pypdf", specifier = ">=5,<6" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.404,<2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4,<9.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.1,<2.0" },
@@ -1184,6 +1186,15 @@ dependencies = [
 sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/7e/ab/265f7dc69d28113ebba19092e57b075f41543b2ed048429c5f56e2b88eac/pyright-1.1.411.tar.gz", hash = "sha256:d885a0551f2e763b089a02702174e7f4ba77548cddabc972ab86d1f7f1b0f998", size = 4112861, upload-time = "2026-06-25T02:14:06.37Z" }
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/0a/49/385be530a6a5b78d1cbcd5c2e38debc8959a2fc6bdb716f4e581002979fc/pyright-1.1.411-py3-none-any.whl", hash = "sha256:dc7c72a8e2700c55baa127554040e067041ea53ccfd50bf96308cc4291c7d5d9", size = 6181526, upload-time = "2026-06-25T02:14:04.691Z" },
+]
+
+[[package]]
+name = "pypdf"
+version = "5.9.0"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/89/3a/584b97a228950ed85aec97c811c68473d9b8d149e6a8c155668287cf1a28/pypdf-5.9.0.tar.gz", hash = "sha256:30f67a614d558e495e1fbb157ba58c1de91ffc1718f5e0dfeb82a029233890a1", size = 5035118, upload-time = "2025-07-27T14:04:52.364Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/48/d9/6cff57c80a6963e7dd183bf09e9f21604a77716644b1e580e97b259f7612/pypdf-5.9.0-py3-none-any.whl", hash = "sha256:be10a4c54202f46d9daceaa8788be07aa8cd5ea8c25c529c50dd509206382c35", size = 313193, upload-time = "2025-07-27T14:04:50.53Z" },
 ]
 
 [[package]]

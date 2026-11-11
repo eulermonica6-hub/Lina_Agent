@@ -371,6 +371,8 @@ curl -X POST http://127.0.0.1:8000/jobs/parse \
 | [开发指南](docs/DEVELOPMENT.md) | 开发流程、质量门禁和发布步骤 |
 | [0.2.0 发布测试手册](docs/RELEASE_TESTING_0.2.0.md) | 从多节点缺口、LLM 计划、Reviewer、降级到 Web 边界的逐步验收 |
 | [文档治理](docs/DOCUMENTATION_GOVERNANCE.md) | 重要文档职责、事实来源和版本 Review 清单 |
+| [未来接口与扩展预留](docs/FUTURE_INTERFACES.md) | 稳定端口、预留字段、计划中方向与扩展检查清单 |
+| [功能介绍与案例跑通](docs/FEATURE_CASE_STUDY.md) | 当前闭环功能、两份匿名 PDF 简历跑通结果与修复记录 |
 | [数据匿名化与标注指南](docs/DATA_ANNOTATION.md) | JD/简历匿名化、Gold Label 和人工复核方法 |
 | [决策信号行为准则](docs/DECISION_SIGNAL_RULES.md) | 自动抽取、未知状态、最小证据、Gold 与发布规则 |
 | [知识库与迭代索引](docs/KNOWLEDGE_BASE.md) | 迭代 001 至今的决策、失败、心得和面试素材 |

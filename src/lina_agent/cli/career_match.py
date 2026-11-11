@@ -31,7 +31,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="读取本地简历与 JD 目录，生成带证据的确定性技能匹配报告。"
     )
-    parser.add_argument("--resume", required=True, type=Path, help="TXT、Markdown 或 DOCX 简历")
+    parser.add_argument("--resume", required=True, type=Path, help="TXT、Markdown、DOCX/PDF 简历")
     parser.add_argument("--jobs", required=True, type=Path, help="Markdown JD 目录")
     parser.add_argument("--top", type=int, default=5, help="返回岗位数量，默认 5")
     parser.add_argument(

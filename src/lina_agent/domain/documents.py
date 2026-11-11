@@ -10,6 +10,7 @@ class DocumentFormat(StrEnum):
     MARKDOWN = "markdown"
     TEXT = "text"
     DOCX = "docx"
+    PDF = "pdf"
 
 
 class DocumentBlockKind(StrEnum):

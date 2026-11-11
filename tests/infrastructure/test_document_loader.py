@@ -25,6 +25,42 @@ def make_docx(body: str) -> bytes:
     return output.getvalue()
 
 
+def make_pdf(*lines: str) -> bytes:
+    """Build a tiny, offset-correct single-page PDF with one text block per line."""
+
+    content = "\n".join(
+        f"BT /F1 12 Tf 72 {720 - index * 20} Td ({line}) Tj ET" for index, line in enumerate(lines)
+    ).encode("latin-1")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+            b"/Resources << /Font << /F1 5 0 R >> >> >>"
+        ),
+        b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    output = bytearray(b"%PDF-1.4\n")
+    offsets: list[int] = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{number} 0 obj\n".encode() + body + b"\nendobj\n")
+    xref = len(output)
+    output.extend(b"xref\n0 " + str(len(objects) + 1).encode() + b"\n")
+    output.extend(b"0000000000 65535 f \n")
+    for offset in offsets:
+        output.extend(f"{offset:010d} 00000 n \n".encode())
+    output.extend(
+        b"trailer\n<< /Size "
+        + str(len(objects) + 1).encode()
+        + b" /Root 1 0 R >>\nstartxref\n"
+        + str(xref).encode()
+        + b"\n%%EOF\n"
+    )
+    return bytes(output)
+
+
 def test_loads_utf8_markdown_into_stable_evidence_blocks() -> None:
     loader = LocalDocumentLoader()
     content = "\ufeff# 标题\r\n- Python\r普通段落".encode()
@@ -53,7 +89,7 @@ def test_loads_text_file_from_path(tmp_path: Path) -> None:
     assert document.blocks[0].kind is DocumentBlockKind.LIST_ITEM
 
 
-@pytest.mark.parametrize("filename", ["resume", "resume.pdf"])
+@pytest.mark.parametrize("filename", ["resume", "resume.png"])
 def test_rejects_unsupported_document_types(filename: str) -> None:
     with pytest.raises(UnsupportedDocumentTypeError, match="不支持的文档类型"):
         LocalDocumentLoader().load_bytes(filename, b"content")
@@ -96,3 +132,20 @@ def test_rejects_invalid_or_textless_docx() -> None:
         loader.load_bytes("broken.docx", b"not-a-zip")
     with pytest.raises(EmptyDocumentError, match="没有可读取的文本"):
         loader.load_bytes("empty.docx", make_docx("<w:p><w:r><w:t/></w:r></w:p>"))
+
+
+def test_reads_pdf_lines_into_paragraph_blocks() -> None:
+    document = LocalDocumentLoader().load_bytes("resume.pdf", make_pdf("Lina Resume", "- Python"))
+
+    assert document.format is DocumentFormat.PDF
+    assert [block.text for block in document.blocks] == ["Lina Resume", "- Python"]
+    assert all(block.kind is DocumentBlockKind.PARAGRAPH for block in document.blocks)
+
+
+def test_rejects_invalid_or_textless_pdf() -> None:
+    loader = LocalDocumentLoader()
+
+    with pytest.raises(DocumentReadError, match="不是可解析的 PDF"):
+        loader.load_bytes("broken.pdf", b"not-a-pdf")
+    with pytest.raises(EmptyDocumentError, match="没有可读取的文本"):
+        loader.load_bytes("empty.pdf", make_pdf())

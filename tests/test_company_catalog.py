@@ -79,6 +79,9 @@ def test_company_catalog_balances_major_and_focused_ai_pools() -> None:
         "Tesla",
         "高通",
         "Booking.com",
+        "Notion",
+        "Linear",
+        "Persona",
     }
     assert len(focused) == 22
     assert {source.company for source in focused} == {
@@ -121,11 +124,11 @@ def test_company_catalog_toml_is_the_reviewable_source_of_truth() -> None:
     catalog = tomllib.loads(catalog_path.read_text(encoding="utf-8"))
 
     assert catalog["schema_version"] == 1
-    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 60
+    assert len(catalog["companies"]) == len(MONITORED_JOB_SOURCES) == 63
     assert [item["source_id"] for item in catalog["companies"]] == [
         source.source_id for source in MONITORED_JOB_SOURCES
     ]
-    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 60
+    assert len({source.company.casefold() for source in MONITORED_JOB_SOURCES}) == 63
 
     domestic_ranking = sorted(
         (source.market_cap_rank, source.company)

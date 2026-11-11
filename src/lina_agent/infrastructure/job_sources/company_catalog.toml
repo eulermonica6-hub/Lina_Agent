@@ -619,3 +619,30 @@ pool = "focused_ai"
 keywords = ["Evaluation", "Observability", "LLMOps", "Applied AI"]
 regions = ["美国", "新加坡", "远程"]
 why_watch = "AI 评测与可观测性方向和 Lina 的验证体系高度重合。"
+
+[[companies]]
+source_id = "notion-careers"
+company = "Notion"
+url = "https://jobs.ashbyhq.com/notion"
+pool = "global_major"
+keywords = ["AI", "Machine Learning", "Product Engineering", "Search"]
+regions = ["远程", "美国", "日本"]
+why_watch = "生产力平台的 AI、搜索与知识管理岗位，公开 Ashby 板可实时刷新。"
+
+[[companies]]
+source_id = "linear-careers"
+company = "Linear"
+url = "https://jobs.ashbyhq.com/linear"
+pool = "global_major"
+keywords = ["Product Engineering", "Infrastructure", "AI", "Design Engineering"]
+regions = ["远程"]
+why_watch = "高质量远程优先的工程组织，产品工程与基础设施岗位密度高。"
+
+[[companies]]
+source_id = "persona-careers"
+company = "Persona"
+url = "https://jobs.ashbyhq.com/persona"
+pool = "global_major"
+keywords = ["Applied AI", "Trust", "Identity", "Full Stack"]
+regions = ["远程", "美国"]
+why_watch = "身份与信任基础设施，结合应用 AI 与全栈工程岗位。"

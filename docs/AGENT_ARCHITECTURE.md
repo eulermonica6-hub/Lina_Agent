@@ -9,7 +9,7 @@
 Lina 的目标架构是“对话编排 + 岗位发现与监控 + 可信决策内核 + 受控执行”。当前代码实现了三条协作流程：
 
 1. **结构化 Web 决策链**：手工画像、单个 JD 硬条件抽取、SQLite 保存和资格判断；
-2. **文件 Agent 分析链**：TXT/Markdown/DOCX 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核；
+2. **文件 Agent 分析链**：TXT/Markdown/DOCX/PDF 证据摄取、JD 目录解析、技能 Top-K、缺口聚合、可选 LLM 计划和确定性复核；
 3. **岗位发现与监控链**：内部公司目录、来源健康、岗位去重、live-only Top 6、手动搜索和每周调度。
 
 三条链共用 FastAPI 进程和部分基础领域类型，但还没有统一的候选人/岗位聚合或执行检查点。结构化实体、脱敏 Agent Run Snapshot、metadata-only 文档引用与确认版本已持久化；浏览器可直接创建文件 Agent Run。岗位发现已建立 60 个内部来源，但大部分实时岗位解析器尚未实现。
@@ -145,7 +145,7 @@ CLI 文件读取或参数错误当前直接以异常结束；它还没有稳定�
 `CareerAgentRequest`：
 
 ```text
-resume.filename          -> 扩展名决定 TXT / Markdown / DOCX reader
+resume.filename          -> 扩展名决定 TXT / Markdown / DOCX / PDF reader
 resume.content           -> Pydantic Base64Bytes 解码为 bytes
 job_catalog.filename     -> 必须带受支持扩展名
 job_catalog.content      -> Base64Bytes 解码为 bytes
@@ -274,7 +274,7 @@ sequenceDiagram
 
 输出：`IngestedDocument`。
 
-不支持：PDF、OCR、图片文字、页眉页脚、批注和复杂版面坐标。
+文本型 PDF 已支持；不支持扫描件 OCR、图片内文字、页眉页脚、批注和复杂版面坐标。
 
 ### 6.2 Candidate Analyst
 
@@ -427,7 +427,7 @@ sequenceDiagram
 | 故障 | 入口行为 | 对结果的影响 |
 | --- | --- | --- |
 | JSON/Pydantic 字段无效 | FastAPI 自动 422 | 不进入应用层 |
-| 不支持文件类型、坏 DOCX、空文档 | API 422；CLI 抛异常 | 无 Agent Run |
+| 不支持文件类型、坏 DOCX/PDF、空文档 | API 422；CLI 抛异常 | 无 Agent Run |
 | JD 目录标题不合法 | API 422；CLI 抛异常 | 无 Agent Run |
 | Web 实体 UUID 不存在 | `/matches` 404 | 无硬条件结果 |
 | 无技能命中 | 返回 warning | 仍可排序，但分数信息有限 |

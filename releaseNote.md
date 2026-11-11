@@ -1,6 +1,6 @@
 # Lina Release Notes
 
-本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.45`，之后按可验收用户能力递增。
+本文件记录 Lina 的可发布版本与重大变更。当前版本为 `0.2.46`，之后按可验收用户能力递增。
 
 ## Unreleased
 
@@ -8,6 +8,13 @@
 - 0.2.25 现有文档摄取、证据、硬条件、匹配、gap、Reviewer、SQLite、Snapshot/Diff 和评测继续作为可信决策内核，不推倒重写。
 - 近期唯一实现目标改为 `JobLead`、统一来源适配器和一个真实官方来源的手动搜索 API；Run 详情与恢复降为跨周期工作流的支撑能力。
 - 明确自治等级：公开信息检索可自动执行，通知需渠道授权，外部提交需逐次预览和确认；绕过验证码、伪造经历与无人值守海投属于禁止能力。
+
+## 0.2.46 - 2026-11-11
+
+- 新增 PDF 简历文本解析（`pypdf`），`LocalDocumentLoader` 与 `/agent/runs`、`lina-match` 支持文本型 PDF；无效 PDF 与无文字层 PDF 单独报错。
+- 新增 Ashby 公开岗位来源 Adapter（Notion / Linear / Persona），复用 `JobSourceAdapter` / `JobLead` 契约接入实时岗位发现与推荐。
+- 公司目录新增 Notion / Linear / Persona 三个 global_major 来源；实时推荐来源由 NVIDIA 单一来源扩展为 NVIDIA + 3 个 Ashby 来源。
+- 新增《未来接口与扩展预留》与《功能介绍与案例跑通》文档，并用两份匿名 PDF 简历完成「PDF 摄取 → 证据画像」跑通验证。
 
 ## 0.2.45 - 2026-10-01
 

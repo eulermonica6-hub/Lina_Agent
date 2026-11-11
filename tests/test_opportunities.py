@@ -44,10 +44,16 @@ def test_live_job_source_is_wired_outside_test_environment() -> None:
     assert development_app.state.job_search_service.source_ids == (
         "verified-snapshot-2026-09-28",
         "nvidia-careers",
+        "notion-careers",
+        "linear-careers",
+        "persona-careers",
     )
     assert development_app.state.job_recommendation_service.source_ids == (
         "verified-snapshot-2026-09-28",
         "nvidia-careers",
+        "notion-careers",
+        "linear-careers",
+        "persona-careers",
     )
 
 
