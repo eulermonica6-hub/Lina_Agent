@@ -28,7 +28,9 @@ jobs:
       - run: uv sync --extra dev --locked
       - name: Install Chromium and Linux system dependencies
         if: runner.os == 'Linux'
-        run: uv run --locked playwright install --with-deps chromium
+        run: |
+          uv run --locked playwright install --with-deps chromium \
+            || uv run --locked playwright install chromium
       - name: Install Chromium on Windows
         if: runner.os == 'Windows'
         run: uv run --locked playwright install chromium
