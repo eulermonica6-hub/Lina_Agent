@@ -71,6 +71,76 @@ _BOARD: dict[str, Any] = {
     ]
 }
 
+_EDGE_BOARD: dict[str, Any] = {
+    "jobs": [
+        {
+            "id": "",
+            "title": "Frontend Engineer",
+            "employmentType": "FullTime",
+            "location": "Remote",
+            "secondaryLocations": [],
+            "publishedAt": None,
+            "isListed": True,
+            "jobUrl": None,
+            "applyUrl": "https://jobs.ashbyhq.com/linear/apply-frontend",
+            "descriptionHtml": "<p>Ship <b>UI</b>.</p><ul><li>React</li></ul>",
+            "descriptionPlain": "",
+        },
+        {
+            "id": "edge-empty-description",
+            "title": "Marketing Lead",
+            "employmentType": "Contract",
+            "location": "",
+            "secondaryLocations": [],
+            "publishedAt": "2026-09-01T00:00:00.000Z",
+            "isListed": True,
+            "jobUrl": None,
+            "applyUrl": None,
+            "descriptionHtml": "",
+            "descriptionPlain": "",
+        },
+        {
+            "id": "edge-contract",
+            "title": "Marketing Lead",
+            "employmentType": "Contract",
+            "location": "",
+            "secondaryLocations": [],
+            "publishedAt": "2026-09-02T00:00:00.000Z",
+            "isListed": True,
+            "jobUrl": None,
+            "applyUrl": None,
+            "descriptionHtml": "",
+            "descriptionPlain": "Own go-to-market for the region.",
+        },
+        {
+            "id": "edge-campus",
+            "title": "New College Grad — Product Designer",
+            "employmentType": "",
+            "location": "New York",
+            "secondaryLocations": [],
+            "publishedAt": "2026-09-03T00:00:00.000Z",
+            "isListed": True,
+            "jobUrl": "https://jobs.ashbyhq.com/notion/edge-campus",
+            "applyUrl": None,
+            "descriptionHtml": "",
+            "descriptionPlain": "Design systems.",
+        },
+        {
+            "id": "edge-data",
+            "title": "Data Analyst",
+            "employmentType": "FullTime",
+            "location": "Singapore",
+            "secondaryLocations": [],
+            "publishedAt": "2026-09-04T00:00:00.000Z",
+            "isListed": True,
+            "jobUrl": "https://jobs.ashbyhq.com/notion/edge-data",
+            "applyUrl": None,
+            "descriptionHtml": "",
+            "descriptionPlain": "Analyze data.",
+        },
+    ]
+}
+
 
 def _source(
     *,
@@ -169,3 +239,72 @@ def test_ashby_source_reports_http_and_schema_failures() -> None:
     result = asyncio.run(source.search(JobSearchRequest(max_results=20)))
     assert result.status is JobSourceStatus.STRUCTURE_CHANGED
     assert result.error_code == "invalid_ashby_payload"
+
+
+def test_ashby_source_reports_rate_limit_and_block() -> None:
+    source, _ = _source(status_code=429)
+    result = asyncio.run(source.search(JobSearchRequest(max_results=20)))
+    assert result.status is JobSourceStatus.RATE_LIMITED
+    assert result.error_code == "http_429"
+
+    source, _ = _source(status_code=401)
+    result = asyncio.run(source.search(JobSearchRequest(max_results=20)))
+    assert result.status is JobSourceStatus.BLOCKED
+    assert result.error_code == "http_401"
+
+
+def test_ashby_source_reports_network_error() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    source = AshbyJobSource(
+        source_id="notion-careers",
+        company="Notion",
+        org="notion",
+        transport=httpx.MockTransport(respond),
+        clock=lambda: _NOW,
+    )
+    result = asyncio.run(source.search(JobSearchRequest(max_results=20)))
+    assert result.status is JobSourceStatus.FAILED
+    assert result.error_code == "network_error"
+    assert result.leads == ()
+
+
+def test_ashby_source_searches_explicit_supported_company() -> None:
+    source, requested = _source()
+
+    result = asyncio.run(source.search(JobSearchRequest(companies=("Notion",), max_results=20)))
+
+    assert result.status is JobSourceStatus.SUCCESS
+    assert requested == ["/posting-api/job-board/notion"]
+    assert {lead.title for lead in result.leads} >= {"AI Engineer Intern", "Research Scientist"}
+
+
+def test_ashby_source_handles_edge_postings() -> None:
+    source, _ = _source(board=_EDGE_BOARD)
+
+    result = asyncio.run(source.search(JobSearchRequest(max_results=20)))
+
+    leads = {lead.title: lead for lead in result.leads}
+    # Empty-description posting is skipped, its identically-titled sibling is kept once.
+    titles = [lead.title for lead in result.leads]
+    assert titles and titles.count("Marketing Lead") == 1
+
+    frontend = leads["Frontend Engineer"]
+    assert frontend.normalized_description == "Ship UI. React"
+    assert "<" not in frontend.normalized_description
+    assert len(frontend.external_id) == 64  # sha256 fallback for the empty posting id
+    assert frontend.source_url == "https://jobs.ashbyhq.com/linear/apply-frontend"
+    assert frontend.captured_at == _NOW  # earlier posting keeps the fixed clock
+
+    marketing = leads["Marketing Lead"]
+    assert marketing.locations == ("全球",)
+    assert marketing.job_type is JobType.UNKNOWN
+    assert marketing.source_url == "https://jobs.ashbyhq.com/notion"
+
+    campus = leads["New College Grad — Product Designer"]
+    assert campus.job_type is JobType.CAMPUS
+    assert campus.direction == "Product & Design"
+
+    data = leads["Data Analyst"]
+    assert data.direction == "Data"
