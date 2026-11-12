@@ -73,7 +73,7 @@ def validate_source(source: str) -> None:
         raise SandboxValidationError(f"source has invalid syntax: {error.msg}") from error
 
     for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
+        if isinstance(node, ast.Import | ast.ImportFrom):
             module = node.module if isinstance(node, ast.ImportFrom) else None
             names = [alias.name.split(".", 1)[0] for alias in node.names]
             imported = ([module.split(".", 1)[0]] if module else []) + names
